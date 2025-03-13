@@ -1,0 +1,62 @@
+name: Microservices CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛠️ Клонируем репозиторий
+        uses: actions/checkout@v4
+
+      # Устанавливаем KinD (локальный кластер Kubernetes)
+      - name: 🚀 Разворачиваем Kubernetes (KinD)
+        uses: helm/kind-action@v1.8.0
+
+      # Проверяем, что кластер поднялся
+      - name: 🔄 Проверяем Kubernetes
+        run: kubectl get nodes
+
+      # Сборка микросервисов и загрузка в KinD
+      - name: 📦 Собираем и загружаем Docker-образы
+        run: |
+          # Сборка Go микросервиса
+          docker build -t my-go-service:latest ./go-service
+          kind load docker-image my-go-service:latest
+
+          # Сборка Java микросервиса
+          docker build -t my-java-service:latest ./java-service
+          kind load docker-image my-java-service:latest
+
+      # Деплой микросервисов в Kubernetes
+      - name: 🚀 Деплой микросервисов в Kubernetes
+        run: |
+          kubectl apply -f k8s/go-deployment.yaml
+          kubectl apply -f k8s/go-service.yaml
+          
+          kubectl apply -f k8s/java-deployment.yaml
+          kubectl apply -f k8s/java-service.yaml
+          kubectl apply -f k8s/api-gateway.yaml
+
+          # Ждем готовности подов
+          kubectl rollout status deployment go-service
+          kubectl rollout status deployment java-service
+          kubectl rollout status deployment api-gateway
+
+      # Запуск тестов
+      - name: 🧪 Запуск интеграционных тестов
+        run: |
+          # Проверяем доступность API
+          kubectl wait --for=condition=available --timeout=60s deployment/go-service
+          kubectl wait --for=condition=available --timeout=60s deployment/java-service
+          
+          # Тестируем эндпоинты
+          curl http://api-gateway:8080/health || exit 1
+
+      # Очистка окружения
+      - name: 🧹 Удаление Kubernetes ресурсов
+        run: kubectl delete namespace default
