@@ -24,7 +24,7 @@ jobs:
         run: |
           timeout=60  # Устанавливаем лимит времени в 60 секунд
           end=$((SECONDS+timeout))
-          until curl -f http://localhost:80; do
+          until curl -f http://localhost:81; do
             if [ $SECONDS -ge $end ]; then
               echo "Сервис не запустился вовремя"
               exit 1  # Завершаем выполнение с ошибкой, если прошло слишком много времени
