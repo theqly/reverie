@@ -1,9 +1,12 @@
-name: Microservices CI
+name: Docker Image CI
 
 on:
   push:
     branches:
-      - main
+      - dev
+  pull_request:
+    branches:
+      - dev
 
 jobs:
   build-test:
@@ -13,50 +16,27 @@ jobs:
       - name: 🛠️ Клонируем репозиторий
         uses: actions/checkout@v4
 
-      # Устанавливаем KinD (локальный кластер Kubernetes)
-      - name: 🚀 Разворачиваем Kubernetes (KinD)
-        uses: helm/kind-action@v1.8.0
-
-      # Проверяем, что кластер поднялся
-      - name: 🔄 Проверяем Kubernetes
-        run: kubectl get nodes
-
-      # Сборка микросервисов и загрузка в KinD
-      - name: 📦 Собираем и загружаем Docker-образы
+      - name: 🔨 Собираем и запускаем сервисы с помощью Docker Compose
         run: |
-          # Сборка Go микросервиса
-          docker build -t my-go-service:latest ./go-service
-          kind load docker-image my-go-service:latest
+          docker-compose -f deploy/docker-compose.yaml up -d --build
 
-          # Сборка Java микросервиса
-          docker build -t my-java-service:latest ./java-service
-          kind load docker-image my-java-service:latest
-
-      # Деплой микросервисов в Kubernetes
-      - name: 🚀 Деплой микросервисов в Kubernetes
+      - name: ⏳ Ждём готовности сервисов (с дедлайном)
         run: |
-          kubectl apply -f k8s/go-deployment.yaml
-          kubectl apply -f k8s/go-service.yaml
-          
-          kubectl apply -f k8s/java-deployment.yaml
-          kubectl apply -f k8s/java-service.yaml
-          kubectl apply -f k8s/api-gateway.yaml
+          timeout=60  # Устанавливаем лимит времени в 60 секунд
+          end=$((SECONDS+timeout))
+          until curl -f http://localhost:80; do
+            if [ $SECONDS -ge $end ]; then
+              echo "Сервис не запустился вовремя"
+              exit 1  # Завершаем выполнение с ошибкой, если прошло слишком много времени
+            fi
+            echo "Ждём Nginx..."
+            sleep 3
+          done
+          echo "Сервис доступен!"
 
-          # Ждем готовности подов
-          kubectl rollout status deployment go-service
-          kubectl rollout status deployment java-service
-          kubectl rollout status deployment api-gateway
-
-      # Запуск тестов
-      - name: 🧪 Запуск интеграционных тестов
+      - name: End to end тестирование детка
         run: |
-          # Проверяем доступность API
-          kubectl wait --for=condition=available --timeout=60s deployment/go-service
-          kubectl wait --for=condition=available --timeout=60s deployment/java-service
-          
-          # Тестируем эндпоинты
-          curl http://api-gateway:8080/health || exit 1
 
       # Очистка окружения
-      - name: 🧹 Удаление Kubernetes ресурсов
-        run: kubectl delete namespace default
+      - name: 🧹 Удаление Docker compose ресурсов
+        run: docker-compose -f deploy/docker-compose.yaml down
