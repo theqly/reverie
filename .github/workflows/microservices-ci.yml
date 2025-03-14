@@ -1,0 +1,42 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛠️ Клонируем репозиторий
+        uses: actions/checkout@v4
+
+      - name: 🔨 Собираем и запускаем сервисы с помощью Docker Compose
+        run: |
+          docker compose -f deploy/docker-compose.yaml up -d --build
+
+      - name: ⏳ Ждём готовности сервисов (с дедлайном)
+        run: |
+          timeout=60  # Устанавливаем лимит времени в 60 секунд
+          end=$((SECONDS+timeout))
+          until curl -f http://localhost:80; do
+            if [ $SECONDS -ge $end ]; then
+              echo "Сервис не запустился вовремя"
+              exit 1  # Завершаем выполнение с ошибкой, если прошло слишком много времени
+            fi
+            echo "Ждём Nginx..."
+            sleep 3
+          done
+          echo "Сервис доступен!"
+
+      - name: End to end тестирование детка
+        run: |
+
+      # Очистка окружения
+      - name: 🧹 Удаление Docker compose ресурсов
+        run: docker compose -f deploy/docker-compose.yaml down
