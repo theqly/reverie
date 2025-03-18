@@ -11,6 +11,56 @@ services:
     networks:
       - app-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command:
+      - start-dev
+#      - import-realm
+    volumes:
+      - ./myrealm.json:/opt/keycloak/data/import/
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-password}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/${KEYCLOAK_POSTGRES_DB:-keycloak}
+      KC_DB_USERNAME: ${KEYCLOAK_POSTGRES_USER:-user}
+      KC_DB_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD:-password}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak-db
+    networks:
+      - app-network
+
+
+  keycloak-db:
+    image: postgres:16
+    container_name: keycloak-db
+    environment:
+      POSTGRES_USER: ${KEYCLOAK_POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${KEYCLOAK__POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${KEYCLOAK_DB:-keycloak}
+    volumes:
+      - keycloak_bd_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "$POSTGRES_USER", "-d", "$POSTGRES_DB" ]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+      start_period: 10s
+    ports:
+      - "5432:5432"
+
+
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  keycloak_bd_data: # Здесь добавляем определение тома postgres-data-dev
+    driver: local
+
