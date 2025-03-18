@@ -1,0 +1,64 @@
+server:
+  port: 8081
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    d.zhdanov.ccfit.nsu: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+
+      global cors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders: "*"
+      routes:
+        # Открытый маршрут без авторизации
+        - id: public
+          uri: http://localhost:8081
+          predicates:
+            - Path=/public/**
+          filters: [ ]
+
+        # Защищённый маршрут с проверкой JWT
+        - id: secure/rest
+          uri: http://localhost:8081
+          predicates:
+            - Path=/secure/**
+          filters:
+            - TokenRelay  # Прокси токен в downstream сервис
+#            - JwtAuthenticationFilter=
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/myrealm
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: ${KEYCLOAK_CLIENT_ID}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET} # кто вставит секрет
+#            ручками тот не молодец
+            authorization-grant-type: authorization_code
+            scope:
+              - openid
+              - email
+              - roles
+      resource server:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/myrealm  # Токен будет проверяться через Keycloak
+          jwk-set-uri: http://localhost:8080/realms/myrealm/protocol/openid-connect/certs    # URL для публичных ключей Keycloak, чтобы проверить подпись токена
