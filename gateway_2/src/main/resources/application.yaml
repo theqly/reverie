@@ -24,8 +24,23 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
             exposedHeaders: "*"
+      routes:
+        - id: public
+          uri: http://localhost:8081
+          predicates:
+            - Path=/public/**
+          filters: [ ]
+
+        - id: authorized
+          uri: http://localhost:8081
+          predicates:
+            - Path=/authorized/**
+          filters:
+            - AddUserInfoHeader
+
   security:
     oauth2:
       resource server:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI}  # Токен будет проверяться через Keycloak
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+          jwk-set-uri: ${KEYCLOAK_SET_URI}
