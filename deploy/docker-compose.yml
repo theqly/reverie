@@ -101,6 +101,22 @@ services:
         "up"
       ]
 
+  profile-service:
+    build:
+      context: ../backend/profile-service
+      dockerfile: Dockerfile
+    container_name: profile-service
+    restart: unless-stopped
+    env_file:
+      - ../backend/profile-service/.env
+    depends_on:
+      profile-db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
 volumes:
   content_data:
   feed_data:

@@ -47,7 +47,7 @@ CREATE TABLE comments (
     FOREIGN KEY (pin_id) REFERENCES pins(id) ON DELETE CASCADE
 );
 
-INSERT INTO access_levels (id, type) VALUES 
+INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
     ('shared');
