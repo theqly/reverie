@@ -1,0 +1,111 @@
+services:
+  content-db:
+    image: postgres:15
+    container_name: content_db
+    env_file: ../database/content-service/.env
+    ports:
+      - "5435:5432"
+    volumes:
+      - content_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d content"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  content-migrator:
+    build:
+      context: ../database/content-service
+      dockerfile: Dockerfile.migrator
+    depends_on:
+      content-db:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint:
+      [
+        "migrate",
+        "-path=/app/migrations",
+        "-database=postgres://user:pass@content-db:5432/content?sslmode=disable",
+        "up"
+      ]
+
+  feed-db:
+    image: postgres:15
+    container_name: feed_db
+    env_file: ../database/feed-service/.env
+    ports:
+      - "5436:5432"
+    volumes:
+      - feed_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d feed"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  feed-migrator:
+    build:
+      context: ../database/feed-service
+      dockerfile: Dockerfile.migrator
+    depends_on:
+      feed-db:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint:
+      [
+        "migrate",
+        "-path=/app/migrations",
+        "-database=postgres://user:pass@feed-db:5432/feed?sslmode=disable",
+        "up"
+      ]
+  
+  profile-db:
+    image: postgres:15
+    container_name: profile_db
+    env_file: ../database/profile-service/.env
+    ports:
+      - "5437:5432"
+    volumes:
+      - profile_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d profile"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  profile-migrator:
+    build:
+      context: ../database/profile-service
+      dockerfile: Dockerfile.migrator
+    depends_on:
+      profile-db:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint:
+      [
+        "migrate",
+        "-path=/app/migrations",
+        "-database=postgres://user:pass@profile-db:5432/profile?sslmode=disable",
+        "up"
+      ]
+
+volumes:
+  content_data:
+  feed_data:
+  profile_data:
+
+networks:
+  app-network:
+    driver: bridge

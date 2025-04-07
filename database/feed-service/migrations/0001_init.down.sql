@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS tagged_pins;
+DROP TABLE IF EXISTS tags;
