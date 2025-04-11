@@ -9,10 +9,10 @@ import (
 )
 
 type PinService struct {
-	pinRepo repository.PinRepository
+	pinRepo *repository.PinRepository
 }
 
-func NewPinService(pinRepo repository.PinRepository) *PinService {
+func NewPinService(pinRepo *repository.PinRepository) *PinService {
 	return &PinService{pinRepo: pinRepo}
 }
 

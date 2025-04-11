@@ -3,6 +3,10 @@ package main
 import (
 	"log"
 
+	"content-service/internal/handler"
+	"content-service/internal/repository"
+	routers "content-service/internal/router"
+	"content-service/internal/service"
 	"content-service/pkg/config"
 	"content-service/pkg/database"
 
@@ -16,6 +20,10 @@ func main() {
 
 	database.Connect()
 
+	pinRepo := repository.NewPinRepository(database.DB)
+	pinService := service.NewPinService(pinRepo)
+	pinHandler := handler.NewPinHandler(pinService)
+
 	router := gin.Default()
 
 	router.Use(corsMiddleware())
@@ -23,6 +31,8 @@ func main() {
 	if err := router.Run(config.CFG.ServerAddress); err != nil {
 		log.Fatalf("server start error: %v", err)
 	}
+
+	routers.NewPinRouter(router, pinHandler)
 }
 
 func corsMiddleware() gin.HandlerFunc {
