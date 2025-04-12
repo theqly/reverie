@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.web: TRACE
+    org.springframework.security: TRACE
+    org.springframework.web.filter.UserInfoHeaderFactory: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      default-filters:
+        - name: UserInfoHeaderFactory
+
+      global cors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - http://localhost:5173
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - authorization
+              - content-type
+              - x-requested-with
+            exposedHeaders:
+              - authorization
+            allow-credentials: true
+
+      routes:
+        - id: api
+          uri: http://localhost:8081
+          predicates:
+            - Path=/graphql
+
+  security:
+    oauth2:
+      resource server:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_SET_URI}
