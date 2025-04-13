@@ -117,6 +117,14 @@ services:
     networks:
       - app-network
 
+  router:
+    image: ghcr.io/apollographql/router:v1.61.3-rc.0
+    volumes:
+      - ./router:/etc/router
+    ports:
+      - "4000:4000"
+    command: --config /etc/router/router.yaml --supergraph /etc/router/supergraph.graphql
+
 volumes:
   content_data:
   feed_data:
