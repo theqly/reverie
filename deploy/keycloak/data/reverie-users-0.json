@@ -1,0 +1,20 @@
+{
+  "realm" : "reverie",
+  "users" : [ {
+    "id" : "201c89d3-80ad-47c6-a493-dd66f6aa0e20",
+    "username" : "test",
+    "firstName" : "test",
+    "lastName" : "user",
+    "email" : "test@g.nsu",
+    "emailVerified" : true,
+    "createdTimestamp" : 1744575388547,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-reverie" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}
