@@ -27,7 +27,7 @@ public class UserInfoHeaderFactory
       return Collections.emptyList();
     }
     resourceAccess = (Map<String, Object>) resourceAccess.get(
-      CustomHeaders.CONSTRUCTION_SYSTEM_CLAIM
+      CustomHeaders.ROLES
     );
     if(resourceAccess != null) {
       return (List<String>) resourceAccess.getOrDefault(
