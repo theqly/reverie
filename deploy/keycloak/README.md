@@ -9,7 +9,6 @@
     ...
 ```
 и запустите внутри контейнера с `keycloak`
-
 ```
 bash opt/keycloak/bin/kc.sh export --dir=/opt/keycloak/data/export
 ```
