@@ -1,0 +1,29 @@
+# Исключаем директории сборки
+/build
+/.gradle
+gradlew.bat
+gradlew
+.gitattributes
+
+# Исключаем зависимости (скачаются заново)
+.gradle
+**/build
+**/out
+
+# Исключаем IDE-файлы
+*.iml
+.idea/
+.vscode/
+
+# Исключаем системные файлы
+.DS_Store
+Thumbs.db
+
+# Исключаем Git-репозиторий (если не нужен внутри контейнера)
+.git
+.gitignore
+
+# Исключаем временные файлы
+*.log
+*.tmp
+*.env
