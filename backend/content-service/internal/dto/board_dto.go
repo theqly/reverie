@@ -1,18 +1,22 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type BoardRequest struct {
-	Title        string      `json:"title"`
-	OwnerID      uuid.UUID   `json:"owner_id"`
-	Visibility   string      `json:"visibility"`
-	GroupEditors []uuid.UUID `json:"group_editors"`
+	Name        string    `json:"name"`
+	AccessLevel string    `json:"access_level"`
+	OwnerID     uuid.UUID `json:"owner_id"`
+	CreateAt    time.Time `json:"create_at"`
 }
 
 type BoardResponse struct {
-	ID           uuid.UUID   `json:"id"`
-	Title        string      `json:"title"`
-	OwnerID      uuid.UUID   `json:"owner_id"`
-	Visibility   string      `json:"visibility"`
-	GroupEditors []uuid.UUID `json:"group_editors"`
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	AccessLevel string    `json:"access_level"`
+	OwnerID     uuid.UUID `json:"owner_id"`
+	CreateAt    time.Time `json:"create_at"`
 }

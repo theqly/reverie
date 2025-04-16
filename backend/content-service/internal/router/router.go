@@ -9,7 +9,7 @@ import (
 func NewPinRouter(router *gin.Engine,
 	pinHandler *handler.PinHandler) {
 
-	bookingapi := router.Group("/content")
+	pinapi := router.Group("/content")
 
-	bookingapi.GET("/pin_create", pinHandler.Create)
+	pinapi.POST("/pin_create", pinHandler.Create)
 }
