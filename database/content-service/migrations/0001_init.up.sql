@@ -1,12 +1,12 @@
 CREATE TABLE access_levels (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id SERIAL PRIMARY KEY,
     type VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
-    access_level_id UUID NOT NULL,
+    access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (access_level_id) REFERENCES access_levels(id)
