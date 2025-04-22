@@ -1,0 +1,57 @@
+input CreateBoardInput {
+  name: String!
+  accessLevelId: UUID!
+  ownerId: UUID!
+}
+
+input UpdateBoardInput {
+  name: String
+  accessLevelId: UUID
+}
+
+input CreatePinInput {
+  name: String!
+  latitude: Float!
+  longitude: Float!
+  description: String
+  ownerId: UUID!
+}
+
+input UpdatePinInput {
+  name: String
+  latitude: Float
+  longitude: Float
+  description: String
+  rating: Float
+}
+
+input AddCommentInput {
+  pinId: UUID!
+  userId: UUID!
+  content: String!
+}
+
+input AddImageInput {
+  pinId: UUID!
+  imageUrl: String!
+  orderNumber: Int!
+}
+
+type Mutation {
+  createBoard(input: CreateBoardInput!): Board!
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
+
+  createPin(input: CreatePinInput!): Pin!
+  updatePin(id: UUID!, input: UpdatePinInput!): Pin!
+
+  addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
+  removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!
+
+  addCommentToPin(input: AddCommentInput!): Comment!
+  updateComment(id: UUID!, content: String!): Comment!
+  deleteComment(id: UUID!): Boolean!
+
+  addImageToPin(input: AddImageInput!): PinImage!
+  removeImageFromPin(imageId: UUID!): Boolean!
+  updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
+}

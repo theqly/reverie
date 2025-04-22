@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"time"
@@ -15,7 +15,7 @@ type Pin struct {
 	Images      []string `gorm:"type:jsonb"`
 	Rating      float64
 	CreatedAt   time.Time
-	AuthorID    uuid.UUID `gorm:"type:uuid"`
+	OwnerID     uuid.UUID `gorm:"type:uuid"`
 	BoardID     uuid.UUID
 	// Tags        []string `gorm:"type:jsonb"`
 }

@@ -1,0 +1,25 @@
+type Pin {
+  id: UUID!
+  name: String!
+  latitude: Float!
+  longitude: Float!
+  description: String
+  owner: User!
+  rating: Float!
+  createdAt: Time!
+  images: [PinImage!]
+  comments: [Comment!]
+}
+
+type PinImage {
+  id: UUID!
+  orderNumber: Int!
+  imageUrl: String!
+}
+
+type Comment {
+  id: UUID!
+  content: String!
+  createdAt: Time!
+  author: User!
+}

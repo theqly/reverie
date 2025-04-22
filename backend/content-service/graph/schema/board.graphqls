@@ -1,0 +1,13 @@
+type AccessLevel {
+  id: UUID!
+  type: String!
+}
+
+type Board {
+  id: UUID!
+  name: String!
+  accessLevel: AccessLevel!
+  owner: User!
+  createdAt: Time!
+  pins: [Pin!]
+}
