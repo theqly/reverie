@@ -29,7 +29,7 @@ type Board struct {
 	ID          uuid.UUID    `json:"id"`
 	Name        string       `json:"name"`
 	AccessLevel *AccessLevel `json:"accessLevel"`
-	Owner       *User        `json:"owner"`
+	GroupID     *Group       `json:"groupId"`
 	CreatedAt   time.Time    `json:"createdAt"`
 	Pins        []*Pin       `json:"pins,omitempty"`
 }
@@ -44,7 +44,7 @@ type Comment struct {
 type CreateBoardInput struct {
 	Name          string    `json:"name"`
 	AccessLevelID uuid.UUID `json:"accessLevelId"`
-	OwnerID       uuid.UUID `json:"ownerId"`
+	GroupID       uuid.UUID `json:"groupId"`
 }
 
 type CreatePinInput struct {
@@ -54,6 +54,12 @@ type CreatePinInput struct {
 	Description *string   `json:"description,omitempty"`
 	OwnerID     uuid.UUID `json:"ownerId"`
 }
+
+type Group struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func (Group) IsEntity() {}
 
 type Mutation struct {
 }
@@ -83,14 +89,16 @@ type Query struct {
 type UpdateBoardInput struct {
 	Name          *string    `json:"name,omitempty"`
 	AccessLevelID *uuid.UUID `json:"accessLevelId,omitempty"`
+	UserID        uuid.UUID  `json:"userId"`
 }
 
 type UpdatePinInput struct {
-	Name        *string  `json:"name,omitempty"`
-	Latitude    *float64 `json:"latitude,omitempty"`
-	Longitude   *float64 `json:"longitude,omitempty"`
-	Description *string  `json:"description,omitempty"`
-	Rating      *float64 `json:"rating,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	Latitude    *float64  `json:"latitude,omitempty"`
+	Longitude   *float64  `json:"longitude,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Rating      *float64  `json:"rating,omitempty"`
+	UserID      uuid.UUID `json:"userId"`
 }
 
 type User struct {

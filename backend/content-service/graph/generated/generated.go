@@ -46,6 +46,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	Policy func(ctx context.Context, obj any, next graphql.Resolver, service string, query string) (res any, err error)
 }
 
 type ComplexityRoot struct {
@@ -57,9 +58,9 @@ type ComplexityRoot struct {
 	Board struct {
 		AccessLevel func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
+		GroupID     func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
-		Owner       func(childComplexity int) int
 		Pins        func(childComplexity int) int
 	}
 
@@ -68,6 +69,10 @@ type ComplexityRoot struct {
 		Content   func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
+	}
+
+	Group struct {
+		ID func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -196,6 +201,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Board.CreatedAt(childComplexity), true
 
+	case "Board.groupId":
+		if e.complexity.Board.GroupID == nil {
+			break
+		}
+
+		return e.complexity.Board.GroupID(childComplexity), true
+
 	case "Board.id":
 		if e.complexity.Board.ID == nil {
 			break
@@ -209,13 +221,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Board.Name(childComplexity), true
-
-	case "Board.owner":
-		if e.complexity.Board.Owner == nil {
-			break
-		}
-
-		return e.complexity.Board.Owner(childComplexity), true
 
 	case "Board.pins":
 		if e.complexity.Board.Pins == nil {
@@ -251,6 +256,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Comment.ID(childComplexity), true
+
+	case "Group.id":
+		if e.complexity.Group.ID == nil {
+			break
+		}
+
+		return e.complexity.Group.ID(childComplexity), true
 
 	case "Mutation.addCommentToPin":
 		if e.complexity.Mutation.AddCommentToPin == nil {
@@ -719,6 +731,10 @@ var sources = []*ast.Source{
 scalar UUID`, BuiltIn: false},
 	{Name: "../schema/user.graphqls", Input: `type User @key(fields: "id") {
   id: UUID! @external
+}
+
+type Group @key(fields: "id") {
+  id: UUID! @external
 }`, BuiltIn: false},
 	{Name: "../schema/board.graphqls", Input: `type AccessLevel {
   id: UUID!
@@ -729,7 +745,7 @@ type Board {
   id: UUID!
   name: String!
   accessLevel: AccessLevel!
-  owner: User!
+  groupId: Group!
   createdAt: Time!
   pins: [Pin!]
 }`, BuiltIn: false},
@@ -762,23 +778,24 @@ type Comment {
   # Поиск доски
   board(id: UUID!): Board
   boardByName(name: String!): Board
-  boardsByUser(userId: UUID!): [Board!]!
+  boardsByUser(userId: UUID!): [Board!]
 
   # Поиск пина
   pin(id: UUID!): Pin
-  pinsByUser(userId: UUID!): [Pin!]!
-  pinsByName(name: String!): [Pin!]!
-  pinsByLocation(query: String!): [Pin!]!
+  pinsByUser(userId: UUID!): [Pin!]
+  pinsByName(name: String!): [Pin!]
+  pinsByLocation(query: String!): [Pin!]
 }`, BuiltIn: false},
 	{Name: "../schema/mutation.graphqls", Input: `input CreateBoardInput {
   name: String!
   accessLevelId: UUID!
-  ownerId: UUID!
+  groupId: UUID!
 }
 
 input UpdateBoardInput {
   name: String
   accessLevelId: UUID
+  userId: UUID!
 }
 
 input CreatePinInput {
@@ -795,6 +812,7 @@ input UpdatePinInput {
   longitude: Float
   description: String
   rating: Float
+  userId: UUID!
 }
 
 input AddCommentInput {
@@ -809,9 +827,14 @@ input AddImageInput {
   orderNumber: Int!
 }
 
+directive @policy(
+  service: String!  # Имя сервиса для проверки (например, "approval-service")
+  query: String!    # Название запроса/мутации в целевом сервисе (например, "checkApproval")
+) on FIELD_DEFINITION
+
 type Mutation {
   createBoard(input: CreateBoardInput!): Board!
-  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board! @policy(service: "coprocessor", query: "checkBoardApproval")
 
   createPin(input: CreatePinInput!): Pin!
   updatePin(id: UUID!, input: UpdatePinInput!): Pin!
@@ -838,7 +861,7 @@ type Mutation {
 `, BuiltIn: true},
 	{Name: "../../federation/entity.graphql", Input: `
 # a union of all types that use the @key directive
-union _Entity = User
+union _Entity = Group | User
 
 type _Service {
   sdl: String
@@ -855,6 +878,57 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_policy_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_policy_argsService(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["service"] = arg0
+	arg1, err := ec.dir_policy_argsQuery(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["query"] = arg1
+	return args, nil
+}
+func (ec *executionContext) dir_policy_argsService(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["service"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("service"))
+	if tmp, ok := rawArgs["service"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) dir_policy_argsQuery(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["query"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+	if tmp, ok := rawArgs["query"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
 
 func (ec *executionContext) field_Mutation_addCommentToPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
@@ -1928,8 +2002,8 @@ func (ec *executionContext) fieldContext_Board_accessLevel(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Board_owner(ctx context.Context, field graphql.CollectedField, obj *model.Board) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Board_owner(ctx, field)
+func (ec *executionContext) _Board_groupId(ctx context.Context, field graphql.CollectedField, obj *model.Board) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Board_groupId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1942,7 +2016,7 @@ func (ec *executionContext) _Board_owner(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Owner, nil
+		return obj.GroupID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1954,12 +2028,12 @@ func (ec *executionContext) _Board_owner(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model.Group)
 	fc.Result = res
-	return ec.marshalNUser2ᚖcontentᚑserviceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNGroup2ᚖcontentᚑserviceᚋgraphᚋmodelᚐGroup(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Board_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Board_groupId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Board",
 		Field:      field,
@@ -1968,9 +2042,9 @@ func (ec *executionContext) fieldContext_Board_owner(_ context.Context, field gr
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_User_id(ctx, field)
+				return ec.fieldContext_Group_id(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Group", field.Name)
 		},
 	}
 	return fc, nil
@@ -2263,6 +2337,50 @@ func (ec *executionContext) fieldContext_Comment_author(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Group_id(ctx context.Context, field graphql.CollectedField, obj *model.Group) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Group_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Group_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Group",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createBoard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createBoard(ctx, field)
 	if err != nil {
@@ -2308,8 +2426,8 @@ func (ec *executionContext) fieldContext_Mutation_createBoard(ctx context.Contex
 				return ec.fieldContext_Board_name(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
-			case "owner":
-				return ec.fieldContext_Board_owner(ctx, field)
+			case "groupId":
+				return ec.fieldContext_Board_groupId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Board_createdAt(ctx, field)
 			case "pins":
@@ -2345,8 +2463,40 @@ func (ec *executionContext) _Mutation_updateBoard(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateBoard(rctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateBoardInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateBoard(rctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateBoardInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			service, err := ec.unmarshalNString2string(ctx, "coprocessor")
+			if err != nil {
+				var zeroVal *model.Board
+				return zeroVal, err
+			}
+			query, err := ec.unmarshalNString2string(ctx, "checkBoardApproval")
+			if err != nil {
+				var zeroVal *model.Board
+				return zeroVal, err
+			}
+			if ec.directives.Policy == nil {
+				var zeroVal *model.Board
+				return zeroVal, errors.New("directive policy is not implemented")
+			}
+			return ec.directives.Policy(ctx, nil, directive0, service, query)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Board); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *content-service/graph/model.Board`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2377,8 +2527,8 @@ func (ec *executionContext) fieldContext_Mutation_updateBoard(ctx context.Contex
 				return ec.fieldContext_Board_name(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
-			case "owner":
-				return ec.fieldContext_Board_owner(ctx, field)
+			case "groupId":
+				return ec.fieldContext_Board_groupId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Board_createdAt(ctx, field)
 			case "pins":
@@ -2600,8 +2750,8 @@ func (ec *executionContext) fieldContext_Mutation_addPinToBoard(ctx context.Cont
 				return ec.fieldContext_Board_name(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
-			case "owner":
-				return ec.fieldContext_Board_owner(ctx, field)
+			case "groupId":
+				return ec.fieldContext_Board_groupId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Board_createdAt(ctx, field)
 			case "pins":
@@ -2669,8 +2819,8 @@ func (ec *executionContext) fieldContext_Mutation_removePinFromBoard(ctx context
 				return ec.fieldContext_Board_name(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
-			case "owner":
-				return ec.fieldContext_Board_owner(ctx, field)
+			case "groupId":
+				return ec.fieldContext_Board_groupId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Board_createdAt(ctx, field)
 			case "pins":
@@ -3686,8 +3836,8 @@ func (ec *executionContext) fieldContext_Query_board(ctx context.Context, field 
 				return ec.fieldContext_Board_name(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
-			case "owner":
-				return ec.fieldContext_Board_owner(ctx, field)
+			case "groupId":
+				return ec.fieldContext_Board_groupId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Board_createdAt(ctx, field)
 			case "pins":
@@ -3752,8 +3902,8 @@ func (ec *executionContext) fieldContext_Query_boardByName(ctx context.Context, 
 				return ec.fieldContext_Board_name(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
-			case "owner":
-				return ec.fieldContext_Board_owner(ctx, field)
+			case "groupId":
+				return ec.fieldContext_Board_groupId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Board_createdAt(ctx, field)
 			case "pins":
@@ -3797,14 +3947,11 @@ func (ec *executionContext) _Query_boardsByUser(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Board)
 	fc.Result = res
-	return ec.marshalNBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐBoardᚄ(ctx, field.Selections, res)
+	return ec.marshalOBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐBoardᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_boardsByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3821,8 +3968,8 @@ func (ec *executionContext) fieldContext_Query_boardsByUser(ctx context.Context,
 				return ec.fieldContext_Board_name(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
-			case "owner":
-				return ec.fieldContext_Board_owner(ctx, field)
+			case "groupId":
+				return ec.fieldContext_Board_groupId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Board_createdAt(ctx, field)
 			case "pins":
@@ -3940,14 +4087,11 @@ func (ec *executionContext) _Query_pinsByUser(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Pin)
 	fc.Result = res
-	return ec.marshalNPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx, field.Selections, res)
+	return ec.marshalOPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_pinsByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4017,14 +4161,11 @@ func (ec *executionContext) _Query_pinsByName(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Pin)
 	fc.Result = res
-	return ec.marshalNPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx, field.Selections, res)
+	return ec.marshalOPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_pinsByName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4094,14 +4235,11 @@ func (ec *executionContext) _Query_pinsByLocation(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Pin)
 	fc.Result = res
-	return ec.marshalNPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx, field.Selections, res)
+	return ec.marshalOPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_pinsByLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6509,7 +6647,7 @@ func (ec *executionContext) unmarshalInputCreateBoardInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "accessLevelId", "ownerId"}
+	fieldsInOrder := [...]string{"name", "accessLevelId", "groupId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6530,13 +6668,13 @@ func (ec *executionContext) unmarshalInputCreateBoardInput(ctx context.Context, 
 				return it, err
 			}
 			it.AccessLevelID = data
-		case "ownerId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
+		case "groupId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
 			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.OwnerID = data
+			it.GroupID = data
 		}
 	}
 
@@ -6605,7 +6743,7 @@ func (ec *executionContext) unmarshalInputUpdateBoardInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "accessLevelId"}
+	fieldsInOrder := [...]string{"name", "accessLevelId", "userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6626,6 +6764,13 @@ func (ec *executionContext) unmarshalInputUpdateBoardInput(ctx context.Context, 
 				return it, err
 			}
 			it.AccessLevelID = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
 		}
 	}
 
@@ -6639,7 +6784,7 @@ func (ec *executionContext) unmarshalInputUpdatePinInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "latitude", "longitude", "description", "rating"}
+	fieldsInOrder := [...]string{"name", "latitude", "longitude", "description", "rating", "userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6681,6 +6826,13 @@ func (ec *executionContext) unmarshalInputUpdatePinInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Rating = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
 		}
 	}
 
@@ -6702,6 +6854,13 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 			return graphql.Null
 		}
 		return ec._User(ctx, sel, obj)
+	case model.Group:
+		return ec._Group(ctx, sel, &obj)
+	case *model.Group:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Group(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -6781,8 +6940,8 @@ func (ec *executionContext) _Board(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "owner":
-			out.Values[i] = ec._Board_owner(ctx, field, obj)
+		case "groupId":
+			out.Values[i] = ec._Board_groupId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6844,6 +7003,45 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "author":
 			out.Values[i] = ec._Comment_author(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var groupImplementors = []string{"Group", "_Entity"}
+
+func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, obj *model.Group) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, groupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Group")
+		case "id":
+			out.Values[i] = ec._Group_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7180,16 +7378,13 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "boardsByUser":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Query_boardsByUser(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -7221,16 +7416,13 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "pinsByUser":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Query_pinsByUser(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -7243,16 +7435,13 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "pinsByName":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Query_pinsByName(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -7265,16 +7454,13 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "pinsByLocation":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Query_pinsByLocation(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -7793,50 +7979,6 @@ func (ec *executionContext) marshalNBoard2contentᚑserviceᚋgraphᚋmodelᚐBo
 	return ec._Board(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐBoardᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Board) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐBoard(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) marshalNBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐBoard(ctx context.Context, sel ast.SelectionSet, v *model.Board) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -7901,6 +8043,16 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) marshalNGroup2ᚖcontentᚑserviceᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v *model.Group) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Group(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7918,50 +8070,6 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 
 func (ec *executionContext) marshalNPin2contentᚑserviceᚋgraphᚋmodelᚐPin(ctx context.Context, sel ast.SelectionSet, v model.Pin) graphql.Marshaler {
 	return ec._Pin(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Pin) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPin2ᚖcontentᚑserviceᚋgraphᚋmodelᚐPin(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalNPin2ᚖcontentᚑserviceᚋgraphᚋmodelᚐPin(ctx context.Context, sel ast.SelectionSet, v *model.Pin) graphql.Marshaler {
@@ -8410,6 +8518,53 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalOBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐBoardᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Board) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐBoard(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐBoard(ctx context.Context, sel ast.SelectionSet, v *model.Board) graphql.Marshaler {

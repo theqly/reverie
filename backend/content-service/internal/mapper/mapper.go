@@ -3,7 +3,6 @@ package mapper
 import (
 	"content-service/graph/model"
 	"content-service/internal/models"
-	"time"
 )
 
 func ToGraphQLBoard(b *models.Board) *model.Board {
@@ -11,18 +10,28 @@ func ToGraphQLBoard(b *models.Board) *model.Board {
 		ID:          b.ID,
 		Name:        b.Name,
 		AccessLevel: &model.AccessLevel{ID: b.AccessLevelID},
-		Owner:       &model.User{ID: b.OwnerID},
+		GroupID:     &model.Group{ID: b.GroupID},
 		CreatedAt:   b.CreatedAt,
 	}
 }
 
-func ToDomainBoard(input *model.CreateBoardInput) *models.Board {
+func CreateToDomainBoard(input *model.CreateBoardInput) *models.Board {
 	return &models.Board{
 		Name:          input.Name,
 		AccessLevelID: input.AccessLevelID,
-		OwnerID:       input.OwnerID,
-		CreatedAt:     time.Now(),
+		GroupID:       input.GroupID,
 	}
+}
+
+func UpdateToDomainBoard(input *model.UpdateBoardInput) *models.Board {
+	board := models.Board{}
+	if input.Name != nil {
+		board.Name = *input.Name
+	}
+	if input.AccessLevelID != nil {
+		board.AccessLevelID = *input.AccessLevelID
+	}
+	return &board
 }
 
 func ToGraphQLPin(p *models.Pin) *model.Pin {
@@ -51,7 +60,29 @@ func toGraphQLImages(imgs []string) []*model.PinImage {
 	return images
 }
 
-func ToDomainPin(input *model.CreatePinInput) *models.Pin {
+func UpdateToDomainPin(input *model.UpdatePinInput) *models.Pin {
+	pin := models.Pin{}
+
+	if input.Name != nil {
+		pin.Name = *input.Name
+	}
+	if input.Latitude != nil {
+		pin.Lat = *input.Latitude
+	}
+	if input.Longitude != nil {
+		pin.Lng = *input.Longitude
+	}
+	if input.Description != nil {
+		pin.Description = *input.Description
+	}
+	if input.Rating != nil {
+		pin.Rating = *input.Rating
+	}
+
+	return &pin
+}
+
+func CreateToDomainPin(input *model.CreatePinInput) *models.Pin {
 	desc := ""
 	if input.Description != nil {
 		desc = *input.Description
@@ -62,7 +93,6 @@ func ToDomainPin(input *model.CreatePinInput) *models.Pin {
 		Lng:         input.Longitude,
 		Description: desc,
 		OwnerID:     input.OwnerID,
-		CreatedAt:   time.Now(),
 		Images:      []string{},
 	}
 }

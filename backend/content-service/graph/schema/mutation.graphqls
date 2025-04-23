@@ -1,12 +1,13 @@
 input CreateBoardInput {
   name: String!
   accessLevelId: UUID!
-  ownerId: UUID!
+  groupId: UUID!
 }
 
 input UpdateBoardInput {
   name: String
   accessLevelId: UUID
+  userId: UUID!
 }
 
 input CreatePinInput {
@@ -23,6 +24,7 @@ input UpdatePinInput {
   longitude: Float
   description: String
   rating: Float
+  userId: UUID!
 }
 
 input AddCommentInput {
@@ -37,9 +39,14 @@ input AddImageInput {
   orderNumber: Int!
 }
 
+directive @policy(
+  service: String!
+  query: String!
+) on FIELD_DEFINITION
+
 type Mutation {
   createBoard(input: CreateBoardInput!): Board!
-  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board! @policy(service: "coprocessor", query: "checkBoardApproval")
 
   createPin(input: CreatePinInput!): Pin!
   updatePin(id: UUID!, input: UpdatePinInput!): Pin!

@@ -7,7 +7,7 @@ type Board {
   id: UUID!
   name: String!
   accessLevel: AccessLevel!
-  owner: User!
+  groupId: Group!
   createdAt: Time!
   pins: [Pin!]
 }

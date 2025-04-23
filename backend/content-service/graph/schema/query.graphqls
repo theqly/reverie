@@ -2,11 +2,11 @@ type Query {
   # Поиск доски
   board(id: UUID!): Board
   boardByName(name: String!): Board
-  boardsByUser(userId: UUID!): [Board!]!
+  boardsByUser(userId: UUID!): [Board!]
 
   # Поиск пина
   pin(id: UUID!): Pin
-  pinsByUser(userId: UUID!): [Pin!]!
-  pinsByName(name: String!): [Pin!]!
-  pinsByLocation(query: String!): [Pin!]!
+  pinsByUser(userId: UUID!): [Pin!]
+  pinsByName(name: String!): [Pin!]
+  pinsByLocation(query: String!): [Pin!]
 }

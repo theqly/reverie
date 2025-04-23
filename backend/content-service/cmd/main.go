@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"content-service/graph/generated"
 	"content-service/graph/resolver"
@@ -10,6 +9,7 @@ import (
 	"content-service/internal/service"
 	"content-service/pkg/config"
 	"content-service/pkg/database"
+	"content-service/pkg/middleware"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -36,7 +36,8 @@ func main() {
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 
 	router := gin.Default()
-	router.Use(corsMiddleware())
+
+	router.Use(middleware.CorsMiddleware())
 
 	// GraphQL endpoint
 	router.POST("/query", func(c *gin.Context) {
@@ -49,21 +50,5 @@ func main() {
 
 	if err := router.Run(config.CFG.ServerAddress); err != nil {
 		log.Fatalf("server start error: %v", err)
-	}
-}
-
-func corsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "X-User-Role, X-User-ID")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-
-		c.Next()
 	}
 }
