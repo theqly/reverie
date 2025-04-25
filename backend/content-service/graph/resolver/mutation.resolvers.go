@@ -10,7 +10,6 @@ import (
 	"content-service/internal/mapper"
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -82,42 +81,74 @@ func (r *mutationResolver) UpdatePin(ctx context.Context, id uuid.UUID, input mo
 
 // AddPinToBoard is the resolver for the addPinToBoard field.
 func (r *mutationResolver) AddPinToBoard(ctx context.Context, pinID uuid.UUID, boardID uuid.UUID) (*model.Board, error) {
-	panic(fmt.Errorf("not implemented: AddPinToBoard - addPinToBoard"))
+	board, err := r.BoardRepo.AddPinToBoard(ctx, pinID, boardID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLBoard(board), nil
 }
 
 // RemovePinFromBoard is the resolver for the removePinFromBoard field.
 func (r *mutationResolver) RemovePinFromBoard(ctx context.Context, pinID uuid.UUID, boardID uuid.UUID) (*model.Board, error) {
-	panic(fmt.Errorf("not implemented: RemovePinFromBoard - removePinFromBoard"))
+	board, err := r.BoardRepo.RemovePinFromBoard(ctx, pinID, boardID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLBoard(board), nil
 }
 
 // AddCommentToPin is the resolver for the addCommentToPin field.
 func (r *mutationResolver) AddCommentToPin(ctx context.Context, input model.AddCommentInput) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: AddCommentToPin - addCommentToPin"))
+	comment, err := r.PinRepo.AddComment(ctx, input.PinID, input.UserID, input.Content)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLComment(comment), nil
 }
 
 // UpdateComment is the resolver for the updateComment field.
 func (r *mutationResolver) UpdateComment(ctx context.Context, id uuid.UUID, content string) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: UpdateComment - updateComment"))
+	comment, err := r.PinRepo.UpdateComment(ctx, id, content)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLComment(comment), nil
 }
 
 // DeleteComment is the resolver for the deleteComment field.
 func (r *mutationResolver) DeleteComment(ctx context.Context, id uuid.UUID) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteComment - deleteComment"))
+	err := r.PinRepo.DeleteCommentByID(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // AddImageToPin is the resolver for the addImageToPin field.
 func (r *mutationResolver) AddImageToPin(ctx context.Context, input model.AddImageInput) (*model.PinImage, error) {
-	panic(fmt.Errorf("not implemented: AddImageToPin - addImageToPin"))
+	pinImage, err := r.PinRepo.AddPinImage(ctx, input.PinID, input.ImageURL, input.OrderNumber)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLPinImage(pinImage), nil
 }
 
 // RemoveImageFromPin is the resolver for the removeImageFromPin field.
 func (r *mutationResolver) RemoveImageFromPin(ctx context.Context, imageID uuid.UUID) (bool, error) {
-	panic(fmt.Errorf("not implemented: RemoveImageFromPin - removeImageFromPin"))
+	err := r.PinRepo.DeletePinImage(ctx, imageID)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // UpdateImageOrder is the resolver for the updateImageOrder field.
 func (r *mutationResolver) UpdateImageOrder(ctx context.Context, imageID uuid.UUID, newOrder int) (*model.PinImage, error) {
-	panic(fmt.Errorf("not implemented: UpdateImageOrder - updateImageOrder"))
+	pinImage, err := r.PinRepo.UpdatePinImageOrder(ctx, imageID, newOrder)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLPinImage(pinImage), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

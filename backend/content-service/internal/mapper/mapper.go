@@ -96,3 +96,20 @@ func CreateToDomainPin(input *model.CreatePinInput) *models.Pin {
 		Images:      []string{},
 	}
 }
+
+func ToGraphQLComment(c *models.Comment) *model.Comment {
+	return &model.Comment{
+		ID:        c.ID,
+		Content:   c.Content,
+		CreatedAt: c.CreatedAt,
+		Author:    &model.User{ID: c.UserID},
+	}
+}
+
+func ToGraphQLPinImage(p *models.PinImage) *model.PinImage {
+	return &model.PinImage{
+		ID:          p.ID,
+		OrderNumber: p.OrderNumber,
+		ImageURL:    p.ImageURL,
+	}
+}

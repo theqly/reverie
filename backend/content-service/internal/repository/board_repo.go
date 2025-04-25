@@ -46,3 +46,32 @@ func (r *BoardRepository) Update(ctx context.Context, id uuid.UUID, updated mode
 			"accessLevel": updated.AccessLevelID,
 		}).Error
 }
+
+func (r *BoardRepository) AddPinToBoard(ctx context.Context, pinID uuid.UUID, boardID uuid.UUID) (*models.Board, error) {
+	err := r.db.WithContext(ctx).Create(&models.BoardPin{
+		BoardID: boardID,
+		PinID:   pinID,
+	}).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	board, err := r.GetByID(ctx, boardID)
+
+	return &board, err
+}
+
+func (r *BoardRepository) RemovePinFromBoard(ctx context.Context, pinID uuid.UUID, boardID uuid.UUID) (*models.Board, error) {
+	err := r.db.WithContext(ctx).
+		Where("board_id = ? AND pin_id = ?", boardID, pinID).
+		Delete(&models.BoardPin{}).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	board, err := r.GetByID(ctx, boardID)
+
+	return &board, err
+}
