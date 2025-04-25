@@ -7,6 +7,7 @@ package resolver
 import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
+	"content-service/internal/mapper"
 	"context"
 	"fmt"
 
@@ -15,32 +16,72 @@ import (
 
 // Board is the resolver for the board field.
 func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, error) {
-	panic(fmt.Errorf("not implemented: Board - board"))
+	board, err := r.BoardRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLBoard(&board), nil
 }
 
 // BoardByName is the resolver for the boardByName field.
-func (r *queryResolver) BoardByName(ctx context.Context, name string) (*model.Board, error) {
-	panic(fmt.Errorf("not implemented: BoardByName - boardByName"))
+func (r *queryResolver) BoardByName(ctx context.Context, name string) ([]*model.Board, error) {
+	boards, err := r.BoardRepo.GetByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	var retBoards []*model.Board
+	for i := range boards {
+		retBoards = append(retBoards, mapper.ToGraphQLBoard(&boards[i]))
+	}
+	return retBoards, nil
 }
 
-// BoardsByUser is the resolver for the boardsByUser field.
-func (r *queryResolver) BoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error) {
-	panic(fmt.Errorf("not implemented: BoardsByUser - boardsByUser"))
+// BoardsByGroup is the resolver for the boardsByGroup field.
+func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID) ([]*model.Board, error) {
+	boards, err := r.BoardRepo.GetByGroup(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	var retBoards []*model.Board
+	for i := range boards {
+		retBoards = append(retBoards, mapper.ToGraphQLBoard(&boards[i]))
+	}
+	return retBoards, nil
 }
 
 // Pin is the resolver for the pin field.
 func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID) (*model.Pin, error) {
-	panic(fmt.Errorf("not implemented: Pin - pin"))
+	pin, err := r.PinRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLPin(&pin), nil
 }
 
 // PinsByUser is the resolver for the pinsByUser field.
 func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Pin, error) {
-	panic(fmt.Errorf("not implemented: PinsByUser - pinsByUser"))
+	pins, err := r.PinRepo.GetByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	var retPins []*model.Pin
+	for i := range pins {
+		retPins = append(retPins, mapper.ToGraphQLPin(&pins[i]))
+	}
+	return retPins, nil
 }
 
 // PinsByName is the resolver for the pinsByName field.
 func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.Pin, error) {
-	panic(fmt.Errorf("not implemented: PinsByName - pinsByName"))
+	pins, err := r.PinRepo.GetByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	var retPins []*model.Pin
+	for i := range pins {
+		retPins = append(retPins, mapper.ToGraphQLPin(&pins[i]))
+	}
+	return retPins, nil
 }
 
 // PinsByLocation is the resolver for the pinsByLocation field.

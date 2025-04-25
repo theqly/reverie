@@ -26,6 +26,18 @@ func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Pin, 
 	return pin, err
 }
 
+func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]models.Pin, error) {
+	var pins []models.Pin
+	err := r.db.WithContext(ctx).Find(&pins, "owner_id = ?", userID).Error
+	return pins, err
+}
+
+func (r *PinRepository) GetByName(ctx context.Context, name string) ([]models.Pin, error) {
+	var pins []models.Pin
+	err := r.db.WithContext(ctx).Find(&pins, "name = ?", name).Error
+	return pins, err
+}
+
 func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models.Pin) error {
 	return r.db.WithContext(ctx).Model(&models.Board{}).
 		Where("id = ?", id).

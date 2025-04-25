@@ -112,7 +112,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Board              func(childComplexity int, id uuid.UUID) int
 		BoardByName        func(childComplexity int, name string) int
-		BoardsByUser       func(childComplexity int, userID uuid.UUID) int
+		BoardsByGroup      func(childComplexity int, groupID uuid.UUID) int
 		Pin                func(childComplexity int, id uuid.UUID) int
 		PinsByLocation     func(childComplexity int, query string) int
 		PinsByName         func(childComplexity int, name string) int
@@ -146,8 +146,8 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Board(ctx context.Context, id uuid.UUID) (*model.Board, error)
-	BoardByName(ctx context.Context, name string) (*model.Board, error)
-	BoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error)
+	BoardByName(ctx context.Context, name string) ([]*model.Board, error)
+	BoardsByGroup(ctx context.Context, groupID uuid.UUID) ([]*model.Board, error)
 	Pin(ctx context.Context, id uuid.UUID) (*model.Pin, error)
 	PinsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Pin, error)
 	PinsByName(ctx context.Context, name string) ([]*model.Pin, error)
@@ -523,17 +523,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.BoardByName(childComplexity, args["name"].(string)), true
 
-	case "Query.boardsByUser":
-		if e.complexity.Query.BoardsByUser == nil {
+	case "Query.boardsByGroup":
+		if e.complexity.Query.BoardsByGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Query_boardsByUser_args(ctx, rawArgs)
+		args, err := ec.field_Query_boardsByGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.BoardsByUser(childComplexity, args["userId"].(uuid.UUID)), true
+		return e.complexity.Query.BoardsByGroup(childComplexity, args["groupId"].(uuid.UUID)), true
 
 	case "Query.pin":
 		if e.complexity.Query.Pin == nil {
@@ -777,8 +777,8 @@ type Comment {
 	{Name: "../schema/query.graphqls", Input: `type Query {
   # Поиск доски
   board(id: UUID!): Board
-  boardByName(name: String!): Board
-  boardsByUser(userId: UUID!): [Board!]
+  boardByName(name: String!): [Board!]
+  boardsByGroup(groupId: UUID!): [Board!]
 
   # Поиск пина
   pin(id: UUID!): Pin
@@ -828,8 +828,8 @@ input AddImageInput {
 }
 
 directive @policy(
-  service: String!  # Имя сервиса для проверки (например, "approval-service")
-  query: String!    # Название запроса/мутации в целевом сервисе (например, "checkApproval")
+  service: String!
+  query: String!
 ) on FIELD_DEFINITION
 
 type Mutation {
@@ -1516,27 +1516,27 @@ func (ec *executionContext) field_Query_board_argsID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_boardsByUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_boardsByGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_boardsByUser_argsUserID(ctx, rawArgs)
+	arg0, err := ec.field_Query_boardsByGroup_argsGroupID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["userId"] = arg0
+	args["groupId"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_boardsByUser_argsUserID(
+func (ec *executionContext) field_Query_boardsByGroup_argsGroupID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (uuid.UUID, error) {
-	if _, ok := rawArgs["userId"]; !ok {
+	if _, ok := rawArgs["groupId"]; !ok {
 		var zeroVal uuid.UUID
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
-	if tmp, ok := rawArgs["userId"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
+	if tmp, ok := rawArgs["groupId"]; ok {
 		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
 	}
 
@@ -3883,9 +3883,9 @@ func (ec *executionContext) _Query_boardByName(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Board)
+	res := resTmp.([]*model.Board)
 	fc.Result = res
-	return ec.marshalOBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐBoard(ctx, field.Selections, res)
+	return ec.marshalOBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐBoardᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_boardByName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3926,8 +3926,8 @@ func (ec *executionContext) fieldContext_Query_boardByName(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_boardsByUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_boardsByUser(ctx, field)
+func (ec *executionContext) _Query_boardsByGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_boardsByGroup(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3940,7 +3940,7 @@ func (ec *executionContext) _Query_boardsByUser(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().BoardsByUser(rctx, fc.Args["userId"].(uuid.UUID))
+		return ec.resolvers.Query().BoardsByGroup(rctx, fc.Args["groupId"].(uuid.UUID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3954,7 +3954,7 @@ func (ec *executionContext) _Query_boardsByUser(ctx context.Context, field graph
 	return ec.marshalOBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐBoardᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_boardsByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_boardsByGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -3985,7 +3985,7 @@ func (ec *executionContext) fieldContext_Query_boardsByUser(ctx context.Context,
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_boardsByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_boardsByGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7375,7 +7375,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "boardsByUser":
+		case "boardsByGroup":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -7384,7 +7384,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_boardsByUser(ctx, field)
+				res = ec._Query_boardsByGroup(ctx, field)
 				return res
 			}
 

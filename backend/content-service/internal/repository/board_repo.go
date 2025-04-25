@@ -26,6 +26,18 @@ func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Boa
 	return board, err
 }
 
+func (r *BoardRepository) GetByName(ctx context.Context, name string) ([]models.Board, error) {
+	var boards []models.Board
+	err := r.db.WithContext(ctx).Find(&boards, "name = ?", name).Error
+	return boards, err
+}
+
+func (r *BoardRepository) GetByGroup(ctx context.Context, groupID uuid.UUID) ([]models.Board, error) {
+	var boards []models.Board
+	err := r.db.WithContext(ctx).Find(&boards, "group_id = ?", groupID).Error
+	return boards, err
+}
+
 func (r *BoardRepository) Update(ctx context.Context, id uuid.UUID, updated models.Board) error {
 	return r.db.WithContext(ctx).Model(&models.Board{}).
 		Where("id = ?", id).

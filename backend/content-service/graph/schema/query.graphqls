@@ -1,8 +1,8 @@
 type Query {
   # Поиск доски
   board(id: UUID!): Board
-  boardByName(name: String!): Board
-  boardsByUser(userId: UUID!): [Board!]
+  boardByName(name: String!): [Board!]
+  boardsByGroup(groupId: UUID!): [Board!]
 
   # Поиск пина
   pin(id: UUID!): Pin

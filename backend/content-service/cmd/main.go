@@ -6,7 +6,6 @@ import (
 	"content-service/graph/generated"
 	"content-service/graph/resolver"
 	"content-service/internal/repository"
-	"content-service/internal/service"
 	"content-service/pkg/config"
 	"content-service/pkg/database"
 	"content-service/pkg/middleware"
@@ -26,12 +25,9 @@ func main() {
 	boardRepo := repository.NewBoardRepository(database.DB)
 	pinRepo := repository.NewPinRepository(database.DB)
 
-	boardService := service.NewBoardService(boardRepo)
-	pinService := service.NewPinService(pinRepo)
-
 	resolver := &resolver.Resolver{
-		BoardService: boardService,
-		PinService:   pinService,
+		BoardRepo: boardRepo,
+		PinRepo:   pinRepo,
 	}
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 

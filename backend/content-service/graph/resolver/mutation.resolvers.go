@@ -7,30 +7,77 @@ package resolver
 import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
+	"content-service/internal/mapper"
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 // CreateBoard is the resolver for the createBoard field.
 func (r *mutationResolver) CreateBoard(ctx context.Context, input model.CreateBoardInput) (*model.Board, error) {
-	panic(fmt.Errorf("not implemented: CreateBoard - createBoard"))
+	board := mapper.CreateToDomainBoard(&input)
+	board.ID = uuid.New()
+	board.CreatedAt = time.Now()
+
+	if err := r.BoardRepo.Create(ctx, *board); err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLBoard(board), nil
 }
 
 // UpdateBoard is the resolver for the updateBoard field.
 func (r *mutationResolver) UpdateBoard(ctx context.Context, id uuid.UUID, input model.UpdateBoardInput) (*model.Board, error) {
-	panic(fmt.Errorf("not implemented: UpdateBoard - updateBoard"))
+	board := mapper.UpdateToDomainBoard(&input)
+
+	err := r.BoardRepo.Update(ctx, id, *board)
+	if err != nil {
+		return nil, err
+	}
+
+	*board, err = r.BoardRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLBoard(board), nil
 }
 
 // CreatePin is the resolver for the createPin field.
 func (r *mutationResolver) CreatePin(ctx context.Context, input model.CreatePinInput) (*model.Pin, error) {
-	panic(fmt.Errorf("not implemented: CreatePin - createPin"))
+	pin := mapper.CreateToDomainPin(&input)
+	pin.ID = uuid.New()
+	pin.CreatedAt = time.Now()
+
+	if err := r.PinRepo.Create(ctx, *pin); err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLPin(pin), nil
 }
 
 // UpdatePin is the resolver for the updatePin field.
 func (r *mutationResolver) UpdatePin(ctx context.Context, id uuid.UUID, input model.UpdatePinInput) (*model.Pin, error) {
-	panic(fmt.Errorf("not implemented: UpdatePin - updatePin"))
+	pin := mapper.UpdateToDomainPin(&input)
+
+	prevPin, err := r.PinRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if prevPin.OwnerID != input.UserID {
+		return nil, errors.New("incorrect user (not pin`s owner)")
+	}
+
+	err = r.PinRepo.Update(ctx, id, *pin)
+	if err != nil {
+		return nil, err
+	}
+
+	*pin, err = r.PinRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.ToGraphQLPin(pin), nil
 }
 
 // AddPinToBoard is the resolver for the addPinToBoard field.

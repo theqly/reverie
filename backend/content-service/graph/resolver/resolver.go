@@ -1,12 +1,12 @@
 package resolver
 
-import "content-service/internal/service"
+import "content-service/internal/repository"
 
 // This file will not be regenerated automatically.
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	BoardService *service.BoardService
-	PinService   *service.PinService
+	BoardRepo *repository.BoardRepository
+	PinRepo   *repository.PinRepository
 }
