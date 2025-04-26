@@ -11,6 +11,7 @@ import (
 	"content-service/pkg/middleware"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +30,11 @@ func main() {
 		BoardRepo: boardRepo,
 		PinRepo:   pinRepo,
 	}
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
+	// srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
+
+	srv := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
+
+	srv.Use(extension.Introspection{})
 
 	router := gin.Default()
 

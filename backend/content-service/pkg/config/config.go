@@ -11,6 +11,7 @@ type Config struct {
 	DBPassword    string
 	DBName        string
 	DBHost        string
+	DBPort        string
 }
 
 var CFG *Config
@@ -20,10 +21,11 @@ func LoadConfig() error {
 	dbpassword := os.Getenv("POSTGRES_PASSWORD")
 	dbname := os.Getenv("POSTGRES_DB")
 	dbhost := os.Getenv("POSTGRES_HOST")
+	dbport := os.Getenv("DB_PORT")
 
 	port := os.Getenv("PORT")
 
-	if port == "" || dbuser == "" || dbpassword == "" || dbname == "" || dbhost == "" {
+	if dbport == "" || port == "" || dbuser == "" || dbpassword == "" || dbname == "" || dbhost == "" {
 		log.Fatal("environment variables not set")
 	}
 
@@ -33,6 +35,7 @@ func LoadConfig() error {
 		DBPassword:    dbpassword,
 		DBName:        dbname,
 		DBHost:        dbhost,
+		DBPort:        dbport,
 	}
 
 	return nil
