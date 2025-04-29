@@ -14,9 +14,20 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
+func initLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	zap.ReplaceGlobals(logger)
+}
+
 func main() {
+	initLogger()
+
 	if err := config.LoadConfig(); err != nil {
 		log.Fatalf("config loading error: %v", err)
 	}
