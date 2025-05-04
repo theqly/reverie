@@ -9,6 +9,7 @@ import (
 	"profile-service/internal/graph/generated"
 	"profile-service/pkg/config"
 	"profile-service/pkg/db"
+	"profile-service/pkg/middleware"
 )
 
 func main() {
@@ -22,16 +23,18 @@ func main() {
 		log.Fatal("error loading config: %w", err)
 	}
 
-	r := gin.Default()
-
 	srv := handler.New(
 		generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db.DB}}),
 	)
 
+	r := gin.Default()
+
+	r.Use(middleware.AuthMiddleware())
+
 	r.POST("/query", gin.WrapH(srv))
 	r.GET("/", gin.WrapH(playground.Handler("GraphQL", "/query")))
 
-	err = r.Run(":8080")
+	err = r.Run(config.CFG.ServerAddress)
 	if err != nil {
 		log.Fatal("error running gin server: %w", err)
 	}

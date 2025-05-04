@@ -2,25 +2,61 @@ package middleware
 
 import (
 	"context"
-	"github.com/golang-jwt/jwt/v5"
+	"errors"
+	"github.com/MicahParks/keyfunc"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"net/http"
 	"strings"
 )
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenStr := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-			return []byte("bubu"), nil
-		})
+var jwks *keyfunc.JWKS
 
-		if err != nil || !token.Valid {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+func InitJWKS(jwksURL string) error {
+	var err error
+	jwks, err = keyfunc.Get(jwksURL, keyfunc.Options{})
+	return err
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid Authorization header"})
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
-		ctx := context.WithValue(r.Context(), "userID", claims["sub"])
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		token, err := jwt.Parse(tokenString, jwks.Keyfunc)
+		if err != nil || !token.Valid {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			return
+		}
+
+		userID, ok := claims["sub"].(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "sub claim not found"})
+			return
+		}
+
+		c.Set("userID", userID)
+
+		c.Next()
+	}
+}
+
+func GetUserID(ctx context.Context) (string, error) {
+	val := ctx.Value("userID")
+	id, ok := val.(string)
+	if !ok {
+		return "", errors.New("no user id in context")
+	}
+	return id, nil
 }
