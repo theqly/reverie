@@ -1,42 +1,41 @@
 package main
 
 import (
-	"log"
-
-	"profile-service/pkg/config"
-	"profile-service/pkg/database"
-
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
+	"log"
+	"profile-service/internal/graph"
+	"profile-service/internal/graph/generated"
+	"profile-service/pkg/config"
+	"profile-service/pkg/db"
+	"profile-service/pkg/middleware"
 )
 
 func main() {
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("config loading error: %v", err)
+	err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("error loading config: %w", err)
 	}
 
-	database.Connect()
-
-	router := gin.Default()
-
-	router.Use(corsMiddleware())
-
-	if err := router.Run(config.CFG.ServerAddress); err != nil {
-		log.Fatalf("server start error: %v", err)
+	err = db.Connect()
+	if err != nil {
+		log.Fatal("error loading config: %w", err)
 	}
-}
 
-func corsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "X-User-Role, X-User-ID")
+	srv := handler.New(
+		generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db.DB}}),
+	)
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
+	r := gin.Default()
 
-		c.Next()
+	r.Use(middleware.AuthMiddleware())
+
+	r.POST("/query", gin.WrapH(srv))
+	r.GET("/", gin.WrapH(playground.Handler("GraphQL", "/query")))
+
+	err = r.Run(config.CFG.ServerAddress)
+	if err != nil {
+		log.Fatal("error running gin server: %w", err)
 	}
 }

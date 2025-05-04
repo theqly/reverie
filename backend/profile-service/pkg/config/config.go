@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"errors"
 	"os"
 )
 
@@ -24,7 +24,7 @@ func LoadConfig() error {
 	port := os.Getenv("PORT")
 
 	if port == "" || dbuser == "" || dbpassword == "" || dbname == "" || dbhost == "" {
-		log.Fatal("environment variables not set")
+		return errors.New("environment variables not set")
 	}
 
 	CFG = &Config{
