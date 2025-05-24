@@ -1,0 +1,21 @@
+supergraph:
+  introspection: true
+  listen: 0.0.0.0:${ROUTER_PORT:-4000}
+  path: /graphiql
+sandbox:
+  enabled: false
+include_subgraph_errors:
+  all: true
+
+cors:
+  allow_any_origin: false
+  allow_headers:
+    - "x-requested-with"
+    - "content-type"
+    - "authorization"
+  expose_headers:
+    - "authorization"
+  methods:
+    - "GET"
+    - "POST"
+    - "OPTIONS"
