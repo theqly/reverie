@@ -174,12 +174,50 @@ services:
       retries: 3
       start_period: 30s
       timeout: 10s
+  geo-api:
+    build:
+      context: ../backend/geo-api
+      dockerfile: Dockerfile
+    container_name: geo-api
+    env_file:
+      - ../backend/geo-api/.env
+    working_dir: /app
+    ports:
+      - "15000:8000"
+
+  rover:
+    build:
+      context: ./apollo
+      dockerfile: Dockerfile
+    container_name: rover-cli
+    volumes:
+      - ./apollo:/etc/apollo/router:ro
+      - rover_data:/etc/apollo/rover
+    working_dir: /app
+    command: supergraph compose --config /etc/apollo/routersupergraph-config.yaml --output /etc/apollo/rover/supergraph-schema.graphql
+    networks:
+      - app-network
+
+  router:
+    image: ghcr.io/apollographql/router:v2.2.1
+    container_name: apollo-router
+    ports:
+      - "14000:4000"
+    volumes:
+      - rover_data:/etc/apollo/rover
+      - ./apollo/router.yaml:/ect/config/router.yaml:ro
+    command: --supergraph /etc/apollo/rover/supergraph-schema.graphql --config /ect/config/router.yaml
+    depends_on:
+      - rover
+    networks:
+      - app-network
 
 volumes:
   content_data:
   feed_data:
   profile_data:
   keycloak_postgres_db_data:
+  rover_data:
 
 networks:
   app-network:
