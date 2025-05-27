@@ -4,15 +4,17 @@ services:
     container_name: content_db
     ports:
       - "5435:5432"
+    env_file:
+      - ../database/content-service/.env
     volumes:
       - content_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d content"]
+      test: ["CMD-SHELL", "pg_isready -U user -d content-db"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 15
       start_period: 5s
 
   content-migrator:
@@ -28,7 +30,7 @@ services:
       [
         "migrate",
         "-path=/app/migrations",
-        "-database=postgres://user:pass@content-db:5432/content?sslmode=disable",
+        "-database=postgres://user:pass@content-db:5432/content-db?sslmode=disable",
         "up"
       ]
 
@@ -37,15 +39,17 @@ services:
     container_name: feed_db
     ports:
       - "5436:5432"
+    env_file:
+      - ../database/feed-service/.env
     volumes:
       - feed_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d feed" ]
+      test: [ "CMD-SHELL", "pg_isready -U user -d feed-db" ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 15
       start_period: 5s
 
   feed-migrator:
@@ -61,7 +65,7 @@ services:
       [
         "migrate",
         "-path=/app/migrations",
-        "-database=postgres://user:pass@feed-db:5432/feed?sslmode=disable",
+        "-database=postgres://user:pass@feed-db:5432/feed-db?sslmode=disable",
         "up"
       ]
   
@@ -70,15 +74,17 @@ services:
     container_name: profile_db
     ports:
       - "5437:5432"
+    env_file:
+      - ../database/profile-service/.env
     volumes:
       - profile_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d profile"]
+      test: ["CMD-SHELL", "pg_isready -U user -d profile-db"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 15
       start_period: 5s
 
   profile-migrator:
@@ -94,7 +100,7 @@ services:
       [
         "migrate",
         "-path=/app/migrations",
-        "-database=postgres://user:pass@profile-db:5432/profile?sslmode=disable",
+        "-database=postgres://user:pass@profile-db:5432/profile-db?sslmode=disable",
         "up"
       ]
 
@@ -104,7 +110,8 @@ services:
       dockerfile: Dockerfile
     container_name: profile-service
     restart: unless-stopped
-
+    env_file:
+      - ../backend/profile-service/.env
     depends_on:
       profile-db:
         condition: service_healthy
@@ -179,8 +186,9 @@ services:
       context: ../backend/geo-api
       dockerfile: Dockerfile
     container_name: geo-api
-    env_file:
-      - ../backend/geo-api/.env
+    environment:
+      GEO_API_URL: ${GEO_API_URL:-https://geocode-maps.yandex.ru/v1}
+      GEO_API_KEY: ${GEO_API_KEY:-}
     working_dir: /app
     ports:
       - "15000:8000"

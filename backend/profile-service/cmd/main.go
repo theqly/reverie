@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
 	"profile-service/internal/graph"
 	"profile-service/internal/graph/generated"
@@ -23,13 +28,13 @@ func main() {
 		log.Fatal("error loading config: %w", err)
 	}
 
-	srv := handler.New(
-		generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db.DB}}),
-	)
+	schema := generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db.DB}})
+
+	srv := setupServer(schema)
 
 	r := gin.Default()
 
-	r.Use(middleware.AuthMiddleware())
+	//r.Use(middleware.AuthMiddleware())
 	r.Use(middleware.CorsMiddleware())
 
 	r.POST("/query", gin.WrapH(srv))
@@ -39,4 +44,21 @@ func main() {
 	if err != nil {
 		log.Fatal("error running gin server: %w", err)
 	}
+}
+
+func setupServer(schema graphql.ExecutableSchema) *handler.Server {
+	srv := handler.New(schema)
+
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport.MultipartForm{})
+
+	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
+		return graphql.DefaultErrorPresenter(ctx, err)
+	})
+
+	srv.Use(extension.Introspection{})
+
+	return srv
 }

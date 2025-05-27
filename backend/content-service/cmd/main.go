@@ -1,6 +1,10 @@
 package main
 
 import (
+	"context"
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
 
 	"content-service/graph/generated"
@@ -43,9 +47,9 @@ func main() {
 	}
 	// srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 
-	srv := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
+	schema := generated.NewExecutableSchema(generated.Config{Resolvers: resolver})
 
-	srv.Use(extension.Introspection{})
+	srv := setupServer(schema)
 
 	router := gin.Default()
 
@@ -63,4 +67,21 @@ func main() {
 	if err := router.Run(config.CFG.ServerAddress); err != nil {
 		log.Fatalf("server start error: %v", err)
 	}
+}
+
+func setupServer(schema graphql.ExecutableSchema) *handler.Server {
+	srv := handler.New(schema)
+
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport.MultipartForm{})
+
+	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
+		return graphql.DefaultErrorPresenter(ctx, err)
+	})
+
+	srv.Use(extension.Introspection{})
+
+	return srv
 }
