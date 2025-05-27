@@ -2,6 +2,10 @@ services:
   content-db:
     image: postgres:15
     container_name: content_db
+    environment:
+      POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content}
     ports:
       - "5435:5432"
     volumes:
@@ -68,6 +72,10 @@ services:
   profile-db:
     image: postgres:15
     container_name: profile_db
+    environment:
+      POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile}
     ports:
       - "5437:5432"
     volumes:
@@ -104,7 +112,12 @@ services:
       dockerfile: Dockerfile
     container_name: profile-service
     restart: unless-stopped
-
+    environment:
+      POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile}
+      POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-profile-db}
+      PORT: ${CONTENT_PORT:-8080}
     depends_on:
       profile-db:
         condition: service_healthy
@@ -119,8 +132,13 @@ services:
       dockerfile: Dockerfile
     container_name: content-service
     restart: unless-stopped
-    env_file:
-      - ../backend/content-service/.env
+    environment:
+      POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content_db}
+      POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-content-db}
+      DB_PORT: ${CONTENT_DB_PORT:-5432}
+      PORT: ${CONTENT_PORT:-8080}
     depends_on:
       content-db:
         condition: service_healthy
@@ -184,6 +202,13 @@ services:
     working_dir: /app
     ports:
       - "15000:8000"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --spider --quiet http://localhost:8000/actuator/health || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
   rover:
     build:
@@ -194,7 +219,10 @@ services:
       - ./apollo:/etc/apollo/router:ro
       - rover_data:/etc/apollo/rover
     working_dir: /app
-    command: supergraph compose --config /etc/apollo/routersupergraph-config.yaml --output /etc/apollo/rover/supergraph-schema.graphql
+    command: supergraph compose --config /etc/apollo/router/supergraph-config.yaml --output /etc/apollo/rover/supergraph-schema.graphql --log=debug
+    depends_on:
+      geo-api:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -208,7 +236,7 @@ services:
       - ./apollo/router.yaml:/ect/config/router.yaml:ro
     command: --supergraph /etc/apollo/rover/supergraph-schema.graphql --config /ect/config/router.yaml
     depends_on:
-      - rover
+      - geo-api
     networks:
       - app-network
 

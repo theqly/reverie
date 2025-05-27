@@ -1,6 +1,6 @@
 federation_version: =2.7.0
 subgraphs:
   geoapi:
-    routing_url: http://geo-api/graphql
+    routing_url: http://geo-api:8000/graphql
     schema:
-      file: ./geoapi/geo-api.graphqls
+      subgraph_url: http://geo-api:8000/graphql

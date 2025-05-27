@@ -36,6 +36,7 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter")
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
 
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
