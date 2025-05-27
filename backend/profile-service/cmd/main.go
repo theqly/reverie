@@ -30,6 +30,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(middleware.AuthMiddleware())
+	r.Use(middleware.CorsMiddleware())
 
 	r.POST("/query", gin.WrapH(srv))
 	r.GET("/", gin.WrapH(playground.Handler("GraphQL", "/query")))
