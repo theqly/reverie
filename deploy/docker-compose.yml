@@ -197,8 +197,9 @@ services:
       context: ../backend/geo-api
       dockerfile: Dockerfile
     container_name: geo-api
-    env_file:
-      - ../backend/geo-api/.env
+    environment:
+      GEO_API_URL: ${GEO_API_URL:-https://geocode-maps.yandex.ru/v1}
+      GEO_API_KEY: ${GEO_API_KEY:-}
     working_dir: /app
     ports:
       - "15000:8000"
