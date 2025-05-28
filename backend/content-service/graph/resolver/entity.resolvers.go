@@ -8,7 +8,6 @@ import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 )

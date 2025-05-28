@@ -5,11 +5,9 @@ services:
     environment:
       POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content}
+      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content-db}
     ports:
       - "5435:5432"
-    env_file:
-      - ../database/content-service/.env
     volumes:
       - content_data:/var/lib/postgresql/data
     networks:
@@ -41,10 +39,12 @@ services:
   feed-db:
     image: postgres:15
     container_name: feed_db
+    environment:
+      POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-feed-db}
     ports:
       - "5436:5432"
-    env_file:
-      - ../database/feed-service/.env
     volumes:
       - feed_data:/var/lib/postgresql/data
     networks:
@@ -79,11 +79,9 @@ services:
     environment:
       POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile}
+      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile-db}
     ports:
       - "5437:5432"
-    env_file:
-      - ../database/profile-service/.env
     volumes:
       - profile_data:/var/lib/postgresql/data
     networks:
@@ -121,7 +119,7 @@ services:
     environment:
       POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile}
+      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile-db}
       POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-profile-db}
       PORT: ${CONTENT_PORT:-8080}
     depends_on:
@@ -141,7 +139,7 @@ services:
     environment:
       POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content_db}
+      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content-db}
       POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-content-db}
       DB_PORT: ${CONTENT_DB_PORT:-5432}
       PORT: ${CONTENT_PORT:-8080}
@@ -162,7 +160,7 @@ services:
     environment:
       POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-feed}
+      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-feed-db}
       POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-feed-db}
       PORT: ${CONTENT_PORT:-8080}
     depends_on:
