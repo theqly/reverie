@@ -1,4 +1,4 @@
-type Pin {
+type Pin @key(fields: "id") {
   id: UUID!
   name: String!
   latitude: Float!
