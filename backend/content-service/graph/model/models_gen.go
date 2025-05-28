@@ -77,6 +77,8 @@ type Pin struct {
 	Comments    []*Comment  `json:"comments,omitempty"`
 }
 
+func (Pin) IsEntity() {}
+
 type PinImage struct {
 	ID          uuid.UUID `json:"id"`
 	OrderNumber int       `json:"orderNumber"`

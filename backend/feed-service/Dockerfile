@@ -1,20 +1,18 @@
-FROM gradle:8.13-jdk23 AS build
+FROM golang:1.24.1-alpine AS builder
 WORKDIR /app
 
-# Копируем Gradle и зависимости заранее (для кэширования)
-COPY build.gradle.kts settings.gradle.kts ./
-COPY gradle gradle
-RUN gradle --no-daemon dependencies || exit 1
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . .
 
-RUN gradle bootJar
+RUN CGO_ENABLED=0 GOOS=linux go build -o feed-service ./cmd/
 
-FROM eclipse-temurin:23-jre
-WORKDIR /app
-
-COPY --from=build /app/build/libs/*.jar app.jar
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/feed-service .
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["./feed-service"]
