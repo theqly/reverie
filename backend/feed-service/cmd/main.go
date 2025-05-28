@@ -2,67 +2,47 @@ package main
 
 import (
 	"context"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
-
-	"feed-service/graph/generated"
 	"feed-service/graph/resolver"
+	"feed-service/graph/generated"
 	"feed-service/pkg/config"
+	"feed-service/pkg/db"
 	"feed-service/pkg/middleware"
-
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
+	"github.com/vektah/gqlparser/v2/gqlerror"
+	"log"
 )
 
-func initLogger() {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	zap.ReplaceGlobals(logger)
-}
-
 func main() {
-	initLogger()
-
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("config loading error: %v", err)
+	err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("error loading config: %w", err)
 	}
 
-	database.Connect()
-
-	boardRepo := repository.NewBoardRepository(database.DB)
-	pinRepo := repository.NewPinRepository(database.DB)
-
-	resolver := &resolver.Resolver{
-		BoardRepo: boardRepo,
-		PinRepo:   pinRepo,
+	err = db.Connect()
+	if err != nil {
+		log.Fatal("error loading config: %w", err)
 	}
 
-	schema := generated.NewExecutableSchema(generated.Config{Resolvers: resolver})
+	schema := generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{DB: db.DB}})
 
 	srv := setupServer(schema)
 
-	router := gin.Default()
+	r := gin.Default()
 
-	router.Use(middleware.CorsMiddleware())
+	//r.Use(middleware.AuthMiddleware())
+	r.Use(middleware.CorsMiddleware())
 
-	// GraphQL endpoint
-	router.POST("/query", func(c *gin.Context) {
-		srv.ServeHTTP(c.Writer, c.Request)
-	})
+	r.POST("/query", gin.WrapH(srv))
+	r.GET("/", gin.WrapH(playground.Handler("GraphQL", "/query")))
 
-	router.GET("/", func(c *gin.Context) {
-		playground.Handler("GraphQL playground", "/query").ServeHTTP(c.Writer, c.Request)
-	})
-
-	if err := router.Run(config.CFG.ServerAddress); err != nil {
-		log.Fatalf("server start error: %v", err)
+	err = r.Run(config.CFG.ServerAddress)
+	if err != nil {
+		log.Fatal("error running gin server: %w", err)
 	}
 }
 
