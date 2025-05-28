@@ -13,3 +13,7 @@ resolver:
   layout: follow-schema
   dir: internal/graph
   package: graph
+
+federation:
+  filename: internal/graph/generated/federation.go
+  package: generated

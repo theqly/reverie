@@ -7,12 +7,13 @@ package graph
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"profile-service/internal/db/models"
 	"profile-service/internal/graph/generated"
 	"profile-service/internal/graph/mapping"
 	"profile-service/internal/graph/model"
 	"profile-service/pkg/middleware"
+
+	"github.com/google/uuid"
 )
 
 // CreateUser is the resolver for the createUser field.
