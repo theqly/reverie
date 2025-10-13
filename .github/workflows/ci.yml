@@ -2,8 +2,9 @@ name: ci
 
 on:
   push:
-    branches: [ "dev", "main", "ci_setup" ] # ветки в которых настроен ci
+    branches: [ "dev", "main", "ci_setup" ] # ветки в которых настроен ci при пуше
   pull_request:
+     branches: [ "dev", "main", "ci_setup" ] # ветки в которых настроен ci при пулл реквестах
 
 jobs:
   build:
@@ -22,9 +23,7 @@ jobs:
           docker build -t feed-service ./backend/feed-service
           docker build -t profile-service ./backend/profile-service
 
-      - name: Build geo-api
-        run: |
-          docker build -t geo-api ./backend/geo-api
+      # TODO: добавить гео-апи сервис, сервис рекомендаций, когда будут готовы
 
       # TODO: добавить фронтенд когда будет
 

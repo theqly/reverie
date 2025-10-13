@@ -16,5 +16,7 @@ Workflow запускается на **GitHub Actions** при следующи�
 ```yaml
 on:
   push:
-    branches: [ "dev", "main", "ci_setup" ] # ветки в которых настроен ci
+    branches: [ "dev", "main", "ci_setup" ] # ветки в которых настроен ci при пуше
   pull_request:
+     branches: [ "dev", "main", "ci_setup" ] # ветки в которых настроен ci при пулл реквестах
+```
