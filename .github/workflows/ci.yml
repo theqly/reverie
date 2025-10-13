@@ -30,7 +30,7 @@ jobs:
 
       - name: Run docker compose
         run: |
-          docker compose -f docker/docker-compose.yml config
+          docker compose -f deploy/docker-compose.yml config
           echo " Building up is ok"
       
       - name: Down docker compose
