@@ -1,0 +1,10 @@
+apiVersion: v2
+name: main
+description: the main chart to unite others into one
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: profile-service
+    version: 0.1.0
+    repository: "file://../services-charts/profile-service"
