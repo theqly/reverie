@@ -1,6 +1,15 @@
+DROP TABLE IF EXISTS bookmarks_boards
+DROP TABLE IF EXISTS bookmarks_pins
+DROP TABLE IF EXISTS reaction_boards
+DROP TABLE IF EXISTS reaction_pins
+DROP TABLE IF EXISTS reaction
+DROP TABLE IF EXISTS complaints
+DROP TABLE IF EXISTS complaint_statuses
+DROP TABLE IF EXISTS complaint_types;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS pin_images;
 DROP TABLE IF EXISTS board_pins;
 DROP TABLE IF EXISTS pins;
+DROP TABLE IF EXISTS places;
 DROP TABLE IF EXISTS boards;
 DROP TABLE IF EXISTS access_levels;
