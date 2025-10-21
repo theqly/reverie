@@ -92,7 +92,7 @@ CREATE TABLE complaints (
 );
 
 CREATE TABLE reaction (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     type VARCHAR(255) NOT NULL UNIQUE,
     description TEXT
 );
