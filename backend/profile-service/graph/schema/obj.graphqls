@@ -1,0 +1,15 @@
+type User {
+  id: ID!
+  nickname: String!
+  email: String!
+  profilePicture: String
+  description: String
+  userRating: Float!
+  followers: [User!]!
+  following: [User!]!
+}
+
+type Group {
+  id: ID!
+  members: [User!]!
+}
