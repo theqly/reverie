@@ -11,39 +11,47 @@ import (
 	"profile-service/graph/model"
 	"profile-service/internal/mapper"
 	"profile-service/internal/models"
+
+	"github.com/google/uuid"
 )
 
 // UserByID is the resolver for the userById field.
 func (r *queryResolver) UserByID(ctx context.Context, id string) (*model.User, error) {
 	var user models.User
-	if err := r.DB.First(&user, "id = ?", id).Error; err != nil {
+
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("unautorized (incorrect id): %w", err)
+	}
+
+	if user, err = r.UserRepo.GetUserByID(ctx, userID); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
 	//TODO another resolvers
 
 	var followerLinks []models.Follower
-	if err := r.DB.Where("user_id = ?", id).Find(&followerLinks).Error; err != nil {
+	if followerLinks, err = r.UserRepo.GetFollowers(ctx, userID); err != nil {
 		return nil, fmt.Errorf("failed to load followers: %w", err)
 	}
 
 	var followers []*model.User
 	for _, link := range followerLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", link.FollowerID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.FollowerID); err == nil {
 			followers = append(followers, mapper.MapUserToGraphQL(&u))
 		}
 	}
 
 	var followingLinks []models.Follower
-	if err := r.DB.Where("follower_id = ?", id).Find(&followingLinks).Error; err != nil {
+	if followingLinks, err = r.UserRepo.GetFollowings(ctx, userID); err != nil {
 		return nil, fmt.Errorf("failed to load following: %w", err)
 	}
 
 	var following []*model.User
 	for _, link := range followingLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", link.UserID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.UserID); err == nil {
 			following = append(following, mapper.MapUserToGraphQL(&u))
 		}
 	}
@@ -58,93 +66,105 @@ func (r *queryResolver) UserByID(ctx context.Context, id string) (*model.User, e
 // UserByNickname is the resolver for the userByNickname field.
 func (r *queryResolver) UserByNickname(ctx context.Context, nickname string) (*model.User, error) {
 	var user models.User
-	if err := r.DB.First(&user, "nickname = ?", nickname).Error; err != nil {
+	var err error
+	if user, err = r.UserRepo.GetUserByNickname(ctx, nickname); err != nil {
 		return nil, fmt.Errorf("user not found with nickname %s: %w", nickname, err)
 	}
 
 	//TODO another resolvers
 
 	var followerLinks []models.Follower
-	if err := r.DB.Where("user_id = ?", user.ID).Find(&followerLinks).Error; err != nil {
+	if followerLinks, err = r.UserRepo.GetFollowers(ctx, user.ID); err != nil {
 		return nil, fmt.Errorf("failed to load followers: %w", err)
 	}
+
 	var followers []*model.User
-	for _, f := range followerLinks {
+	for _, link := range followerLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", f.FollowerID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.FollowerID); err == nil {
 			followers = append(followers, mapper.MapUserToGraphQL(&u))
 		}
 	}
 
 	var followingLinks []models.Follower
-	if err := r.DB.Where("follower_id = ?", user.ID).Find(&followingLinks).Error; err != nil {
+	if followingLinks, err = r.UserRepo.GetFollowings(ctx, user.ID); err != nil {
 		return nil, fmt.Errorf("failed to load following: %w", err)
 	}
+
 	var following []*model.User
-	for _, f := range followingLinks {
+	for _, link := range followingLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", f.UserID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.UserID); err == nil {
 			following = append(following, mapper.MapUserToGraphQL(&u))
 		}
 	}
 
-	result := mapper.MapUserToGraphQL(&user)
-	result.Followers = followers
-	result.Following = following
+	res := mapper.MapUserToGraphQL(&user)
+	res.Followers = followers
+	res.Following = following
 
-	return result, nil
+	return res, nil
 }
 
 // UserByEmail is the resolver for the userByEmail field.
 func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user models.User
-	if err := r.DB.First(&user, "email = ?", email).Error; err != nil {
+	var err error
+	if user, err = r.UserRepo.GetUserByEmail(ctx, email); err != nil {
 		return nil, fmt.Errorf("user not found with email %s: %w", email, err)
 	}
 
 	//TODO another resolvers
 
 	var followerLinks []models.Follower
-	if err := r.DB.Where("user_id = ?", user.ID).Find(&followerLinks).Error; err != nil {
+	if followerLinks, err = r.UserRepo.GetFollowers(ctx, user.ID); err != nil {
 		return nil, fmt.Errorf("failed to load followers: %w", err)
 	}
+
 	var followers []*model.User
-	for _, f := range followerLinks {
+	for _, link := range followerLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", f.FollowerID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.FollowerID); err == nil {
 			followers = append(followers, mapper.MapUserToGraphQL(&u))
 		}
 	}
 
 	var followingLinks []models.Follower
-	if err := r.DB.Where("follower_id = ?", user.ID).Find(&followingLinks).Error; err != nil {
+	if followingLinks, err = r.UserRepo.GetFollowings(ctx, user.ID); err != nil {
 		return nil, fmt.Errorf("failed to load following: %w", err)
 	}
+
 	var following []*model.User
-	for _, f := range followingLinks {
+	for _, link := range followingLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", f.UserID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.UserID); err == nil {
 			following = append(following, mapper.MapUserToGraphQL(&u))
 		}
 	}
 
-	result := mapper.MapUserToGraphQL(&user)
-	result.Followers = followers
-	result.Following = following
+	res := mapper.MapUserToGraphQL(&user)
+	res.Followers = followers
+	res.Following = following
 
-	return result, nil
+	return res, nil
 }
 
 // FollowersOf is the resolver for the followersOf field.
 func (r *queryResolver) FollowersOf(ctx context.Context, userID string) ([]*model.User, error) {
 	var followerLinks []models.Follower
-	if err := r.DB.Where("user_id = ?", userID).Find(&followerLinks).Error; err != nil {
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
+	if followerLinks, err = r.UserRepo.GetFollowers(ctx, userIDuuid); err != nil {
 		return nil, fmt.Errorf("failed to load followers: %w", err)
 	}
+
 	var followers []*model.User
-	for _, f := range followerLinks {
+	for _, link := range followerLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", f.FollowerID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.FollowerID); err == nil {
 			followers = append(followers, mapper.MapUserToGraphQL(&u))
 		}
 	}
@@ -154,14 +174,20 @@ func (r *queryResolver) FollowersOf(ctx context.Context, userID string) ([]*mode
 
 // FollowingOf is the resolver for the followingOf field.
 func (r *queryResolver) FollowingOf(ctx context.Context, userID string) ([]*model.User, error) {
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
 	var followingLinks []models.Follower
-	if err := r.DB.Where("follower_id = ?", userID).Find(&followingLinks).Error; err != nil {
+	if followingLinks, err = r.UserRepo.GetFollowings(ctx, userIDuuid); err != nil {
 		return nil, fmt.Errorf("failed to load following: %w", err)
 	}
+
 	var following []*model.User
-	for _, f := range followingLinks {
+	for _, link := range followingLinks {
 		var u models.User
-		if err := r.DB.First(&u, "id = ?", f.UserID).Error; err == nil {
+		if u, err = r.UserRepo.GetUserByID(ctx, link.UserID); err == nil {
 			following = append(following, mapper.MapUserToGraphQL(&u))
 		}
 	}
@@ -171,20 +197,24 @@ func (r *queryResolver) FollowingOf(ctx context.Context, userID string) ([]*mode
 
 // GroupByID is the resolver for the groupById field.
 func (r *queryResolver) GroupByID(ctx context.Context, id string) ([]*model.User, error) {
-	var group models.Group
-	if err := r.DB.First(&group, "id = ?", id).Error; err != nil {
+	groupID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
+	if _, err = r.UserRepo.GetGroupByID(ctx, groupID); err != nil {
 		return nil, fmt.Errorf("group not found with id %s: %w", id, err)
 	}
 
 	var members []models.Member
-	if err := r.DB.Where("group_id = ?", id).Find(&members).Error; err != nil {
+	if members, err = r.UserRepo.GetMembers(ctx, groupID); err != nil {
 		return nil, fmt.Errorf("failed to load members for group %s: %w", id, err)
 	}
 
 	var users []*model.User
 	for _, member := range members {
 		var user models.User
-		if err := r.DB.First(&user, "id = ?", member.UserID).Error; err != nil {
+		if user, err = r.UserRepo.GetUserByID(ctx, member.UserID); err != nil {
 			return nil, fmt.Errorf("failed to load user for member %v: %w", member.UserID, err)
 		}
 		users = append(users, mapper.MapUserToGraphQL(&user))
@@ -195,8 +225,16 @@ func (r *queryResolver) GroupByID(ctx context.Context, id string) ([]*model.User
 
 // IsUserInGroup is the resolver for the isUserInGroup field.
 func (r *queryResolver) IsUserInGroup(ctx context.Context, userID string, groupID string) (bool, error) {
-	var member models.Member
-	if err := r.DB.First(&member, "user_id = ? AND group_id = ?", userID, groupID).Error; err != nil {
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+	groupIDuuid, err := uuid.Parse(groupID)
+	if err != nil {
+		return false, fmt.Errorf("group not found (incorrect id): %w", err)
+	}
+
+	if _, err := r.UserRepo.GetMember(ctx, userIDuuid, groupIDuuid); err != nil {
 		return false, fmt.Errorf("failed to check if user is in group: %w", err)
 	}
 
@@ -205,15 +243,20 @@ func (r *queryResolver) IsUserInGroup(ctx context.Context, userID string, groupI
 
 // GroupsOfUser is the resolver for the groupsOfUser field.
 func (r *queryResolver) GroupsOfUser(ctx context.Context, userID string) ([]*model.Group, error) {
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
 	var members []models.Member
-	if err := r.DB.Where("user_id = ?", userID).Find(&members).Error; err != nil {
+	if members, err = r.UserRepo.GetGroups(ctx, userIDuuid); err != nil {
 		return nil, fmt.Errorf("failed to find groups for user: %w", err)
 	}
 
 	var groups []*model.Group
 	for _, member := range members {
 		var group models.Group
-		if err := r.DB.First(&group, "id = ?", member.GroupID).Error; err != nil {
+		if group, err = r.UserRepo.GetGroupByID(ctx, member.GroupID); err != nil {
 			return nil, fmt.Errorf("failed to find group: %w", err)
 		}
 

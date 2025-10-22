@@ -18,18 +18,22 @@ import (
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
-	userId, err := middleware.GetUserID(ctx)
+	userIDStr, err := middleware.GetUserID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unautorized: %w", err)
 	}
 
-	var existing models.User
-	if err := r.DB.First(&existing, "id = ?", userId).Error; err == nil {
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, fmt.Errorf("unautorized (incorrect id): %w", err)
+	}
+
+	if _, err = r.UserRepo.GetUserByID(ctx, userID); err == nil {
 		return nil, fmt.Errorf("user already exists")
 	}
 
 	user := &models.User{
-		ID:             uuid.MustParse(userId),
+		ID:             userID,
 		Nickname:       input.Nickname,
 		Email:          input.Email,
 		ProfilePicture: input.ProfilePicture,
@@ -37,7 +41,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		UserRating:     0,
 	}
 
-	if err := r.DB.Create(user).Error; err != nil {
+	if err = r.UserRepo.CreateUser(ctx, *user); err != nil {
 		return nil, err
 	}
 
@@ -47,7 +51,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
 	var user models.User
-	if err := r.DB.First(&user, "id = ?", id).Error; err != nil {
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
+	if user, err = r.UserRepo.GetUserByID(ctx, userID); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
@@ -64,7 +73,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 		user.Description = input.Description
 	}
 
-	if err := r.DB.Save(&user).Error; err != nil {
+	if err := r.UserRepo.SaveUser(ctx, user).Error; err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
@@ -73,16 +82,25 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, error) {
-	var user models.User
-	if err := r.DB.First(&user, "id = ?", id).Error; err != nil {
-		return false, fmt.Errorf("user not found: %w", err)
-	}
+	// Жесткого удаления скорее всего не будет, пока нет требований останется заглушкой
+	return false, nil
 
-	if err := r.DB.Delete(&user).Error; err != nil {
-		return false, fmt.Errorf("failed to delete user: %w", err)
-	}
+	// userId, err := uuid.Parse(id)
+	// if err != nil {
+	// 	return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	// }
 
-	return true, nil
+	// if _, err = r.UserRepo.GetUserByID(ctx, userId); err != nil {
+	// 	return false, fmt.Errorf("user not found: %w", err)
+	// }
+
+	// var user models.User
+
+	// if err := r.DB.Delete(&user).Error; err != nil {
+	// 	return false, fmt.Errorf("failed to delete user: %w", err)
+	// }
+
+	// return true, nil
 }
 
 // FollowUser is the resolver for the followUser field.
@@ -91,8 +109,16 @@ func (r *mutationResolver) FollowUser(ctx context.Context, userID string, follow
 		return false, fmt.Errorf("cannot follow yourself")
 	}
 
-	var existing models.Follower
-	if err := r.DB.First(&existing, "user_id = ? AND follower_id = ?", userID, followerID).Error; err == nil {
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+	followerIDuuid, err := uuid.Parse(followerID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
+	if _, err := r.UserRepo.GetFollow(ctx, userIDuuid, followerIDuuid); err == nil {
 		return false, fmt.Errorf("user %s already following %s", userID, followerID)
 	}
 
@@ -101,7 +127,7 @@ func (r *mutationResolver) FollowUser(ctx context.Context, userID string, follow
 		FollowerID: uuid.MustParse(followerID),
 	}
 
-	if err := r.DB.Create(follow).Error; err != nil {
+	if err := r.UserRepo.CreateFollow(ctx, *follow); err != nil {
 		return false, fmt.Errorf("failed to follow: %w ", err)
 	}
 
@@ -111,11 +137,21 @@ func (r *mutationResolver) FollowUser(ctx context.Context, userID string, follow
 // UnfollowUser is the resolver for the unfollowUser field.
 func (r *mutationResolver) UnfollowUser(ctx context.Context, userID string, followerID string) (bool, error) {
 	var follow models.Follower
-	if err := r.DB.First(&follow, "user_id = ? AND follower_id = ?", userID, followerID).Error; err != nil {
+
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+	followerIDuuid, err := uuid.Parse(followerID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
+	if follow, err = r.UserRepo.GetFollow(ctx, userIDuuid, followerIDuuid); err != nil {
 		return false, fmt.Errorf("user %s dont following %s", userID, followerID)
 	}
 
-	if err := r.DB.Delete(&follow).Error; err != nil {
+	if err := r.UserRepo.DeleteFollow(ctx, follow); err != nil {
 		return false, fmt.Errorf("failed to unfollow: %w", err)
 	}
 
@@ -126,7 +162,18 @@ func (r *mutationResolver) UnfollowUser(ctx context.Context, userID string, foll
 func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error) {
 	group := &models.Group{}
 
-	if err := r.DB.Create(group).Error; err != nil {
+	for _, userIDStr := range input.MemberIds {
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid user ID: %s", userIDStr)
+		}
+
+		if _, err := r.UserRepo.GetUserByID(ctx, userID); err != nil {
+			return nil, fmt.Errorf("user %s not found: %w", userID, err)
+		}
+	}
+
+	if err := r.UserRepo.CreateGroup(ctx, *group); err != nil {
 		return nil, fmt.Errorf("failed to create group: %w", err)
 	}
 
@@ -142,7 +189,7 @@ func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGr
 			GroupID: group.ID,
 		}
 
-		if err := r.DB.Create(&member).Error; err != nil {
+		if err := r.UserRepo.CreateMember(ctx, member); err != nil {
 			return nil, fmt.Errorf("failed to add user %s to group: %w", userIDStr, err)
 		}
 
@@ -150,7 +197,7 @@ func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGr
 	}
 
 	for i := range members {
-		if err := r.DB.First(&members[i].User, "id = ?", members[i].UserID).Error; err != nil {
+		if _, err := r.UserRepo.GetUserByID(ctx, members[i].UserID); err != nil {
 			return nil, fmt.Errorf("failed to load user %s: %w", members[i].UserID, err)
 		}
 	}
@@ -160,8 +207,16 @@ func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGr
 
 // AddUserToGroup is the resolver for the addUserToGroup field.
 func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID string, groupID string) (bool, error) {
-	var existing models.Member
-	if err := r.DB.First(&existing, "user_id = ? AND group_id = ?", userID, groupID).Error; err == nil {
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+	grouprIDuuid, err := uuid.Parse(groupID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
+	if _, err := r.UserRepo.GetMember(ctx, userIDuuid, grouprIDuuid); err == nil {
 		return false, fmt.Errorf("user already in the group")
 	}
 
@@ -170,7 +225,7 @@ func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID string, gr
 		GroupID: uuid.MustParse(groupID),
 	}
 
-	if err := r.DB.Create(member).Error; err != nil {
+	if err := r.UserRepo.CreateMember(ctx, *member); err != nil {
 		return false, fmt.Errorf("failed to add user to group: %w", err)
 	}
 
@@ -179,12 +234,22 @@ func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID string, gr
 
 // RemoveUserFromGroup is the resolver for the removeUserFromGroup field.
 func (r *mutationResolver) RemoveUserFromGroup(ctx context.Context, userID string, groupID string) (bool, error) {
-	var membership models.Member
-	if err := r.DB.First(&membership, "user_id = ? AND group_id = ?", userID, groupID).Error; err != nil {
+	var member models.Member
+
+	userIDuuid, err := uuid.Parse(userID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+	grouprIDuuid, err := uuid.Parse(groupID)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+
+	if member, err = r.UserRepo.GetMember(ctx, userIDuuid, grouprIDuuid); err != nil {
 		return false, fmt.Errorf("user %s not in group %s", userID, groupID)
 	}
 
-	if err := r.DB.Delete(&membership).Error; err != nil {
+	if err := r.UserRepo.RemoveUserFromGroup(ctx, member); err != nil {
 		return false, fmt.Errorf("failed to remove user from group: %w", err)
 	}
 
@@ -193,16 +258,19 @@ func (r *mutationResolver) RemoveUserFromGroup(ctx context.Context, userID strin
 
 // DeleteGroup is the resolver for the deleteGroup field.
 func (r *mutationResolver) DeleteGroup(ctx context.Context, id string) (bool, error) {
-	var group models.Group
-	if err := r.DB.First(&group, "id = ?", id).Error; err != nil {
-		return false, fmt.Errorf("group not found: %w", err)
-	}
+	// Жесткого удаления скорее всего не будет, пока нет требований останется заглушкой
+	return false, nil
 
-	if err := r.DB.Delete(&group).Error; err != nil {
-		return false, fmt.Errorf("failed to delete group: %w", err)
-	}
+	// var group models.Group
+	// if err := r.DB.First(&group, "id = ?", id).Error; err != nil {
+	// 	return false, fmt.Errorf("group not found: %w", err)
+	// }
 
-	return true, nil
+	// if err := r.DB.Delete(&group).Error; err != nil {
+	// 	return false, fmt.Errorf("failed to delete group: %w", err)
+	// }
+
+	// return true, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

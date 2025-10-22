@@ -5,6 +5,7 @@ import (
 	"log"
 	"profile-service/graph/generated"
 	"profile-service/graph/resolver"
+	"profile-service/internal/repository"
 	"profile-service/pkg/config"
 	"profile-service/pkg/database"
 	"profile-service/pkg/middleware"
@@ -29,7 +30,13 @@ func main() {
 		log.Fatal("error loading config: %w", err)
 	}
 
-	schema := generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{DB: database.DB}})
+	userRepo := repository.NewUserRepository(database.DB)
+
+	resolver := &resolver.Resolver{
+		UserRepo: userRepo,
+	}
+
+	schema := generated.NewExecutableSchema(generated.Config{Resolvers: resolver})
 
 	srv := setupServer(schema)
 
