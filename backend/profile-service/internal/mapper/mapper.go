@@ -1,8 +1,8 @@
-package mapping
+package mapper
 
 import (
-	"profile-service/internal/db/models"
-	"profile-service/internal/graph/model"
+	model "profile-service/graph/model"
+	"profile-service/internal/models"
 )
 
 func MapUserToGraphQL(u *models.User) *model.User {
