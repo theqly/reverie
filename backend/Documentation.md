@@ -410,17 +410,21 @@ CREATE TABLE join_group_requests (
 );
 
 CREATE TABLE settings_statuses (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     type VARCHAR(255) NOT NULL UNIQUE,
     description TEXT
 );
 
 CREATE TABLE settings (
     user_id UUID NOT NULL,
-    bookmarks_status_id UUID NOT NULL,
+    favorites_status_id UUID NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (bookmarks_status_id) REFERENCES settings_statuses(id) ON DELETE CASCADE
+    FOREIGN KEY (favorites_status_id) REFERENCES settings_statuses(id) ON DELETE CASCADE
 );
+
+INSERT INTO settings_statuses (type) VALUES
+    ('private'),
+    ('public');
 
 CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
 CREATE UNIQUE INDEX idx_users_email ON users(email);
@@ -431,6 +435,7 @@ CREATE INDEX idx_followers_follower_id ON followers(follower_id);
 
 CREATE INDEX idx_members_user_id ON members(user_id);
 CREATE INDEX idx_members_group_id ON members(group_id);
+
 ```
 #### Взаимодействие с другими микросервисами
 - связь с Keycloak будет (требует дополнительного изучения)
@@ -459,7 +464,6 @@ type Group {
 input CreateUserInput {
   nickname: String!
   email: String!
-  ==~~password: String!~~==
   profilePicture: String
   description: String
 }
@@ -467,7 +471,6 @@ input CreateUserInput {
 input UpdateUserInput {
   nickname: String
   email: String
-  ==~~password: String~~==
   profilePicture: String
   description: String
 }
@@ -481,6 +484,7 @@ input CreateGroupInput {
   type: String!
   description: String
 }==
+
 ##### Реализованные методы
 - userById(==userId==: ID!): User
 - userByNickname(nickname: String!): User
