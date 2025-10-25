@@ -371,6 +371,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nickname VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
+    nick_tag      VARCHAR(255) NOT NULL,
     profile_picture TEXT,
     description TEXT,
     user_rating FLOAT DEFAULT 0.0,
@@ -423,6 +424,7 @@ CREATE TABLE settings (
 
 CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
 CREATE UNIQUE INDEX idx_users_email ON users(email);
+CREATE UNIQUE INDEX idx_users_nick_tag ON users(nick_tag);
 
 CREATE INDEX idx_followers_user_id ON followers(user_id);
 CREATE INDEX idx_followers_follower_id ON followers(follower_id);
