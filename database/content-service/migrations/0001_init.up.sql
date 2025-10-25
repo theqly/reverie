@@ -52,3 +52,15 @@ INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
     ('shared');
+
+
+CREATE INDEX idx_boards_owner_id ON boards(owner_id);
+CREATE INDEX idx_boards_name ON boards(name);
+CREATE INDEX idx_boards_owner_created_at ON boards(owner_id, created_at DESC);
+
+CREATE INDEX idx_pins_owner_id ON pins(owner_id);
+CREATE INDEX idx_pins_name ON pins(name);
+
+CREATE INDEX idx_board_pins_pin_id ON board_pins(pin_id);
+CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
+
