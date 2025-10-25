@@ -158,7 +158,7 @@ CREATE TABLE bookmarks_boards (
     PRIMARY KEY (user_id, board_id),
     FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
 );
-    
+
 INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
@@ -361,6 +361,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nickname VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
+    nick_tag      VARCHAR(255) NOT NULL,
     profile_picture TEXT,
     description TEXT,
     user_rating FLOAT DEFAULT 0.0,
@@ -413,6 +414,7 @@ CREATE TABLE settings (
 
 CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
 CREATE UNIQUE INDEX idx_users_email ON users(email);
+CREATE UNIQUE INDEX idx_users_nick_tag ON users(nick_tag);
 
 CREATE INDEX idx_followers_user_id ON followers(user_id);
 CREATE INDEX idx_followers_follower_id ON followers(follower_id);
@@ -552,7 +554,7 @@ CREATE INDEX idx_tagged_pins_tag_id ON tagged_pins(tag_id);
 		когда то попозже, нужно не просто выдавать список подборок или пинов, но и делать это персонализировано
 - поиск по картам/местам/авторам.
 		контентные запросы есть в микраче контента, тут скорее еще нужно по-умному их сортировать (сюда же относится то, что проплаченные места и доски должны быть в начале) (PS: или выносим поиск в отдельный микрач, хотя теперь выглядит излишним)
-- 
+-
 
 
 #### Методы
@@ -566,10 +568,10 @@ CREATE INDEX idx_tagged_pins_tag_id ON tagged_pins(tag_id);
 #### Назначение
 - взаимодействие с внешним API карт
 - формирование карт
-- поиск/сортировка/тп по адресу/названию 
+- поиск/сортировка/тп по адресу/названию
 
 #### БД
-В бд нет смысла, этот микросервис является не хранилкой, а прослойкой, чтобы все остальные микросервисы не были жестко привязаны к определенному gis service. 
+В бд нет смысла, этот микросервис является не хранилкой, а прослойкой, чтобы все остальные микросервисы не были жестко привязаны к определенному gis service.
 #### Взаимодействие с другими микросервисами
 - получать гео точки нужно с пинов - Контент
 
@@ -607,7 +609,7 @@ type Object {
 		нужно делать карту красивую, чтобы ей потом делиться
 - шаринг маршрута в gis-сервисы
 		шаринг подборки в gis-сервисы (чтобы построить например там маршрут) (PS: нужно смотреть, что позволяет API для этого, и в какой форме вообще можно реализовать такую функцию)
-- 
+-
 
 #### Под вопросом из функционала (не оч понятно, а от этого будет зависеть, что нужно добавить и где):
 18. Шаринг построенного маршрута в gis-сервисы или шаринг мест для построние маршрута (рисерч + разработка). (в 2гис в веб версии я не вижу подборки, можно списки создавать, но это в аккаунте личном, мы не сможем сами генерить такие списки и давать ссылку пользователю)
@@ -648,7 +650,7 @@ type Object {
 
 
 #### Методы
-  
+
 
 
 
