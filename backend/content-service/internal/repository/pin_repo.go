@@ -44,8 +44,8 @@ func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"name":        updated.Name,
-			"latitude":    updated.Lat,
-			"longitude":   updated.Lng,
+			"latitude":    updated.Latitude,
+			"longitude":   updated.Longitude,
 			"description": updated.Description,
 			"rating":      updated.Rating,
 		}).Error

@@ -7,16 +7,19 @@ import (
 )
 
 type Pin struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name        string
-	Lat         float64
-	Lng         float64
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Name        string    `gorm:"size:255;not null"`
+	OwnerID     uuid.UUID `gorm:"type:uuid;not null"`
+	Address     string
+	Latitude    float64   `gorm:"not null"`
+	Longitude   float64   `gorm:"not null"`
+	PlaceID     uuid.UUID `gorm:"type:uuid"`
 	Description string
-	Images      []string `gorm:"type:jsonb"`
-	Rating      float64
-	CreatedAt   time.Time
-	OwnerID     uuid.UUID `gorm:"type:uuid"`
-	BoardID     uuid.UUID
+	Rating      float64   `gorm:"default:0.0"`
+	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+
+	Images  []string `gorm:"type:jsonb"`
+	BoardID uuid.UUID
 	// Tags        []string `gorm:"type:jsonb"`
 }
 
@@ -26,16 +29,16 @@ type BoardPin struct {
 }
 
 type Comment struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	PinID     uuid.UUID
-	UserID    uuid.UUID
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	PinID     uuid.UUID `gorm:"type:uuid;not null"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null"`
 	Content   string
 	CreatedAt time.Time
 }
 
 type PinImage struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	PinID       uuid.UUID
-	ImageURL    string
-	OrderNumber int
+	OrderNumber int       `gorm:"not null"`
+	PinID       uuid.UUID `gorm:"type:uuid;not null"`
+	ImageURL    string    `gorm:"not null"`
 }

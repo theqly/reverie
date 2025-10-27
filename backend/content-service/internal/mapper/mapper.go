@@ -38,8 +38,8 @@ func ToGraphQLPin(p *models.Pin) *model.Pin {
 	return &model.Pin{
 		ID:          p.ID,
 		Name:        p.Name,
-		Latitude:    p.Lat,
-		Longitude:   p.Lng,
+		Latitude:    p.Latitude,
+		Longitude:   p.Longitude,
 		Description: &p.Description,
 		Rating:      p.Rating,
 		CreatedAt:   p.CreatedAt,
@@ -67,10 +67,10 @@ func UpdateToDomainPin(input *model.UpdatePinInput) *models.Pin {
 		pin.Name = *input.Name
 	}
 	if input.Latitude != nil {
-		pin.Lat = *input.Latitude
+		pin.Latitude = *input.Latitude
 	}
 	if input.Longitude != nil {
-		pin.Lng = *input.Longitude
+		pin.Longitude = *input.Longitude
 	}
 	if input.Description != nil {
 		pin.Description = *input.Description
@@ -89,8 +89,8 @@ func CreateToDomainPin(input *model.CreatePinInput) *models.Pin {
 	}
 	return &models.Pin{
 		Name:        input.Name,
-		Lat:         input.Latitude,
-		Lng:         input.Longitude,
+		Latitude:    input.Latitude,
+		Longitude:   input.Longitude,
 		Description: desc,
 		OwnerID:     input.OwnerID,
 		Images:      []string{},
