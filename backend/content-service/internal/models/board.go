@@ -24,9 +24,10 @@ type Board struct {
 	OwnerTypeID   int       `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 
-	// Опциональные поля, которые будут инициализировать только в том случае, если при запросе были указаны явно
-	// Если в graphQL запросе этих полей не было, то и обращения в БД не будет
-	Pins        []*Pin
-	AccessLevel string
-	OwnerType   string
+	// Опциональные поля, которые будут инициализировать только в том случае, если при graphQL запросе были указаны явно
+	Pins []*Pin `gorm:"many2many:board_pins;"`
+
+	// Это не колонки таблицы Board
+	AccessLevel string `gorm:"-"`
+	OwnerType   string `gorm:"-"`
 }

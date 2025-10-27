@@ -15,5 +15,7 @@ type Board {
   ownerId: UUID!
   ownerType: OwnerType!
   createdAt: Time!
+  
+  # Опциональное поле
   pins: [Pin!]
 }

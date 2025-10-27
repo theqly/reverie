@@ -8,7 +8,6 @@ import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
 	"content-service/internal/mapper"
-	"content-service/internal/utils"
 	"context"
 	"fmt"
 
@@ -21,8 +20,7 @@ func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, 
 	logger := zap.L().With(zap.String("resolver", "Board"), zap.String("boardID", id.String()))
 	logger.Info("Fetching board")
 
-	preloads := utils.GetPreloads(ctx)
-	board, err := r.BoardRepo.GetByID(ctx, id, preloads...)
+	board, err := r.BoardRepo.GetByID(ctx, id)
 
 	if err != nil {
 		logger.Error("Failed to fetch board", zap.Error(err))
