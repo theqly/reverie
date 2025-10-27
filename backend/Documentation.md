@@ -33,13 +33,31 @@ CREATE TABLE access_levels (
     type VARCHAR(255) NOT NULL UNIQUE
 );
 
+CREATE TABLE owner_types (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(255) NOT NULL UNIQUE
+);
+
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
+    owner_type_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (access_level_id) REFERENCES access_levels(id)
+    FOREIGN KEY (owner_type_id) REFERENCES owner_types(id)
+);
+
+CREATE TABLE places (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    gis_id UUID,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    purpose_name VARCHAR(255),
+    type VARCHAR(255)
 );
 
 CREATE TABLE pins (
@@ -54,17 +72,6 @@ CREATE TABLE pins (
     rating FLOAT DEFAULT 0.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (place_id) REFERENCES places(id)
-);
-
-CREATE TABLE places (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    gis_id UUID,
-    name VARCHAR(255) NOT NULL,
-    address TEXT,
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    purpose_name VARCHAR(255),
-    type VARCHAR(255)
 );
 
 CREATE TABLE board_pins (
@@ -165,6 +172,10 @@ INSERT INTO access_levels (type) VALUES
     ('group'),
     ('group public');
 
+INSERT INTO owner_types (type) VALUES
+    ('user'),
+    ('group');
+
 CREATE INDEX idx_boards_owner_id ON boards(owner_id);
 CREATE INDEX idx_boards_name ON boards(name);
 CREATE INDEX idx_boards_owner_created_at ON boards(owner_id, created_at DESC);
@@ -195,7 +206,12 @@ CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
 ##### input/output objects
 
 type AccessLevel {
-  id: UUID!
+  id: Int!
+  type: String!
+}
+
+type OwnerType {
+  id: Int!
   type: String!
 }
 
@@ -203,20 +219,22 @@ type Board {
   id: UUID!
   name: String!
   accessLevel: AccessLevel!
-  groupId: Group!
+  ownerId: UUID!
+  ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
 }
 
 input CreateBoardInput {
   name: String!
-  accessLevelId: UUID!
-  groupId: UUID!
+  accessLevelId: Int!
+  ownerId: UUID!
+  ownerTypeId: Int!
 }
 
 input UpdateBoardInput {
   name: String
-  accessLevelId: UUID
+  accessLevelId: Int
   userId: UUID!
 }
 
