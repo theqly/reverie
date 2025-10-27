@@ -9,8 +9,8 @@ import (
 )
 
 type AccessLevel struct {
-	ID   uuid.UUID `json:"id"`
-	Type string    `json:"type"`
+	ID   int    `json:"id"`
+	Type string `json:"type"`
 }
 
 type AddCommentInput struct {
@@ -29,7 +29,8 @@ type Board struct {
 	ID          uuid.UUID    `json:"id"`
 	Name        string       `json:"name"`
 	AccessLevel *AccessLevel `json:"accessLevel"`
-	GroupID     *Group       `json:"groupId"`
+	OwnerID     uuid.UUID    `json:"ownerId"`
+	OwnerType   *OwnerType   `json:"ownerType"`
 	CreatedAt   time.Time    `json:"createdAt"`
 	Pins        []*Pin       `json:"pins,omitempty"`
 }
@@ -43,8 +44,9 @@ type Comment struct {
 
 type CreateBoardInput struct {
 	Name          string    `json:"name"`
-	AccessLevelID uuid.UUID `json:"accessLevelId"`
-	GroupID       uuid.UUID `json:"groupId"`
+	AccessLevelID int       `json:"accessLevelId"`
+	OwnerID       uuid.UUID `json:"ownerId"`
+	OwnerTypeID   int       `json:"ownerTypeId"`
 }
 
 type CreatePinInput struct {
@@ -62,6 +64,11 @@ type Group struct {
 func (Group) IsEntity() {}
 
 type Mutation struct {
+}
+
+type OwnerType struct {
+	ID   int    `json:"id"`
+	Type string `json:"type"`
 }
 
 type Pin struct {
@@ -89,9 +96,9 @@ type Query struct {
 }
 
 type UpdateBoardInput struct {
-	Name          *string    `json:"name,omitempty"`
-	AccessLevelID *uuid.UUID `json:"accessLevelId,omitempty"`
-	UserID        uuid.UUID  `json:"userId"`
+	Name          *string   `json:"name,omitempty"`
+	AccessLevelID *int      `json:"accessLevelId,omitempty"`
+	UserID        uuid.UUID `json:"userId"`
 }
 
 type UpdatePinInput struct {

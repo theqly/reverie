@@ -1,12 +1,13 @@
 input CreateBoardInput {
   name: String!
-  accessLevelId: UUID!
-  groupId: UUID!
+  accessLevelId: Int!
+  ownerId: UUID!
+  ownerTypeId: Int!
 }
 
 input UpdateBoardInput {
   name: String
-  accessLevelId: UUID
+  accessLevelId: Int
   userId: UUID!
 }
 

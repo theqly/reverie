@@ -20,9 +20,15 @@ func (r *BoardRepository) Create(ctx context.Context, board models.Board) error 
 	return r.db.WithContext(ctx).Create(&board).Error
 }
 
-func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Board, error) {
+func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID, preloads ...string) (models.Board, error) {
 	var board models.Board
-	err := r.db.WithContext(ctx).First(&board, "id = ?", id).Error
+
+	tx := r.db.WithContext(ctx)
+	for _, preload := range preloads {
+		tx = tx.Preload(preload)
+	}
+
+	err := tx.First(&board, "id = ?", id).Error
 	return board, err
 }
 

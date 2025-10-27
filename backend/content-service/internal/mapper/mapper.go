@@ -9,8 +9,9 @@ func ToGraphQLBoard(b *models.Board) *model.Board {
 	return &model.Board{
 		ID:          b.ID,
 		Name:        b.Name,
-		AccessLevel: &model.AccessLevel{ID: b.AccessLevelID},
-		GroupID:     &model.Group{ID: b.GroupID},
+		AccessLevel: &model.AccessLevel{ID: b.AccessLevelID, Type: b.AccessLevel},
+		OwnerID:     b.OwnerID,
+		OwnerType:   &model.OwnerType{ID: b.OwnerTypeID, Type: b.OwnerType},
 		CreatedAt:   b.CreatedAt,
 	}
 }
@@ -19,7 +20,8 @@ func CreateToDomainBoard(input *model.CreateBoardInput) *models.Board {
 	return &models.Board{
 		Name:          input.Name,
 		AccessLevelID: input.AccessLevelID,
-		GroupID:       input.GroupID,
+		OwnerID:       input.OwnerID,
+		OwnerTypeID:   input.OwnerTypeID,
 	}
 }
 
