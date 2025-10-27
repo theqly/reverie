@@ -3,13 +3,20 @@ CREATE TABLE access_levels (
     type VARCHAR(255) NOT NULL UNIQUE
 );
 
+CREATE TABLE owner_types (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(255) NOT NULL UNIQUE
+);
+
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
+    owner_type_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (access_level_id) REFERENCES access_levels(id)
+    FOREIGN KEY (owner_type_id) REFERENCES owner_types(id)
 );
 
 CREATE TABLE places (
@@ -134,3 +141,7 @@ INSERT INTO access_levels (type) VALUES
     ('public'),
     ('group'),
     ('group public');
+
+INSERT INTO owner_types (type) VALUES
+    ('user'),
+    ('group');

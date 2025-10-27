@@ -1,5 +1,10 @@
 type AccessLevel {
-  id: UUID!
+  id: Int!
+  type: String!
+}
+
+type OwnerType {
+  id: Int!
   type: String!
 }
 
@@ -7,7 +12,8 @@ type Board {
   id: UUID!
   name: String!
   accessLevel: AccessLevel!
-  groupId: Group!
+  ownerId: UUID!
+  ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
 }
