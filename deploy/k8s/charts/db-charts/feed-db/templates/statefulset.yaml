@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "profile-db.fullname" . }}
+  name: {{ include "feed-db.fullname" . }}
   labels:
-    {{- include "profile-db.labels" . | nindent 4 }}
+    {{- include "feed-db.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "profile-db.fullname" . }}-headless
+  serviceName: {{ include "feed-db.fullname" . }}-headless
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "profile-db.selectorLabels" . | nindent 6 }}
+      {{- include "feed-db.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "profile-db.selectorLabels" . | nindent 8 }}
+        {{- include "feed-db.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -82,7 +82,7 @@ spec:
     - metadata:
         name: data
         labels:
-          {{- include "profile-db.labels" . | nindent 8 }}
+          {{- include "feed-db.labels" . | nindent 8 }}
       spec:
         accessModes:
           - {{ .Values.persistence.accessMode | default "ReadWriteOnce" }}

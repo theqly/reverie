@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "profile-db.fullname" . }}
+  name: {{ include "content-db.fullname" . }}
   labels:
-    {{- include "profile-db.labels" . | nindent 4 }}
+    {{- include "content-db.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       targetPort: postgres
       protocol: TCP
   selector:
-    {{- include "profile-db.selectorLabels" . | nindent 4 }}
+    {{- include "content-db.selectorLabels" . | nindent 4 }}

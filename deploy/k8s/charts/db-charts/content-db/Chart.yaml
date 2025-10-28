@@ -1,0 +1,6 @@
+apiVersion: v2
+name: content-db
+description: postgresql database for content service
+type: application
+version: 0.1.0
+appVersion: "15"
