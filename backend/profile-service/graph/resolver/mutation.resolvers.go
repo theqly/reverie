@@ -82,6 +82,12 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, error) {
+	userId, err := uuid.Parse(id)
+	if err != nil {
+		return false, fmt.Errorf("user not found (incorrect id): %w", err)
+	}
+	r.UserRepo.SoftDeleteUserByID(ctx, userId)
+
 	// Жесткого удаления скорее всего не будет, пока нет требований останется заглушкой
 	return false, nil
 
@@ -271,6 +277,11 @@ func (r *mutationResolver) DeleteGroup(ctx context.Context, id string) (bool, er
 	// }
 
 	// return true, nil
+}
+
+// ChangeAccessBookmarks is the resolver for the changeAccessBookmarks field.
+func (r *mutationResolver) ChangeAccessBookmarks(ctx context.Context, userID string, newStatus string) (bool, error) {
+	panic(fmt.Errorf("not implemented: ChangeAccessBookmarks - changeAccessBookmarks"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

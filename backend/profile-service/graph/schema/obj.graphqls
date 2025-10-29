@@ -1,9 +1,15 @@
+enum UserStatus {
+  ACTIVE
+  DELETED
+}
+
 type User {
   id: ID!
   nickname: String!
   email: String!
   profilePicture: String
   description: String
+  status: UserStatus!
   userRating: Float!
   followers: [User!]!
   following: [User!]!
@@ -13,3 +19,10 @@ type Group {
   id: ID!
   members: [User!]!
 }
+
+type SettingsStatuses {
+  id: ID!
+  type: String!
+  description: String
+}
+

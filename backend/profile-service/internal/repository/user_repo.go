@@ -22,9 +22,20 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (models.
 	return user, err
 }
 
+func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	var user models.User
+	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
+	if err != nil {
+		return err
+	}
+
+	user.Status = models.UserStatusDeleted
+	return r.db.WithContext(ctx).Save(&user).Error
+}
+
 func (r *UserRepository) GetUserByNickname(ctx context.Context, nickname string) (models.User, error) {
 	var user models.User
-	err := r.db.WithContext(ctx).First(&user, "nickname = ?", nickname).Error
+	err := r.db.WithContext(ctx).Delete(&user).Error
 	return user, err
 }
 

@@ -2,6 +2,13 @@
 
 package model
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type CreateGroupInput struct {
 	MemberIds []string `json:"memberIds"`
 }
@@ -9,7 +16,6 @@ type CreateGroupInput struct {
 type CreateUserInput struct {
 	Nickname       string  `json:"nickname"`
 	Email          string  `json:"email"`
-	Password       string  `json:"password"`
 	ProfilePicture *string `json:"profilePicture,omitempty"`
 	Description    *string `json:"description,omitempty"`
 }
@@ -25,21 +31,82 @@ type Mutation struct {
 type Query struct {
 }
 
+type SettingsStatuses struct {
+	ID          string  `json:"id"`
+	Type        string  `json:"type"`
+	Description *string `json:"description,omitempty"`
+}
+
 type UpdateUserInput struct {
 	Nickname       *string `json:"nickname,omitempty"`
 	Email          *string `json:"email,omitempty"`
-	Password       *string `json:"password,omitempty"`
 	ProfilePicture *string `json:"profilePicture,omitempty"`
 	Description    *string `json:"description,omitempty"`
 }
 
 type User struct {
-	ID             string  `json:"id"`
-	Nickname       string  `json:"nickname"`
-	Email          string  `json:"email"`
-	ProfilePicture *string `json:"profilePicture,omitempty"`
-	Description    *string `json:"description,omitempty"`
-	UserRating     float64 `json:"userRating"`
-	Followers      []*User `json:"followers"`
-	Following      []*User `json:"following"`
+	ID             string     `json:"id"`
+	Nickname       string     `json:"nickname"`
+	Email          string     `json:"email"`
+	ProfilePicture *string    `json:"profilePicture,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Status         UserStatus `json:"status"`
+	UserRating     float64    `json:"userRating"`
+	Followers      []*User    `json:"followers"`
+	Following      []*User    `json:"following"`
+}
+
+type UserStatus string
+
+const (
+	UserStatusActive  UserStatus = "ACTIVE"
+	UserStatusDeleted UserStatus = "DELETED"
+)
+
+var AllUserStatus = []UserStatus{
+	UserStatusActive,
+	UserStatusDeleted,
+}
+
+func (e UserStatus) IsValid() bool {
+	switch e {
+	case UserStatusActive, UserStatusDeleted:
+		return true
+	}
+	return false
+}
+
+func (e UserStatus) String() string {
+	return string(e)
+}
+
+func (e *UserStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UserStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UserStatus", str)
+	}
+	return nil
+}
+
+func (e UserStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *UserStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e UserStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

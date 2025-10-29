@@ -1,7 +1,6 @@
 input CreateUserInput {
   nickname: String!
   email: String!
-  password: String!
   profilePicture: String
   description: String
 }
@@ -9,7 +8,6 @@ input CreateUserInput {
 input UpdateUserInput {
   nickname: String
   email: String
-  password: String
   profilePicture: String
   description: String
 }
@@ -30,4 +28,7 @@ type Mutation {
   addUserToGroup(userId: ID!, groupId: ID!): Boolean!
   removeUserFromGroup(userId: ID!, groupId: ID!): Boolean!
   deleteGroup(id: ID!): Boolean!
+
+  changeAccessBookmarks(userId: ID!, newStatus: ID!): Boolean!
 }
+

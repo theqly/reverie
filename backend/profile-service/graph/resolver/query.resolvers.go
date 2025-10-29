@@ -16,22 +16,22 @@ import (
 )
 
 // UserByID is the resolver for the userById field.
-func (r *queryResolver) UserByID(ctx context.Context, id string) (*model.User, error) {
+func (r *queryResolver) UserByID(ctx context.Context, userID string) (*model.User, error) {
 	var user models.User
 
-	userID, err := uuid.Parse(id)
+	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, fmt.Errorf("unautorized (incorrect id): %w", err)
 	}
 
-	if user, err = r.UserRepo.GetUserByID(ctx, userID); err != nil {
+	if user, err = r.UserRepo.GetUserByID(ctx, uid); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
 	//TODO another resolvers
 
 	var followerLinks []models.Follower
-	if followerLinks, err = r.UserRepo.GetFollowers(ctx, userID); err != nil {
+	if followerLinks, err = r.UserRepo.GetFollowers(ctx, uid); err != nil {
 		return nil, fmt.Errorf("failed to load followers: %w", err)
 	}
 
@@ -44,7 +44,7 @@ func (r *queryResolver) UserByID(ctx context.Context, id string) (*model.User, e
 	}
 
 	var followingLinks []models.Follower
-	if followingLinks, err = r.UserRepo.GetFollowings(ctx, userID); err != nil {
+	if followingLinks, err = r.UserRepo.GetFollowings(ctx, uid); err != nil {
 		return nil, fmt.Errorf("failed to load following: %w", err)
 	}
 
@@ -195,6 +195,16 @@ func (r *queryResolver) FollowingOf(ctx context.Context, userID string) ([]*mode
 	return following, nil
 }
 
+// FollowersCount is the resolver for the followersCount field.
+func (r *queryResolver) FollowersCount(ctx context.Context, userID string) (int, error) {
+	panic(fmt.Errorf("not implemented: FollowersCount - followersCount"))
+}
+
+// FollowingCount is the resolver for the followingCount field.
+func (r *queryResolver) FollowingCount(ctx context.Context, userID string) (int, error) {
+	panic(fmt.Errorf("not implemented: FollowingCount - followingCount"))
+}
+
 // GroupByID is the resolver for the groupById field.
 func (r *queryResolver) GroupByID(ctx context.Context, id string) ([]*model.User, error) {
 	groupID, err := uuid.Parse(id)
@@ -264,6 +274,21 @@ func (r *queryResolver) GroupsOfUser(ctx context.Context, userID string) ([]*mod
 	}
 
 	return groups, nil
+}
+
+// RequestJoinGroup is the resolver for the requestJoinGroup field.
+func (r *queryResolver) RequestJoinGroup(ctx context.Context, groupID string, userID string) (bool, error) {
+	panic(fmt.Errorf("not implemented: RequestJoinGroup - requestJoinGroup"))
+}
+
+// AcceptJoinToGroup is the resolver for the acceptJoinToGroup field.
+func (r *queryResolver) AcceptJoinToGroup(ctx context.Context, requestID string) (bool, error) {
+	panic(fmt.Errorf("not implemented: AcceptJoinToGroup - acceptJoinToGroup"))
+}
+
+// GetSettingsStatuses is the resolver for the getSettingsStatuses field.
+func (r *queryResolver) GetSettingsStatuses(ctx context.Context) ([]*model.SettingsStatuses, error) {
+	panic(fmt.Errorf("not implemented: GetSettingsStatuses - getSettingsStatuses"))
 }
 
 // Query returns generated.QueryResolver implementation.
