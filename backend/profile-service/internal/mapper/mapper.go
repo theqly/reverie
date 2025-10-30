@@ -13,6 +13,7 @@ func MapUserToGraphQL(u *models.User) *model.User {
 		ID:             u.ID.String(),
 		Nickname:       u.Nickname,
 		Email:          u.Email,
+		NickTag:        u.NickTag,
 		ProfilePicture: u.ProfilePicture,
 		Description:    u.Description,
 		UserRating:     u.UserRating,

@@ -25,6 +25,11 @@ func main() {
 		log.Fatal("error loading config: %w", err)
 	}
 
+	// err = middleware.InitJWKS("https://www.googleapis.com/oauth2/v3/certs") // currently without config
+	// if err != nil {
+		// log.Fatal("error loading config: %w", err)
+	// }
+
 	err = database.Connect()
 	if err != nil {
 		log.Fatal("error loading config: %w", err)
@@ -42,7 +47,7 @@ func main() {
 
 	r := gin.Default()
 
-	//r.Use(middleware.AuthMiddleware())
+	// r.Use(middleware.AuthMiddleware())
 	r.Use(middleware.CorsMiddleware())
 
 	r.POST("/query", gin.WrapH(srv))

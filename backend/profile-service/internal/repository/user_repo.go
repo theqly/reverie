@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"profile-service/internal/models"
+	"profile-service/graph/model"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -29,13 +30,14 @@ func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) e
 		return err
 	}
 
-	user.Status = models.UserStatusDeleted
+	user.Status = model.UserStatusActive
+
 	return r.db.WithContext(ctx).Save(&user).Error
 }
 
 func (r *UserRepository) GetUserByNickname(ctx context.Context, nickname string) (models.User, error) {
 	var user models.User
-	err := r.db.WithContext(ctx).Delete(&user).Error
+	err := r.db.WithContext(ctx).First(&user, "nickname = ?", nickname).Error
 	return user, err
 }
 

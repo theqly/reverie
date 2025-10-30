@@ -371,7 +371,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nickname VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    nick_tag VARCHAR(255) NOT NULL,
+    nick_tag      VARCHAR(255) NOT NULL,
     profile_picture TEXT,
     description TEXT,
     user_rating FLOAT DEFAULT 0.0,
@@ -410,21 +410,17 @@ CREATE TABLE join_group_requests (
 );
 
 CREATE TABLE settings_statuses (
-    id UUID PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     type VARCHAR(255) NOT NULL UNIQUE,
     description TEXT
 );
 
 CREATE TABLE settings (
     user_id UUID NOT NULL,
-    favorites_status_id INT NOT NULL,
+    bookmarks_status_id UUID NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (favorites_status_id) REFERENCES settings_statuses(id) ON DELETE CASCADE
+    FOREIGN KEY (bookmarks_status_id) REFERENCES settings_statuses(id) ON DELETE CASCADE
 );
-
-INSERT INTO settings_statuses (type) VALUES
-    ('private'),
-    ('public');
 
 CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
 CREATE UNIQUE INDEX idx_users_email ON users(email);
@@ -435,7 +431,6 @@ CREATE INDEX idx_followers_follower_id ON followers(follower_id);
 
 CREATE INDEX idx_members_user_id ON members(user_id);
 CREATE INDEX idx_members_group_id ON members(group_id);
-
 ```
 #### Взаимодействие с другими микросервисами
 - связь с Keycloak будет (требует дополнительного изучения)
@@ -444,13 +439,20 @@ CREATE INDEX idx_members_group_id ON members(group_id);
 #### Методы
 
 ##### input/output objects
+```graphql
+enum UserStatus {
+  active
+  deleted
+}
 
 type User {
   id: ID!
   nickname: String!
   email: String!
+  nick_tag: String!
   profilePicture: String
   description: String
+  status: UserStatus!
   userRating: Float!
   followers: [User!]!
   following: [User!]!
@@ -461,9 +463,16 @@ type Group {
   members: [User!]!
 }
 
+type SettingsStatuses {
+  id: ID!
+  type: String!
+  description: String
+}
+
 input CreateUserInput {
   nickname: String!
   email: String!
+  nick_tag: String!
   profilePicture: String
   description: String
 }
@@ -471,6 +480,7 @@ input CreateUserInput {
 input UpdateUserInput {
   nickname: String
   email: String
+  nick_tag: String!
   profilePicture: String
   description: String
 }
@@ -478,28 +488,24 @@ input UpdateUserInput {
 input CreateGroupInput {
   memberIds: [ID!]!
 }
-
-==type settingsStatuses {
-  id: UUID!
-  type: String!
-  description: String
-}==
+```
 
 ##### Реализованные методы
-- userById(==userId==: ID!): User
+```graphql
+- userById(userId: ID!): User
 - userByNickname(nickname: String!): User
 - userByEmail(email: String!): User
 
 - followersOf(userId: ID!): [User!]!
 - followingOf(userId: ID!): [User!]!
 
-- groupById(==groupId==: ID!): [User!]
+- groupById(groupId: ID!): [User!]
 - isUserInGroup(user_id: ID!, group_id: ID!): Boolean!
 - groupsOfUser(userId: ID!): [Group!]!
 
 - createUser(input: CreateUserInput!): User!
-- updateUser(==userId==: ID!, input: UpdateUserInput!): User!
-- ==deleteUser(id: ID!): Boolean!== (не нужно ничего удалять, нужно в доп поле занести пометку, что неактивный аккаунт)
+- updateUser(userId: ID!, input: UpdateUserInput!): User!
+- deleteUser(id: ID!): Boolean
 
 - followUser(userId: ID!, followerId: ID!): Boolean!
 - unfollowUser(userId: ID!, followerId: ID!): Boolean!
@@ -507,18 +513,22 @@ input CreateGroupInput {
 - createGroup(input: CreateGroupInput!): Group!
 - addUserToGroup(userId: ID!, groupId: ID!): Boolean!
 - removeUserFromGroup(userId: ID!, groupId: ID!): Boolean!
-- ==deleteGroup(id: ID!): Boolean!== (не нужно ничего удалять, ну или удалять только при удалении доски/всех досок во владении группой)
+- ==deleteGroup(groupId: ID!): Boolean!== (не нужно ничего удалять, ну или удалять только при удалении доски/всех досок во владении группой)
+```
 
 ##### Необходимо реализовать:
+```graphql
 - followersCount(userId: ID!): Integer!
 - followingCount(userId: ID!): Integer!
+```
 (в профиле пользователя явно нужно будет выводить на превью не список всех, на кого подписан юзер и кто подписан на него, а просто количество, поэтому нужно добавить отдельные методы ля этого)
+```graphql
 - requestJoinGroup(groupId: ID!, userId: ID!): Boolean!
 - acceptJoinToGroup(requestId: ID!): Boolean! (тут же нужно изменить статус заявки) (может нужно отправлять какой пользователь разрешает доступ?)
 (сейчас есть только конечные методы редактирования состава группы, нужно добавить промежуточный этап в виде бросания приглашения, а только после подтверждения добавлять нового пользователя)
 - settingsStatuses():[settingsStatuses!]!
 - changeAccessBookmarks(userId: ID!, newStatus: ID!): Boolean!
-
+```
 (Я прописала не все геттеры и соответствующие им объекты, нужно будет самостоятельно проследить при реализации)
 
 Позже еще:

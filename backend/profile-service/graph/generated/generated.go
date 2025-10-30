@@ -57,12 +57,12 @@ type ComplexityRoot struct {
 		ChangeAccessBookmarks func(childComplexity int, userID string, newStatus string) int
 		CreateGroup           func(childComplexity int, input model.CreateGroupInput) int
 		CreateUser            func(childComplexity int, input model.CreateUserInput) int
-		DeleteGroup           func(childComplexity int, id string) int
-		DeleteUser            func(childComplexity int, id string) int
+		DeleteGroup           func(childComplexity int, groupID string) int
+		DeleteUser            func(childComplexity int, userID string) int
 		FollowUser            func(childComplexity int, userID string, followerID string) int
 		RemoveUserFromGroup   func(childComplexity int, userID string, groupID string) int
 		UnfollowUser          func(childComplexity int, userID string, followerID string) int
-		UpdateUser            func(childComplexity int, id string, input model.UpdateUserInput) int
+		UpdateUser            func(childComplexity int, userID string, input model.UpdateUserInput) int
 	}
 
 	Query struct {
@@ -72,7 +72,7 @@ type ComplexityRoot struct {
 		FollowingCount      func(childComplexity int, userID string) int
 		FollowingOf         func(childComplexity int, userID string) int
 		GetSettingsStatuses func(childComplexity int) int
-		GroupByID           func(childComplexity int, id string) int
+		GroupByID           func(childComplexity int, groupID string) int
 		GroupsOfUser        func(childComplexity int, userID string) int
 		IsUserInGroup       func(childComplexity int, userID string, groupID string) int
 		RequestJoinGroup    func(childComplexity int, groupID string, userID string) int
@@ -94,6 +94,7 @@ type ComplexityRoot struct {
 		Followers      func(childComplexity int) int
 		Following      func(childComplexity int) int
 		ID             func(childComplexity int) int
+		NickTag        func(childComplexity int) int
 		Nickname       func(childComplexity int) int
 		ProfilePicture func(childComplexity int) int
 		Status         func(childComplexity int) int
@@ -107,14 +108,14 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
-	UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error)
-	DeleteUser(ctx context.Context, id string) (bool, error)
+	UpdateUser(ctx context.Context, userID string, input model.UpdateUserInput) (*model.User, error)
+	DeleteUser(ctx context.Context, userID string) (bool, error)
 	FollowUser(ctx context.Context, userID string, followerID string) (bool, error)
 	UnfollowUser(ctx context.Context, userID string, followerID string) (bool, error)
 	CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error)
 	AddUserToGroup(ctx context.Context, userID string, groupID string) (bool, error)
 	RemoveUserFromGroup(ctx context.Context, userID string, groupID string) (bool, error)
-	DeleteGroup(ctx context.Context, id string) (bool, error)
+	DeleteGroup(ctx context.Context, groupID string) (bool, error)
 	ChangeAccessBookmarks(ctx context.Context, userID string, newStatus string) (bool, error)
 }
 type QueryResolver interface {
@@ -125,7 +126,7 @@ type QueryResolver interface {
 	FollowingOf(ctx context.Context, userID string) ([]*model.User, error)
 	FollowersCount(ctx context.Context, userID string) (int, error)
 	FollowingCount(ctx context.Context, userID string) (int, error)
-	GroupByID(ctx context.Context, id string) ([]*model.User, error)
+	GroupByID(ctx context.Context, groupID string) ([]*model.User, error)
 	IsUserInGroup(ctx context.Context, userID string, groupID string) (bool, error)
 	GroupsOfUser(ctx context.Context, userID string) ([]*model.Group, error)
 	RequestJoinGroup(ctx context.Context, groupID string, userID string) (bool, error)
@@ -219,7 +220,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteGroup(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteGroup(childComplexity, args["groupId"].(string)), true
 	case "Mutation.deleteUser":
 		if e.complexity.Mutation.DeleteUser == nil {
 			break
@@ -230,7 +231,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteUser(childComplexity, args["userId"].(string)), true
 	case "Mutation.followUser":
 		if e.complexity.Mutation.FollowUser == nil {
 			break
@@ -274,7 +275,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(string), args["input"].(model.UpdateUserInput)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["userId"].(string), args["input"].(model.UpdateUserInput)), true
 
 	case "Query.acceptJoinToGroup":
 		if e.complexity.Query.AcceptJoinToGroup == nil {
@@ -347,7 +348,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.GroupByID(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.GroupByID(childComplexity, args["groupId"].(string)), true
 	case "Query.groupsOfUser":
 		if e.complexity.Query.GroupsOfUser == nil {
 			break
@@ -369,7 +370,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.IsUserInGroup(childComplexity, args["user_id"].(string), args["group_id"].(string)), true
+		return e.complexity.Query.IsUserInGroup(childComplexity, args["userId"].(string), args["groupId"].(string)), true
 	case "Query.requestJoinGroup":
 		if e.complexity.Query.RequestJoinGroup == nil {
 			break
@@ -470,6 +471,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.ID(childComplexity), true
+	case "User.nickTag":
+		if e.complexity.User.NickTag == nil {
+			break
+		}
+
+		return e.complexity.User.NickTag(childComplexity), true
 	case "User.nickname":
 		if e.complexity.User.Nickname == nil {
 			break
@@ -611,14 +618,15 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "../schema/obj.graphqls", Input: `enum UserStatus {
-  ACTIVE
-  DELETED
+  active
+  deleted
 }
 
 type User {
   id: ID!
   nickname: String!
   email: String!
+  nickTag: String!
   profilePicture: String
   description: String
   status: UserStatus!
@@ -649,8 +657,8 @@ type SettingsStatuses {
   followersCount(userId: ID!): Int!
   followingCount(userId: ID!): Int!
 
-  groupById(id: ID!): [User!]
-  isUserInGroup(user_id: ID!, group_id: ID!): Boolean!
+  groupById(groupId: ID!): [User!]
+  isUserInGroup(userId: ID!, groupId: ID!): Boolean!
   groupsOfUser(userId: ID!): [Group!]!
   requestJoinGroup(groupId: ID!, userId: ID!): Boolean!
   acceptJoinToGroup(requestId: ID!): Boolean!
@@ -661,6 +669,7 @@ type SettingsStatuses {
 	{Name: "../schema/mutation.graphqls", Input: `input CreateUserInput {
   nickname: String!
   email: String!
+  nick_tag: String!
   profilePicture: String
   description: String
 }
@@ -668,6 +677,7 @@ type SettingsStatuses {
 input UpdateUserInput {
   nickname: String
   email: String
+  nick_tag: String!
   profilePicture: String
   description: String
 }
@@ -678,8 +688,8 @@ input CreateGroupInput {
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
-  updateUser(id: ID!, input: UpdateUserInput!): User!
-  deleteUser(id: ID!): Boolean!
+  updateUser(userId: ID!, input: UpdateUserInput!): User!
+  deleteUser(userId: ID!): Boolean!
 
   followUser(userId: ID!, followerId: ID!): Boolean!
   unfollowUser(userId: ID!, followerId: ID!): Boolean!
@@ -687,7 +697,7 @@ type Mutation {
   createGroup(input: CreateGroupInput!): Group!
   addUserToGroup(userId: ID!, groupId: ID!): Boolean!
   removeUserFromGroup(userId: ID!, groupId: ID!): Boolean!
-  deleteGroup(id: ID!): Boolean!
+  deleteGroup(groupId: ID!): Boolean!
 
   changeAccessBookmarks(userId: ID!, newStatus: ID!): Boolean!
 }
@@ -775,22 +785,22 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_deleteGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["groupId"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["userId"] = arg0
 	return args, nil
 }
 
@@ -845,11 +855,11 @@ func (ec *executionContext) field_Mutation_unfollowUser_args(ctx context.Context
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["userId"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserInput2profileᚑserviceᚋgraphᚋmodelᚐUpdateUserInput)
 	if err != nil {
 		return nil, err
@@ -927,11 +937,11 @@ func (ec *executionContext) field_Query_followingOf_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_groupById_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["groupId"] = arg0
 	return args, nil
 }
 
@@ -949,16 +959,16 @@ func (ec *executionContext) field_Query_groupsOfUser_args(ctx context.Context, r
 func (ec *executionContext) field_Query_isUserInGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "user_id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["user_id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "group_id", ec.unmarshalNID2string)
+	args["userId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["group_id"] = arg1
+	args["groupId"] = arg1
 	return args, nil
 }
 
@@ -1122,6 +1132,8 @@ func (ec *executionContext) fieldContext_Group_members(_ context.Context, field 
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1172,6 +1184,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1210,7 +1224,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_updateUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateUserInput))
+			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["userId"].(string), fc.Args["input"].(model.UpdateUserInput))
 		},
 		nil,
 		ec.marshalNUser2ᚖprofileᚑserviceᚋgraphᚋmodelᚐUser,
@@ -1233,6 +1247,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1271,7 +1287,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_deleteUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteUser(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().DeleteUser(ctx, fc.Args["userId"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1523,7 +1539,7 @@ func (ec *executionContext) _Mutation_deleteGroup(ctx context.Context, field gra
 		ec.fieldContext_Mutation_deleteGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteGroup(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().DeleteGroup(ctx, fc.Args["groupId"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1628,6 +1644,8 @@ func (ec *executionContext) fieldContext_Query_userById(ctx context.Context, fie
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1689,6 +1707,8 @@ func (ec *executionContext) fieldContext_Query_userByNickname(ctx context.Contex
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1750,6 +1770,8 @@ func (ec *executionContext) fieldContext_Query_userByEmail(ctx context.Context, 
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1811,6 +1833,8 @@ func (ec *executionContext) fieldContext_Query_followersOf(ctx context.Context, 
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1872,6 +1896,8 @@ func (ec *executionContext) fieldContext_Query_followingOf(ctx context.Context, 
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -1992,7 +2018,7 @@ func (ec *executionContext) _Query_groupById(ctx context.Context, field graphql.
 		ec.fieldContext_Query_groupById,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().GroupByID(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Query().GroupByID(ctx, fc.Args["groupId"].(string))
 		},
 		nil,
 		ec.marshalOUser2ᚕᚖprofileᚑserviceᚋgraphᚋmodelᚐUserᚄ,
@@ -2015,6 +2041,8 @@ func (ec *executionContext) fieldContext_Query_groupById(ctx context.Context, fi
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -2053,7 +2081,7 @@ func (ec *executionContext) _Query_isUserInGroup(ctx context.Context, field grap
 		ec.fieldContext_Query_isUserInGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().IsUserInGroup(ctx, fc.Args["user_id"].(string), fc.Args["group_id"].(string))
+			return ec.resolvers.Query().IsUserInGroup(ctx, fc.Args["userId"].(string), fc.Args["groupId"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -2567,6 +2595,35 @@ func (ec *executionContext) fieldContext_User_email(_ context.Context, field gra
 	return fc, nil
 }
 
+func (ec *executionContext) _User_nickTag(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_nickTag,
+		func(ctx context.Context) (any, error) {
+			return obj.NickTag, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_nickTag(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_profilePicture(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2713,6 +2770,8 @@ func (ec *executionContext) fieldContext_User_followers(_ context.Context, field
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -2762,6 +2821,8 @@ func (ec *executionContext) fieldContext_User_following(_ context.Context, field
 				return ec.fieldContext_User_nickname(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
 			case "profilePicture":
 				return ec.fieldContext_User_profilePicture(ctx, field)
 			case "description":
@@ -4290,7 +4351,7 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"nickname", "email", "profilePicture", "description"}
+	fieldsInOrder := [...]string{"nickname", "email", "nick_tag", "profilePicture", "description"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4311,6 +4372,13 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.Email = data
+		case "nick_tag":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nick_tag"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NickTag = data
 		case "profilePicture":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePicture"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -4338,7 +4406,7 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"nickname", "email", "profilePicture", "description"}
+	fieldsInOrder := [...]string{"nickname", "email", "nick_tag", "profilePicture", "description"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4359,6 +4427,13 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.Email = data
+		case "nick_tag":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nick_tag"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NickTag = data
 		case "profilePicture":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePicture"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -4958,6 +5033,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "email":
 			out.Values[i] = ec._User_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "nickTag":
+			out.Values[i] = ec._User_nickTag(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

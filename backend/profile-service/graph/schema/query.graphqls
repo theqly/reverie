@@ -8,8 +8,8 @@ type Query {
   followersCount(userId: ID!): Int!
   followingCount(userId: ID!): Int!
 
-  groupById(id: ID!): [User!]
-  isUserInGroup(user_id: ID!, group_id: ID!): Boolean!
+  groupById(groupId: ID!): [User!]
+  isUserInGroup(userId: ID!, groupId: ID!): Boolean!
   groupsOfUser(userId: ID!): [Group!]!
   requestJoinGroup(groupId: ID!, userId: ID!): Boolean!
   acceptJoinToGroup(requestId: ID!): Boolean!

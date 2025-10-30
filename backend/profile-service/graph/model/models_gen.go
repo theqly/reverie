@@ -16,6 +16,7 @@ type CreateGroupInput struct {
 type CreateUserInput struct {
 	Nickname       string  `json:"nickname"`
 	Email          string  `json:"email"`
+	NickTag        string  `json:"nick_tag"`
 	ProfilePicture *string `json:"profilePicture,omitempty"`
 	Description    *string `json:"description,omitempty"`
 }
@@ -40,6 +41,7 @@ type SettingsStatuses struct {
 type UpdateUserInput struct {
 	Nickname       *string `json:"nickname,omitempty"`
 	Email          *string `json:"email,omitempty"`
+	NickTag        string  `json:"nick_tag"`
 	ProfilePicture *string `json:"profilePicture,omitempty"`
 	Description    *string `json:"description,omitempty"`
 }
@@ -48,6 +50,7 @@ type User struct {
 	ID             string     `json:"id"`
 	Nickname       string     `json:"nickname"`
 	Email          string     `json:"email"`
+	NickTag        string     `json:"nickTag"`
 	ProfilePicture *string    `json:"profilePicture,omitempty"`
 	Description    *string    `json:"description,omitempty"`
 	Status         UserStatus `json:"status"`
@@ -59,8 +62,8 @@ type User struct {
 type UserStatus string
 
 const (
-	UserStatusActive  UserStatus = "ACTIVE"
-	UserStatusDeleted UserStatus = "DELETED"
+	UserStatusActive  UserStatus = "active"
+	UserStatusDeleted UserStatus = "deleted"
 )
 
 var AllUserStatus = []UserStatus{

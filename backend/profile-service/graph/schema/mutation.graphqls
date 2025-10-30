@@ -1,6 +1,7 @@
 input CreateUserInput {
   nickname: String!
   email: String!
+  nick_tag: String!
   profilePicture: String
   description: String
 }
@@ -8,6 +9,7 @@ input CreateUserInput {
 input UpdateUserInput {
   nickname: String
   email: String
+  nick_tag: String!
   profilePicture: String
   description: String
 }
@@ -18,8 +20,8 @@ input CreateGroupInput {
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
-  updateUser(id: ID!, input: UpdateUserInput!): User!
-  deleteUser(id: ID!): Boolean!
+  updateUser(userId: ID!, input: UpdateUserInput!): User!
+  deleteUser(userId: ID!): Boolean!
 
   followUser(userId: ID!, followerId: ID!): Boolean!
   unfollowUser(userId: ID!, followerId: ID!): Boolean!
@@ -27,7 +29,7 @@ type Mutation {
   createGroup(input: CreateGroupInput!): Group!
   addUserToGroup(userId: ID!, groupId: ID!): Boolean!
   removeUserFromGroup(userId: ID!, groupId: ID!): Boolean!
-  deleteGroup(id: ID!): Boolean!
+  deleteGroup(groupId: ID!): Boolean!
 
   changeAccessBookmarks(userId: ID!, newStatus: ID!): Boolean!
 }

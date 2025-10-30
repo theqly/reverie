@@ -206,18 +206,18 @@ func (r *queryResolver) FollowingCount(ctx context.Context, userID string) (int,
 }
 
 // GroupByID is the resolver for the groupById field.
-func (r *queryResolver) GroupByID(ctx context.Context, id string) ([]*model.User, error) {
-	groupID, err := uuid.Parse(id)
+func (r *queryResolver) GroupByID(ctx context.Context, groupID string) ([]*model.User, error) {
+	id, err := uuid.Parse(groupID)
 	if err != nil {
 		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
 	}
 
-	if _, err = r.UserRepo.GetGroupByID(ctx, groupID); err != nil {
+	if _, err = r.UserRepo.GetGroupByID(ctx, id); err != nil {
 		return nil, fmt.Errorf("group not found with id %s: %w", id, err)
 	}
 
 	var members []models.Member
-	if members, err = r.UserRepo.GetMembers(ctx, groupID); err != nil {
+	if members, err = r.UserRepo.GetMembers(ctx, id); err != nil {
 		return nil, fmt.Errorf("failed to load members for group %s: %w", id, err)
 	}
 

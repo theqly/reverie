@@ -18,14 +18,9 @@ import (
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
-	userIDStr, err := middleware.GetUserID(ctx)
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unautorized: %w", err)
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, fmt.Errorf("unautorized (incorrect id): %w", err)
 	}
 
 	if _, err = r.UserRepo.GetUserByID(ctx, userID); err == nil {
@@ -36,6 +31,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		ID:             userID,
 		Nickname:       input.Nickname,
 		Email:          input.Email,
+		NickTag:        input.NickTag,
 		ProfilePicture: input.ProfilePicture,
 		Description:    input.Description,
 		UserRating:     0,
@@ -49,14 +45,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 }
 
 // UpdateUser is the resolver for the updateUser field.
-func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input model.UpdateUserInput) (*model.User, error) {
 	var user models.User
-	userID, err := uuid.Parse(id)
+	id, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
 	}
 
-	if user, err = r.UserRepo.GetUserByID(ctx, userID); err != nil {
+	if user, err = r.UserRepo.GetUserByID(ctx, id); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
@@ -72,6 +68,9 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 	if input.Description != nil {
 		user.Description = input.Description
 	}
+	if input.NickTag != "" {
+		user.NickTag = input.NickTag
+	}
 
 	if err := r.UserRepo.SaveUser(ctx, user).Error; err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
@@ -81,15 +80,18 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 }
 
 // DeleteUser is the resolver for the deleteUser field.
-func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, error) {
-	userId, err := uuid.Parse(id)
+func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (bool, error) {
+	userId, err := uuid.Parse(userID)
 	if err != nil {
 		return false, fmt.Errorf("user not found (incorrect id): %w", err)
 	}
-	r.UserRepo.SoftDeleteUserByID(ctx, userId)
 
-	// Жесткого удаления скорее всего не будет, пока нет требований останется заглушкой
-	return false, nil
+	err = r.UserRepo.SoftDeleteUserByID(ctx, userId)
+	if err != nil {
+		return false, fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	return true, nil
 
 	// userId, err := uuid.Parse(id)
 	// if err != nil {
@@ -263,7 +265,7 @@ func (r *mutationResolver) RemoveUserFromGroup(ctx context.Context, userID strin
 }
 
 // DeleteGroup is the resolver for the deleteGroup field.
-func (r *mutationResolver) DeleteGroup(ctx context.Context, id string) (bool, error) {
+func (r *mutationResolver) DeleteGroup(ctx context.Context, groupID string) (bool, error) {
 	// Жесткого удаления скорее всего не будет, пока нет требований останется заглушкой
 	return false, nil
 

@@ -1,12 +1,13 @@
 enum UserStatus {
-  ACTIVE
-  DELETED
+  active
+  deleted
 }
 
 type User {
   id: ID!
   nickname: String!
   email: String!
+  nickTag: String!
   profilePicture: String
   description: String
   status: UserStatus!
