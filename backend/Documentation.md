@@ -375,7 +375,7 @@ CREATE TABLE users (
     profile_picture TEXT,
     description TEXT,
     user_rating FLOAT DEFAULT 0.0,
-    status user_status NOT NULL
+    status user_status NOT NULL DEFAULT 'active'
 );
 
 CREATE TABLE followers (
@@ -417,9 +417,9 @@ CREATE TABLE settings_statuses (
 
 CREATE TABLE settings (
     user_id UUID NOT NULL,
-    favorites_status_id INT NOT NULL,
+    bookmarks_status_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (favorites_status_id) REFERENCES settings_statuses(id) ON DELETE CASCADE
+    FOREIGN KEY (bookmarks_status_id) REFERENCES settings_statuses(id) ON DELETE CASCADE
 );
 
 INSERT INTO settings_statuses (type) VALUES
