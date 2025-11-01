@@ -6,6 +6,7 @@ import (
 	"github.com/MicahParks/keyfunc"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"net/http"
 	"strings"
 )
@@ -40,23 +41,32 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userID, ok := claims["sub"].(string)
+		userIDStr, ok := claims["sub"].(string)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "sub claim not found"})
 			return
 		}
 
-		c.Set("userID", userID)
+		userID, err := uuid.Parse(userIDStr) // put here uuid to parse into uuid, is better?
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+			return
+		}
+
+		ctx := context.WithValue(c.Request.Context(), "userID", userID) // gin context does not provide auto injection into context
+		c.Request = c.Request.WithContext(ctx)
+
+		c.Set("userID", userID) // let it be
 
 		c.Next()
 	}
 }
 
-func GetUserID(ctx context.Context) (string, error) {
+func GetUserID(ctx context.Context) (uuid.UUID, error) {
 	val := ctx.Value("userID")
-	id, ok := val.(string)
+	id, ok := val.(uuid.UUID)
 	if !ok {
-		return "", errors.New("no user id in context")
+		return uuid.Nil, errors.New("no user id in context")
 	}
 	return id, nil
 }

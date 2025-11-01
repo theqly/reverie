@@ -16,15 +16,11 @@ import (
 )
 
 // UserByID is the resolver for the userById field.
-func (r *queryResolver) UserByID(ctx context.Context, id string) (*model.User, error) {
+func (r *queryResolver) UserByID(ctx context.Context, userID uuid.UUID) (*model.User, error) {
 	var user models.User
 
-	userID, err := uuid.Parse(id)
+	user, err := r.UserRepo.GetUserByID(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("unautorized (incorrect id): %w", err)
-	}
-
-	if user, err = r.UserRepo.GetUserByID(ctx, userID); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
@@ -150,14 +146,10 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 }
 
 // FollowersOf is the resolver for the followersOf field.
-func (r *queryResolver) FollowersOf(ctx context.Context, userID string) ([]*model.User, error) {
+func (r *queryResolver) FollowersOf(ctx context.Context, userID uuid.UUID) ([]*model.User, error) {
 	var followerLinks []models.Follower
-	userIDuuid, err := uuid.Parse(userID)
+	followerLinks, err := r.UserRepo.GetFollowers(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
-	}
-
-	if followerLinks, err = r.UserRepo.GetFollowers(ctx, userIDuuid); err != nil {
 		return nil, fmt.Errorf("failed to load followers: %w", err)
 	}
 
@@ -173,14 +165,10 @@ func (r *queryResolver) FollowersOf(ctx context.Context, userID string) ([]*mode
 }
 
 // FollowingOf is the resolver for the followingOf field.
-func (r *queryResolver) FollowingOf(ctx context.Context, userID string) ([]*model.User, error) {
-	userIDuuid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
-	}
-
+func (r *queryResolver) FollowingOf(ctx context.Context, userID uuid.UUID) ([]*model.User, error) {
 	var followingLinks []models.Follower
-	if followingLinks, err = r.UserRepo.GetFollowings(ctx, userIDuuid); err != nil {
+	followingLinks, err := r.UserRepo.GetFollowings(ctx, userID)
+	if err != nil {
 		return nil, fmt.Errorf("failed to load following: %w", err)
 	}
 
@@ -195,20 +183,26 @@ func (r *queryResolver) FollowingOf(ctx context.Context, userID string) ([]*mode
 	return following, nil
 }
 
-// GroupByID is the resolver for the groupById field.
-func (r *queryResolver) GroupByID(ctx context.Context, id string) ([]*model.User, error) {
-	groupID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
-	}
+// FollowersCount is the resolver for the followersCount field.
+func (r *queryResolver) FollowersCount(ctx context.Context, userID uuid.UUID) (int, error) {
+	panic(fmt.Errorf("not implemented: FollowersCount - followersCount"))
+}
 
-	if _, err = r.UserRepo.GetGroupByID(ctx, groupID); err != nil {
-		return nil, fmt.Errorf("group not found with id %s: %w", id, err)
+// FollowingCount is the resolver for the followingCount field.
+func (r *queryResolver) FollowingCount(ctx context.Context, userID uuid.UUID) (int, error) {
+	panic(fmt.Errorf("not implemented: FollowingCount - followingCount"))
+}
+
+// GroupByID is the resolver for the groupById field.
+func (r *queryResolver) GroupByID(ctx context.Context, groupID uuid.UUID) ([]*model.User, error) {
+	if _, err := r.UserRepo.GetGroupByID(ctx, groupID); err != nil {
+		return nil, fmt.Errorf("group not found with id %s: %w", groupID, err)
 	}
 
 	var members []models.Member
-	if members, err = r.UserRepo.GetMembers(ctx, groupID); err != nil {
-		return nil, fmt.Errorf("failed to load members for group %s: %w", id, err)
+	members, err := r.UserRepo.GetMembers(ctx, groupID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load members for group %s: %w", groupID, err)
 	}
 
 	var users []*model.User
@@ -224,17 +218,8 @@ func (r *queryResolver) GroupByID(ctx context.Context, id string) ([]*model.User
 }
 
 // IsUserInGroup is the resolver for the isUserInGroup field.
-func (r *queryResolver) IsUserInGroup(ctx context.Context, userID string, groupID string) (bool, error) {
-	userIDuuid, err := uuid.Parse(userID)
-	if err != nil {
-		return false, fmt.Errorf("user not found (incorrect id): %w", err)
-	}
-	groupIDuuid, err := uuid.Parse(groupID)
-	if err != nil {
-		return false, fmt.Errorf("group not found (incorrect id): %w", err)
-	}
-
-	if _, err := r.UserRepo.GetMember(ctx, userIDuuid, groupIDuuid); err != nil {
+func (r *queryResolver) IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
+	if _, err := r.UserRepo.GetMember(ctx, userID, groupID); err != nil {
 		return false, fmt.Errorf("failed to check if user is in group: %w", err)
 	}
 
@@ -242,14 +227,10 @@ func (r *queryResolver) IsUserInGroup(ctx context.Context, userID string, groupI
 }
 
 // GroupsOfUser is the resolver for the groupsOfUser field.
-func (r *queryResolver) GroupsOfUser(ctx context.Context, userID string) ([]*model.Group, error) {
-	userIDuuid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("user not found (incorrect id): %w", err)
-	}
-
+func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error) {
 	var members []models.Member
-	if members, err = r.UserRepo.GetGroups(ctx, userIDuuid); err != nil {
+	members, err := r.UserRepo.GetGroups(ctx, userID)
+	if err != nil {
 		return nil, fmt.Errorf("failed to find groups for user: %w", err)
 	}
 
@@ -266,7 +247,27 @@ func (r *queryResolver) GroupsOfUser(ctx context.Context, userID string) ([]*mod
 	return groups, nil
 }
 
+// GetSettingsStatuses is the resolver for the getSettingsStatuses field.
+func (r *queryResolver) GetSettingsStatuses(ctx context.Context) ([]*model.SettingsStatuses, error) {
+	panic(fmt.Errorf("not implemented: GetSettingsStatuses - getSettingsStatuses"))
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type queryResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) RequestJoinGroup(ctx context.Context, groupID uuid.UUID, userID uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: RequestJoinGroup - requestJoinGroup"))
+}
+func (r *queryResolver) AcceptJoinToGroup(ctx context.Context, requestID uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: AcceptJoinToGroup - acceptJoinToGroup"))
+}
+*/

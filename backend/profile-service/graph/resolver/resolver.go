@@ -9,3 +9,4 @@ import "profile-service/internal/repository"
 type Resolver struct {
 	UserRepo *repository.UserRepository
 }
+

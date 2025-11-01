@@ -2,24 +2,77 @@ package repository
 
 import (
 	"context"
-	"profile-service/internal/models"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"profile-service/graph/model"
+	"profile-service/internal/models"
 )
 
 type UserRepository struct {
-	db *gorm.DB
+	db             *gorm.DB
+	userStatusesDB map[string]struct{}
+}
+
+func getUserStatuses(db *gorm.DB) (map[string]struct{}, error) {
+	var values []string
+
+	query := `
+		SELECT e.enumlabel
+		FROM pg_enum e
+		JOIN pg_type t ON e.enumtypid = t.oid
+		WHERE t.typname = 'user_status'
+		ORDER BY e.enumsortorder
+	`
+
+	err := db.Raw(query).Scan(&values).Error
+	if err != nil {
+		return nil, err
+	}
+
+	userStatusesDB := make(map[string]struct{}, len(values))
+	for i := range values {
+		userStatusesDB[values[i]] = struct{}{}
+
+	}
+
+	return userStatusesDB, nil
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{db: db}
+	userStatusesDB, err := getUserStatuses(db)
+	if err != nil {
+		panic(err)
+	}
+
+	_, check := userStatusesDB[model.UserStatusDeleted.String()]
+	if !check {
+		panic("user status in graph/model does not match SQL user_status enum")
+	}
+
+	_, check = userStatusesDB[model.UserStatusActive.String()]
+	if !check {
+		panic("user status in graph/model does not match SQL user_status enum")
+	}
+
+	return &UserRepository{db: db, userStatusesDB: userStatusesDB}
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error) {
 	var user models.User
 	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
 	return user, err
+}
+
+func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	var user models.User
+	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
+	if err != nil {
+		return err
+	}
+
+	user.Status = model.UserStatusDeleted
+
+	return r.db.WithContext(ctx).Save(&user).Error
 }
 
 func (r *UserRepository) GetUserByNickname(ctx context.Context, nickname string) (models.User, error) {
