@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"profile-service/graph/model"
@@ -10,7 +9,7 @@ import (
 )
 
 type UserRepository struct {
-	db           *gorm.DB
+	db             *gorm.DB
 	userStatusesDB map[string]struct{}
 }
 
