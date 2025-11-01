@@ -136,6 +136,27 @@ CREATE TABLE bookmarks_boards (
     FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
 );
 
+CREATE TABLE groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+);
+
+CREATE TABLE members (
+    user_id UUID NOT NULL,
+    group_id UUID NOT NULL,
+    PRIMARY KEY (user_id, group_id),
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+);
+
+CREATE TYPE request_status AS ENUM ('waited', 'rejected', 'accepted', 'cancelled');
+
+CREATE TABLE join_group_requests (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    group_id UUID NOT NULL,
+    status request_status NOT NULL,
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+);
+
 INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
@@ -145,3 +166,6 @@ INSERT INTO access_levels (type) VALUES
 INSERT INTO owner_types (type) VALUES
     ('user'),
     ('group');
+
+CREATE INDEX idx_members_user_id ON members(user_id);
+CREATE INDEX idx_members_group_id ON members(group_id);

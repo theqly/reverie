@@ -166,6 +166,27 @@ CREATE TABLE bookmarks_boards (
     FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
 );
 
+CREATE TABLE groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+);
+
+CREATE TABLE members (
+    user_id UUID NOT NULL,
+    group_id UUID NOT NULL,
+    PRIMARY KEY (user_id, group_id),
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+);
+
+CREATE TYPE request_status AS ENUM ('waited', 'rejected', 'accepted', 'cancelled');
+
+CREATE TABLE join_group_requests (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    group_id UUID NOT NULL,
+    status request_status NOT NULL,
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+);
+
 INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
@@ -185,6 +206,9 @@ CREATE INDEX idx_pins_name ON pins(name);
 
 CREATE INDEX idx_board_pins_pin_id ON board_pins(pin_id);
 CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
+
+CREATE INDEX idx_members_user_id ON members(user_id);
+CREATE INDEX idx_members_group_id ON members(group_id);
 ```
 
 
@@ -316,6 +340,16 @@ type Comment {
   type: String!
   description: String
 }==
+
+type Group {
+  id: UUID!
+  members: [User!]!
+}
+
+input CreateGroupInput {
+  memberIds: [UUID!]!
+}
+
 ##### Реализованные методы
 - board(id: UUID!): Board
 - boardByName(name: String!): [Board!]
@@ -327,7 +361,7 @@ type Comment {
 - pinsByLocation(query: String!): [Pin!]
 
 - createBoard(input: CreateBoardInput!): Board!
-- updateBoard(==boardId==: UUID!, input: UpdateBoardInput!): Board! @policy(service: "coprocessor", query: "checkBoardApproval") (см взаимодействие с другими микросервисами)
+- updateBoard(==boardId==: UUID!, input: UpdateBoardInput!): Board!
 
 - ==createPin(input: CreatePinInput!): Pin!== @policy(service: "coprocessor", query: "checkBoardApproval") (см взаимодействие с другими микросервисами)
 - updatePin(==pinId==: UUID!, input: UpdatePinInput!, ==userId: UUID!==): Pin! (проверка, что редактирует владелец)
@@ -342,6 +376,15 @@ type Comment {
 - addImageToPin(input: AddImageInput!, ==userId: UUID!==): PinImage! (проверка, что обновляет владелец)
 - removeImageFromPin(imageId: UUID!, ==userId: UUID!==): Boolean! (проверка, что удаляет владелец)
 - updateImageOrder(imageId: UUID!, newOrder: Int!, ==userId: UUID!==): PinImage! (проверка, что обновляет владелец)
+
+- groupById(groupId: UUID!): [User!]
+- isUserInGroup(user_id: UUID!, group_id: UUID!): Boolean!
+- groupsOfUser(userId: UUID!): [Group!]!
+
+- createGroup(input: CreateGroupInput!): Group!
+- addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+- removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+- ==deleteGroup(groupId: UUID!): Boolean!== (не нужно ничего удалять, ну или удалять только при удалении доски/всех досок во владении группой)
 
 ##### Необходимо реализовать:
 - boardsByUser(userId: UUID!): [Board!] (вернуть список всех досок, где пользователь владелец)
@@ -363,6 +406,11 @@ type Comment {
 - complainAboutUser(creatorId: UUID!, userId: UUID!, complaint: ComplaintInput): Boolean! (если тип жалобы другое, то комментарий обязателен)
 - complainAboutPin(creatorId: UUID!, pinId: UUID!, complaint: ComplaintInput): Boolean! (если тип жалобы другое, то комментарий обязателен)
 - complainAboutBoard(creatorId: UUID!, boardId: UUID!, complaint: ComplaintInput): Boolean! (если тип жалобы другое, то комментарий обязателен)
+- requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+- acceptJoinToGroup(requestId: UUID!): Boolean! (тут же нужно изменить статус заявки) (может нужно отправлять какой пользователь разрешает доступ?)
+(сейчас есть только конечные методы редактирования состава группы, нужно добавить промежуточный этап в виде бросания приглашения, а только после подтверждения добавлять нового пользователя)
+- getSettingsStatuses: [SettingsStatuses!]!
+- changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
 
 (Я прописала не все геттеры и соответствующие им объекты, нужно будет самостоятельно проследить при реализации)
 

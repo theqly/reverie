@@ -13,3 +13,8 @@ DROP TABLE IF EXISTS pins;
 DROP TABLE IF EXISTS places;
 DROP TABLE IF EXISTS boards;
 DROP TABLE IF EXISTS access_levels;
+DROP TABLE IF EXISTS groups;
+DROP TABLE IF EXISTS members;
+DROP TABLE IF EXISTS join_group_requests;
+
+DROP TYPE IF EXISTS request_status;
