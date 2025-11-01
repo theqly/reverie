@@ -40,14 +40,13 @@ input AddImageInput {
   orderNumber: Int!
 }
 
-directive @policy(
-  service: String!
-  query: String!
-) on FIELD_DEFINITION
+input CreateGroupInput {
+  members: [UUID!]!
+}
 
 type Mutation {
   createBoard(input: CreateBoardInput!): Board!
-  updateBoard(id: UUID!, input: UpdateBoardInput!): Board! @policy(service: "coprocessor", query: "checkBoardApproval")
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
 
   createPin(input: CreatePinInput!): Pin!
   updatePin(id: UUID!, input: UpdatePinInput!): Pin!
@@ -62,4 +61,11 @@ type Mutation {
   addImageToPin(input: AddImageInput!): PinImage!
   removeImageFromPin(imageId: UUID!): Boolean!
   updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
+
+  createGroup(input: CreateGroupInput!): Group!
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+  deleteGroup(groupId: UUID!): Boolean!
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+  acceptJoinToGroup(requestId: UUID!): Boolean!
 }

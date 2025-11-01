@@ -1,0 +1,4 @@
+type Group {
+  id: UUID!
+  members: [User!]! @external
+}
