@@ -1,18 +1,16 @@
 type Query {
-  userById(userId: ID!): User
+  userById(userId: UUID!): User
   userByNickname(nickname: String!): User
   userByEmail(email: String!): User
 
-  followersOf(userId: ID!): [User!]!
-  followingOf(userId: ID!): [User!]!
-  followersCount(userId: ID!): Int!
-  followingCount(userId: ID!): Int!
+  followersOf(userId: UUID!): [User!]!
+  followingOf(userId: UUID!): [User!]!
+  followersCount(userId: UUID!): Int!
+  followingCount(userId: UUID!): Int!
 
-  groupById(groupId: ID!): [User!]
-  isUserInGroup(userId: ID!, groupId: ID!): Boolean!
-  groupsOfUser(userId: ID!): [Group!]!
-  requestJoinGroup(groupId: ID!, userId: ID!): Boolean!
-  acceptJoinToGroup(requestId: ID!): Boolean!
+  groupById(groupId: UUID!): [User!]
+  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
+  groupsOfUser(userId: UUID!): [Group!]!
 
   getSettingsStatuses: [SettingsStatuses!]!
 }

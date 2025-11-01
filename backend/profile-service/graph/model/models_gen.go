@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type CreateGroupInput struct {
-	MemberIds []string `json:"memberIds"`
+	MemberIds []uuid.UUID `json:"memberIds"`
 }
 
 type CreateUserInput struct {
@@ -22,8 +24,8 @@ type CreateUserInput struct {
 }
 
 type Group struct {
-	ID      string  `json:"id"`
-	Members []*User `json:"members"`
+	ID      uuid.UUID `json:"id"`
+	Members []*User   `json:"members"`
 }
 
 type Mutation struct {
@@ -33,9 +35,9 @@ type Query struct {
 }
 
 type SettingsStatuses struct {
-	ID          string  `json:"id"`
-	Type        string  `json:"type"`
-	Description *string `json:"description,omitempty"`
+	ID          uuid.UUID `json:"id"`
+	Type        string    `json:"type"`
+	Description *string   `json:"description,omitempty"`
 }
 
 type UpdateUserInput struct {
@@ -47,7 +49,7 @@ type UpdateUserInput struct {
 }
 
 type User struct {
-	ID             string     `json:"id"`
+	ID             uuid.UUID  `json:"id"`
 	Nickname       string     `json:"nickname"`
 	Email          string     `json:"email"`
 	NickTag        string     `json:"nickTag"`

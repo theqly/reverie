@@ -15,22 +15,24 @@ input UpdateUserInput {
 }
 
 input CreateGroupInput {
-  memberIds: [ID!]!
+  memberIds: [UUID!]!
 }
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
-  updateUser(userId: ID!, input: UpdateUserInput!): User!
-  deleteUser(userId: ID!): Boolean!
+  updateUser(userId: UUID!, input: UpdateUserInput!): User!
+  deleteUser(userId: UUID!): Boolean!
 
-  followUser(userId: ID!, followerId: ID!): Boolean!
-  unfollowUser(userId: ID!, followerId: ID!): Boolean!
+  followUser(userId: UUID!, followerId: UUID!): Boolean!
+  unfollowUser(userId: UUID!, followerId: UUID!): Boolean!
 
   createGroup(input: CreateGroupInput!): Group!
-  addUserToGroup(userId: ID!, groupId: ID!): Boolean!
-  removeUserFromGroup(userId: ID!, groupId: ID!): Boolean!
-  deleteGroup(groupId: ID!): Boolean!
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+  deleteGroup(groupId: UUID!): Boolean!
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+  acceptJoinToGroup(requestId: UUID!): Boolean!
 
-  changeAccessBookmarks(userId: ID!, newStatus: ID!): Boolean!
+  changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
 }
 

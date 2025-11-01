@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/99designs/gqlgen/plugin/federation/fedruntime"
+	"github.com/google/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -53,31 +54,31 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddUserToGroup        func(childComplexity int, userID string, groupID string) int
-		ChangeAccessBookmarks func(childComplexity int, userID string, newStatus string) int
+		AcceptJoinToGroup     func(childComplexity int, requestID uuid.UUID) int
+		AddUserToGroup        func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
+		ChangeAccessBookmarks func(childComplexity int, userID uuid.UUID, newStatus uuid.UUID) int
 		CreateGroup           func(childComplexity int, input model.CreateGroupInput) int
 		CreateUser            func(childComplexity int, input model.CreateUserInput) int
-		DeleteGroup           func(childComplexity int, groupID string) int
-		DeleteUser            func(childComplexity int, userID string) int
-		FollowUser            func(childComplexity int, userID string, followerID string) int
-		RemoveUserFromGroup   func(childComplexity int, userID string, groupID string) int
-		UnfollowUser          func(childComplexity int, userID string, followerID string) int
-		UpdateUser            func(childComplexity int, userID string, input model.UpdateUserInput) int
+		DeleteGroup           func(childComplexity int, groupID uuid.UUID) int
+		DeleteUser            func(childComplexity int, userID uuid.UUID) int
+		FollowUser            func(childComplexity int, userID uuid.UUID, followerID uuid.UUID) int
+		RemoveUserFromGroup   func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
+		RequestJoinGroup      func(childComplexity int, groupID uuid.UUID, userID uuid.UUID) int
+		UnfollowUser          func(childComplexity int, userID uuid.UUID, followerID uuid.UUID) int
+		UpdateUser            func(childComplexity int, userID uuid.UUID, input model.UpdateUserInput) int
 	}
 
 	Query struct {
-		AcceptJoinToGroup   func(childComplexity int, requestID string) int
-		FollowersCount      func(childComplexity int, userID string) int
-		FollowersOf         func(childComplexity int, userID string) int
-		FollowingCount      func(childComplexity int, userID string) int
-		FollowingOf         func(childComplexity int, userID string) int
+		FollowersCount      func(childComplexity int, userID uuid.UUID) int
+		FollowersOf         func(childComplexity int, userID uuid.UUID) int
+		FollowingCount      func(childComplexity int, userID uuid.UUID) int
+		FollowingOf         func(childComplexity int, userID uuid.UUID) int
 		GetSettingsStatuses func(childComplexity int) int
-		GroupByID           func(childComplexity int, groupID string) int
-		GroupsOfUser        func(childComplexity int, userID string) int
-		IsUserInGroup       func(childComplexity int, userID string, groupID string) int
-		RequestJoinGroup    func(childComplexity int, groupID string, userID string) int
+		GroupByID           func(childComplexity int, groupID uuid.UUID) int
+		GroupsOfUser        func(childComplexity int, userID uuid.UUID) int
+		IsUserInGroup       func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
 		UserByEmail         func(childComplexity int, email string) int
-		UserByID            func(childComplexity int, userID string) int
+		UserByID            func(childComplexity int, userID uuid.UUID) int
 		UserByNickname      func(childComplexity int, nickname string) int
 		__resolve__service  func(childComplexity int) int
 	}
@@ -108,29 +109,29 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
-	UpdateUser(ctx context.Context, userID string, input model.UpdateUserInput) (*model.User, error)
-	DeleteUser(ctx context.Context, userID string) (bool, error)
-	FollowUser(ctx context.Context, userID string, followerID string) (bool, error)
-	UnfollowUser(ctx context.Context, userID string, followerID string) (bool, error)
+	UpdateUser(ctx context.Context, userID uuid.UUID, input model.UpdateUserInput) (*model.User, error)
+	DeleteUser(ctx context.Context, userID uuid.UUID) (bool, error)
+	FollowUser(ctx context.Context, userID uuid.UUID, followerID uuid.UUID) (bool, error)
+	UnfollowUser(ctx context.Context, userID uuid.UUID, followerID uuid.UUID) (bool, error)
 	CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error)
-	AddUserToGroup(ctx context.Context, userID string, groupID string) (bool, error)
-	RemoveUserFromGroup(ctx context.Context, userID string, groupID string) (bool, error)
-	DeleteGroup(ctx context.Context, groupID string) (bool, error)
-	ChangeAccessBookmarks(ctx context.Context, userID string, newStatus string) (bool, error)
+	AddUserToGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
+	RemoveUserFromGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
+	DeleteGroup(ctx context.Context, groupID uuid.UUID) (bool, error)
+	RequestJoinGroup(ctx context.Context, groupID uuid.UUID, userID uuid.UUID) (bool, error)
+	AcceptJoinToGroup(ctx context.Context, requestID uuid.UUID) (bool, error)
+	ChangeAccessBookmarks(ctx context.Context, userID uuid.UUID, newStatus uuid.UUID) (bool, error)
 }
 type QueryResolver interface {
-	UserByID(ctx context.Context, userID string) (*model.User, error)
+	UserByID(ctx context.Context, userID uuid.UUID) (*model.User, error)
 	UserByNickname(ctx context.Context, nickname string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
-	FollowersOf(ctx context.Context, userID string) ([]*model.User, error)
-	FollowingOf(ctx context.Context, userID string) ([]*model.User, error)
-	FollowersCount(ctx context.Context, userID string) (int, error)
-	FollowingCount(ctx context.Context, userID string) (int, error)
-	GroupByID(ctx context.Context, groupID string) ([]*model.User, error)
-	IsUserInGroup(ctx context.Context, userID string, groupID string) (bool, error)
-	GroupsOfUser(ctx context.Context, userID string) ([]*model.Group, error)
-	RequestJoinGroup(ctx context.Context, groupID string, userID string) (bool, error)
-	AcceptJoinToGroup(ctx context.Context, requestID string) (bool, error)
+	FollowersOf(ctx context.Context, userID uuid.UUID) ([]*model.User, error)
+	FollowingOf(ctx context.Context, userID uuid.UUID) ([]*model.User, error)
+	FollowersCount(ctx context.Context, userID uuid.UUID) (int, error)
+	FollowingCount(ctx context.Context, userID uuid.UUID) (int, error)
+	GroupByID(ctx context.Context, groupID uuid.UUID) ([]*model.User, error)
+	IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
+	GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error)
 	GetSettingsStatuses(ctx context.Context) ([]*model.SettingsStatuses, error)
 }
 
@@ -166,6 +167,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Group.Members(childComplexity), true
 
+	case "Mutation.acceptJoinToGroup":
+		if e.complexity.Mutation.AcceptJoinToGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_acceptJoinToGroup_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AcceptJoinToGroup(childComplexity, args["requestId"].(uuid.UUID)), true
 	case "Mutation.addUserToGroup":
 		if e.complexity.Mutation.AddUserToGroup == nil {
 			break
@@ -176,7 +188,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddUserToGroup(childComplexity, args["userId"].(string), args["groupId"].(string)), true
+		return e.complexity.Mutation.AddUserToGroup(childComplexity, args["userId"].(uuid.UUID), args["groupId"].(uuid.UUID)), true
 	case "Mutation.changeAccessBookmarks":
 		if e.complexity.Mutation.ChangeAccessBookmarks == nil {
 			break
@@ -187,7 +199,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ChangeAccessBookmarks(childComplexity, args["userId"].(string), args["newStatus"].(string)), true
+		return e.complexity.Mutation.ChangeAccessBookmarks(childComplexity, args["userId"].(uuid.UUID), args["newStatus"].(uuid.UUID)), true
 	case "Mutation.createGroup":
 		if e.complexity.Mutation.CreateGroup == nil {
 			break
@@ -220,7 +232,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteGroup(childComplexity, args["groupId"].(string)), true
+		return e.complexity.Mutation.DeleteGroup(childComplexity, args["groupId"].(uuid.UUID)), true
 	case "Mutation.deleteUser":
 		if e.complexity.Mutation.DeleteUser == nil {
 			break
@@ -231,7 +243,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["userId"].(string)), true
+		return e.complexity.Mutation.DeleteUser(childComplexity, args["userId"].(uuid.UUID)), true
 	case "Mutation.followUser":
 		if e.complexity.Mutation.FollowUser == nil {
 			break
@@ -242,7 +254,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.FollowUser(childComplexity, args["userId"].(string), args["followerId"].(string)), true
+		return e.complexity.Mutation.FollowUser(childComplexity, args["userId"].(uuid.UUID), args["followerId"].(uuid.UUID)), true
 	case "Mutation.removeUserFromGroup":
 		if e.complexity.Mutation.RemoveUserFromGroup == nil {
 			break
@@ -253,7 +265,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RemoveUserFromGroup(childComplexity, args["userId"].(string), args["groupId"].(string)), true
+		return e.complexity.Mutation.RemoveUserFromGroup(childComplexity, args["userId"].(uuid.UUID), args["groupId"].(uuid.UUID)), true
+	case "Mutation.requestJoinGroup":
+		if e.complexity.Mutation.RequestJoinGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestJoinGroup_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestJoinGroup(childComplexity, args["groupId"].(uuid.UUID), args["userId"].(uuid.UUID)), true
 	case "Mutation.unfollowUser":
 		if e.complexity.Mutation.UnfollowUser == nil {
 			break
@@ -264,7 +287,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UnfollowUser(childComplexity, args["userId"].(string), args["followerId"].(string)), true
+		return e.complexity.Mutation.UnfollowUser(childComplexity, args["userId"].(uuid.UUID), args["followerId"].(uuid.UUID)), true
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
 			break
@@ -275,19 +298,8 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["userId"].(string), args["input"].(model.UpdateUserInput)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["userId"].(uuid.UUID), args["input"].(model.UpdateUserInput)), true
 
-	case "Query.acceptJoinToGroup":
-		if e.complexity.Query.AcceptJoinToGroup == nil {
-			break
-		}
-
-		args, err := ec.field_Query_acceptJoinToGroup_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.AcceptJoinToGroup(childComplexity, args["requestId"].(string)), true
 	case "Query.followersCount":
 		if e.complexity.Query.FollowersCount == nil {
 			break
@@ -298,7 +310,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.FollowersCount(childComplexity, args["userId"].(string)), true
+		return e.complexity.Query.FollowersCount(childComplexity, args["userId"].(uuid.UUID)), true
 	case "Query.followersOf":
 		if e.complexity.Query.FollowersOf == nil {
 			break
@@ -309,7 +321,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.FollowersOf(childComplexity, args["userId"].(string)), true
+		return e.complexity.Query.FollowersOf(childComplexity, args["userId"].(uuid.UUID)), true
 	case "Query.followingCount":
 		if e.complexity.Query.FollowingCount == nil {
 			break
@@ -320,7 +332,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.FollowingCount(childComplexity, args["userId"].(string)), true
+		return e.complexity.Query.FollowingCount(childComplexity, args["userId"].(uuid.UUID)), true
 	case "Query.followingOf":
 		if e.complexity.Query.FollowingOf == nil {
 			break
@@ -331,7 +343,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.FollowingOf(childComplexity, args["userId"].(string)), true
+		return e.complexity.Query.FollowingOf(childComplexity, args["userId"].(uuid.UUID)), true
 	case "Query.getSettingsStatuses":
 		if e.complexity.Query.GetSettingsStatuses == nil {
 			break
@@ -348,7 +360,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.GroupByID(childComplexity, args["groupId"].(string)), true
+		return e.complexity.Query.GroupByID(childComplexity, args["groupId"].(uuid.UUID)), true
 	case "Query.groupsOfUser":
 		if e.complexity.Query.GroupsOfUser == nil {
 			break
@@ -359,7 +371,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.GroupsOfUser(childComplexity, args["userId"].(string)), true
+		return e.complexity.Query.GroupsOfUser(childComplexity, args["userId"].(uuid.UUID)), true
 	case "Query.isUserInGroup":
 		if e.complexity.Query.IsUserInGroup == nil {
 			break
@@ -370,18 +382,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.IsUserInGroup(childComplexity, args["userId"].(string), args["groupId"].(string)), true
-	case "Query.requestJoinGroup":
-		if e.complexity.Query.RequestJoinGroup == nil {
-			break
-		}
-
-		args, err := ec.field_Query_requestJoinGroup_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.RequestJoinGroup(childComplexity, args["groupId"].(string), args["userId"].(string)), true
+		return e.complexity.Query.IsUserInGroup(childComplexity, args["userId"].(uuid.UUID), args["groupId"].(uuid.UUID)), true
 	case "Query.userByEmail":
 		if e.complexity.Query.UserByEmail == nil {
 			break
@@ -403,7 +404,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.UserByID(childComplexity, args["userId"].(string)), true
+		return e.complexity.Query.UserByID(childComplexity, args["userId"].(uuid.UUID)), true
 	case "Query.userByNickname":
 		if e.complexity.Query.UserByNickname == nil {
 			break
@@ -617,13 +618,15 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema/obj.graphqls", Input: `enum UserStatus {
+	{Name: "../schema/obj.graphqls", Input: `scalar UUID
+
+enum UserStatus {
   active
   deleted
 }
 
 type User {
-  id: ID!
+  id: UUID!
   nickname: String!
   email: String!
   nickTag: String!
@@ -636,32 +639,30 @@ type User {
 }
 
 type Group {
-  id: ID!
+  id: UUID!
   members: [User!]!
 }
 
 type SettingsStatuses {
-  id: ID!
+  id: UUID!
   type: String!
   description: String
 }
 
 `, BuiltIn: false},
 	{Name: "../schema/query.graphqls", Input: `type Query {
-  userById(userId: ID!): User
+  userById(userId: UUID!): User
   userByNickname(nickname: String!): User
   userByEmail(email: String!): User
 
-  followersOf(userId: ID!): [User!]!
-  followingOf(userId: ID!): [User!]!
-  followersCount(userId: ID!): Int!
-  followingCount(userId: ID!): Int!
+  followersOf(userId: UUID!): [User!]!
+  followingOf(userId: UUID!): [User!]!
+  followersCount(userId: UUID!): Int!
+  followingCount(userId: UUID!): Int!
 
-  groupById(groupId: ID!): [User!]
-  isUserInGroup(userId: ID!, groupId: ID!): Boolean!
-  groupsOfUser(userId: ID!): [Group!]!
-  requestJoinGroup(groupId: ID!, userId: ID!): Boolean!
-  acceptJoinToGroup(requestId: ID!): Boolean!
+  groupById(groupId: UUID!): [User!]
+  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
+  groupsOfUser(userId: UUID!): [Group!]!
 
   getSettingsStatuses: [SettingsStatuses!]!
 }
@@ -683,23 +684,25 @@ input UpdateUserInput {
 }
 
 input CreateGroupInput {
-  memberIds: [ID!]!
+  memberIds: [UUID!]!
 }
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
-  updateUser(userId: ID!, input: UpdateUserInput!): User!
-  deleteUser(userId: ID!): Boolean!
+  updateUser(userId: UUID!, input: UpdateUserInput!): User!
+  deleteUser(userId: UUID!): Boolean!
 
-  followUser(userId: ID!, followerId: ID!): Boolean!
-  unfollowUser(userId: ID!, followerId: ID!): Boolean!
+  followUser(userId: UUID!, followerId: UUID!): Boolean!
+  unfollowUser(userId: UUID!, followerId: UUID!): Boolean!
 
   createGroup(input: CreateGroupInput!): Group!
-  addUserToGroup(userId: ID!, groupId: ID!): Boolean!
-  removeUserFromGroup(userId: ID!, groupId: ID!): Boolean!
-  deleteGroup(groupId: ID!): Boolean!
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+  deleteGroup(groupId: UUID!): Boolean!
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+  acceptJoinToGroup(requestId: UUID!): Boolean!
 
-  changeAccessBookmarks(userId: ID!, newStatus: ID!): Boolean!
+  changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
 }
 
 `, BuiltIn: false},
@@ -728,15 +731,26 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_acceptJoinToGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "requestId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["requestId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addUserToGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
 	args["userId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -747,12 +761,12 @@ func (ec *executionContext) field_Mutation_addUserToGroup_args(ctx context.Conte
 func (ec *executionContext) field_Mutation_changeAccessBookmarks_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
 	args["userId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "newStatus", ec.unmarshalNID2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "newStatus", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -785,7 +799,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_deleteGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -796,7 +810,7 @@ func (ec *executionContext) field_Mutation_deleteGroup_args(ctx context.Context,
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -807,12 +821,12 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_followUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
 	args["userId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "followerId", ec.unmarshalNID2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "followerId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -823,12 +837,12 @@ func (ec *executionContext) field_Mutation_followUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_removeUserFromGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
 	args["userId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -836,15 +850,31 @@ func (ec *executionContext) field_Mutation_removeUserFromGroup_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_requestJoinGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["groupId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_unfollowUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
 	args["userId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "followerId", ec.unmarshalNID2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "followerId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -855,7 +885,7 @@ func (ec *executionContext) field_Mutation_unfollowUser_args(ctx context.Context
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -879,21 +909,10 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_acceptJoinToGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "requestId", ec.unmarshalNID2string)
-	if err != nil {
-		return nil, err
-	}
-	args["requestId"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_followersCount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -904,7 +923,7 @@ func (ec *executionContext) field_Query_followersCount_args(ctx context.Context,
 func (ec *executionContext) field_Query_followersOf_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -915,7 +934,7 @@ func (ec *executionContext) field_Query_followersOf_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_followingCount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -926,7 +945,7 @@ func (ec *executionContext) field_Query_followingCount_args(ctx context.Context,
 func (ec *executionContext) field_Query_followingOf_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -937,7 +956,7 @@ func (ec *executionContext) field_Query_followingOf_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_groupById_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -948,7 +967,7 @@ func (ec *executionContext) field_Query_groupById_args(ctx context.Context, rawA
 func (ec *executionContext) field_Query_groupsOfUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -959,32 +978,16 @@ func (ec *executionContext) field_Query_groupsOfUser_args(ctx context.Context, r
 func (ec *executionContext) field_Query_isUserInGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
 	args["userId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
 	args["groupId"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_requestJoinGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNID2string)
-	if err != nil {
-		return nil, err
-	}
-	args["groupId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
-	if err != nil {
-		return nil, err
-	}
-	args["userId"] = arg1
 	return args, nil
 }
 
@@ -1002,7 +1005,7 @@ func (ec *executionContext) field_Query_userByEmail_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_userById_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -1083,7 +1086,7 @@ func (ec *executionContext) _Group_id(ctx context.Context, field graphql.Collect
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2string,
+		ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID,
 		true,
 		true,
 	)
@@ -1096,7 +1099,7 @@ func (ec *executionContext) fieldContext_Group_id(_ context.Context, field graph
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1224,7 +1227,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_updateUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["userId"].(string), fc.Args["input"].(model.UpdateUserInput))
+			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["userId"].(uuid.UUID), fc.Args["input"].(model.UpdateUserInput))
 		},
 		nil,
 		ec.marshalNUser2ᚖprofileᚑserviceᚋgraphᚋmodelᚐUser,
@@ -1287,7 +1290,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_deleteUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteUser(ctx, fc.Args["userId"].(string))
+			return ec.resolvers.Mutation().DeleteUser(ctx, fc.Args["userId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1328,7 +1331,7 @@ func (ec *executionContext) _Mutation_followUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_followUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().FollowUser(ctx, fc.Args["userId"].(string), fc.Args["followerId"].(string))
+			return ec.resolvers.Mutation().FollowUser(ctx, fc.Args["userId"].(uuid.UUID), fc.Args["followerId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1369,7 +1372,7 @@ func (ec *executionContext) _Mutation_unfollowUser(ctx context.Context, field gr
 		ec.fieldContext_Mutation_unfollowUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UnfollowUser(ctx, fc.Args["userId"].(string), fc.Args["followerId"].(string))
+			return ec.resolvers.Mutation().UnfollowUser(ctx, fc.Args["userId"].(uuid.UUID), fc.Args["followerId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1457,7 +1460,7 @@ func (ec *executionContext) _Mutation_addUserToGroup(ctx context.Context, field 
 		ec.fieldContext_Mutation_addUserToGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().AddUserToGroup(ctx, fc.Args["userId"].(string), fc.Args["groupId"].(string))
+			return ec.resolvers.Mutation().AddUserToGroup(ctx, fc.Args["userId"].(uuid.UUID), fc.Args["groupId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1498,7 +1501,7 @@ func (ec *executionContext) _Mutation_removeUserFromGroup(ctx context.Context, f
 		ec.fieldContext_Mutation_removeUserFromGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().RemoveUserFromGroup(ctx, fc.Args["userId"].(string), fc.Args["groupId"].(string))
+			return ec.resolvers.Mutation().RemoveUserFromGroup(ctx, fc.Args["userId"].(uuid.UUID), fc.Args["groupId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1539,7 +1542,7 @@ func (ec *executionContext) _Mutation_deleteGroup(ctx context.Context, field gra
 		ec.fieldContext_Mutation_deleteGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteGroup(ctx, fc.Args["groupId"].(string))
+			return ec.resolvers.Mutation().DeleteGroup(ctx, fc.Args["groupId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1572,6 +1575,88 @@ func (ec *executionContext) fieldContext_Mutation_deleteGroup(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_requestJoinGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_requestJoinGroup,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().RequestJoinGroup(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["userId"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_requestJoinGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_requestJoinGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_acceptJoinToGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_acceptJoinToGroup,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().AcceptJoinToGroup(ctx, fc.Args["requestId"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_acceptJoinToGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_acceptJoinToGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_changeAccessBookmarks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1580,7 +1665,7 @@ func (ec *executionContext) _Mutation_changeAccessBookmarks(ctx context.Context,
 		ec.fieldContext_Mutation_changeAccessBookmarks,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ChangeAccessBookmarks(ctx, fc.Args["userId"].(string), fc.Args["newStatus"].(string))
+			return ec.resolvers.Mutation().ChangeAccessBookmarks(ctx, fc.Args["userId"].(uuid.UUID), fc.Args["newStatus"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1621,7 +1706,7 @@ func (ec *executionContext) _Query_userById(ctx context.Context, field graphql.C
 		ec.fieldContext_Query_userById,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().UserByID(ctx, fc.Args["userId"].(string))
+			return ec.resolvers.Query().UserByID(ctx, fc.Args["userId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOUser2ᚖprofileᚑserviceᚋgraphᚋmodelᚐUser,
@@ -1810,7 +1895,7 @@ func (ec *executionContext) _Query_followersOf(ctx context.Context, field graphq
 		ec.fieldContext_Query_followersOf,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().FollowersOf(ctx, fc.Args["userId"].(string))
+			return ec.resolvers.Query().FollowersOf(ctx, fc.Args["userId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNUser2ᚕᚖprofileᚑserviceᚋgraphᚋmodelᚐUserᚄ,
@@ -1873,7 +1958,7 @@ func (ec *executionContext) _Query_followingOf(ctx context.Context, field graphq
 		ec.fieldContext_Query_followingOf,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().FollowingOf(ctx, fc.Args["userId"].(string))
+			return ec.resolvers.Query().FollowingOf(ctx, fc.Args["userId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNUser2ᚕᚖprofileᚑserviceᚋgraphᚋmodelᚐUserᚄ,
@@ -1936,7 +2021,7 @@ func (ec *executionContext) _Query_followersCount(ctx context.Context, field gra
 		ec.fieldContext_Query_followersCount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().FollowersCount(ctx, fc.Args["userId"].(string))
+			return ec.resolvers.Query().FollowersCount(ctx, fc.Args["userId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNInt2int,
@@ -1977,7 +2062,7 @@ func (ec *executionContext) _Query_followingCount(ctx context.Context, field gra
 		ec.fieldContext_Query_followingCount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().FollowingCount(ctx, fc.Args["userId"].(string))
+			return ec.resolvers.Query().FollowingCount(ctx, fc.Args["userId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNInt2int,
@@ -2018,7 +2103,7 @@ func (ec *executionContext) _Query_groupById(ctx context.Context, field graphql.
 		ec.fieldContext_Query_groupById,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().GroupByID(ctx, fc.Args["groupId"].(string))
+			return ec.resolvers.Query().GroupByID(ctx, fc.Args["groupId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOUser2ᚕᚖprofileᚑserviceᚋgraphᚋmodelᚐUserᚄ,
@@ -2081,7 +2166,7 @@ func (ec *executionContext) _Query_isUserInGroup(ctx context.Context, field grap
 		ec.fieldContext_Query_isUserInGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().IsUserInGroup(ctx, fc.Args["userId"].(string), fc.Args["groupId"].(string))
+			return ec.resolvers.Query().IsUserInGroup(ctx, fc.Args["userId"].(uuid.UUID), fc.Args["groupId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -2122,7 +2207,7 @@ func (ec *executionContext) _Query_groupsOfUser(ctx context.Context, field graph
 		ec.fieldContext_Query_groupsOfUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().GroupsOfUser(ctx, fc.Args["userId"].(string))
+			return ec.resolvers.Query().GroupsOfUser(ctx, fc.Args["userId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNGroup2ᚕᚖprofileᚑserviceᚋgraphᚋmodelᚐGroupᚄ,
@@ -2155,88 +2240,6 @@ func (ec *executionContext) fieldContext_Query_groupsOfUser(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_groupsOfUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_requestJoinGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_requestJoinGroup,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().RequestJoinGroup(ctx, fc.Args["groupId"].(string), fc.Args["userId"].(string))
-		},
-		nil,
-		ec.marshalNBoolean2bool,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_requestJoinGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_requestJoinGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_acceptJoinToGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_acceptJoinToGroup,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().AcceptJoinToGroup(ctx, fc.Args["requestId"].(string))
-		},
-		nil,
-		ec.marshalNBoolean2bool,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_acceptJoinToGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_acceptJoinToGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2431,7 +2434,7 @@ func (ec *executionContext) _SettingsStatuses_id(ctx context.Context, field grap
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2string,
+		ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID,
 		true,
 		true,
 	)
@@ -2444,7 +2447,7 @@ func (ec *executionContext) fieldContext_SettingsStatuses_id(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2518,7 +2521,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2string,
+		ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID,
 		true,
 		true,
 	)
@@ -2531,7 +2534,7 @@ func (ec *executionContext) fieldContext_User_id(_ context.Context, field graphq
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4333,7 +4336,7 @@ func (ec *executionContext) unmarshalInputCreateGroupInput(ctx context.Context, 
 		switch k {
 		case "memberIds":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberIds"))
-			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+			data, err := ec.unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4588,6 +4591,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "requestJoinGroup":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_requestJoinGroup(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "acceptJoinToGroup":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_acceptJoinToGroup(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "changeAccessBookmarks":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_changeAccessBookmarks(ctx, field)
@@ -4833,50 +4850,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_groupsOfUser(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "requestJoinGroup":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_requestJoinGroup(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "acceptJoinToGroup":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_acceptJoinToGroup(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5559,52 +5532,6 @@ func (ec *executionContext) marshalNGroup2ᚖprofileᚑserviceᚋgraphᚋmodel�
 	return ec._Group(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
-	res, err := graphql.UnmarshalID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
-	var vSlice []any
-	vSlice = graphql.CoerceList(v)
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5689,6 +5616,52 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v any) (uuid.UUID, error) {
+	res, err := graphql.UnmarshalUUID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v uuid.UUID) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalUUID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, v any) ([]uuid.UUID, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]uuid.UUID, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []uuid.UUID) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNUpdateUserInput2profileᚑserviceᚋgraphᚋmodelᚐUpdateUserInput(ctx context.Context, v any) (model.UpdateUserInput, error) {

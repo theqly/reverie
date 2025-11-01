@@ -10,21 +10,12 @@ import (
 )
 
 type UserRepository struct {
-	db *gorm.DB
+	db           *gorm.DB
+	userStatusesDB map[string]struct{}
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{db: db}
-}
-
-func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error) {
-	var user models.User
-	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
-	return user, err
-}
-
-func (r *UserRepository) getUserStatuses() (map[string]struct{}, error) {
-	var values map[string]struct{}
+func getUserStatuses(db *gorm.DB) (map[string]struct{}, error) {
+	var values []string
 
 	query := `
 		SELECT e.enumlabel
@@ -34,15 +25,44 @@ func (r *UserRepository) getUserStatuses() (map[string]struct{}, error) {
 		ORDER BY e.enumsortorder
 	`
 
-	err := r.db.Raw(query).Scan(&values).Error
+	err := db.Raw(query).Scan(&values).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return values, nil
+	userStatusesDB := make(map[string]struct{}, len(values))
+	for i := range values {
+		userStatusesDB[values[i]] = struct{}{}
+
+	}
+
+	return userStatusesDB, nil
 }
 
-var userStatusesDB map[string]struct{}
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	userStatusesDB, err := getUserStatuses(db)
+	if err != nil {
+		panic(err)
+	}
+
+	_, check := userStatusesDB[model.UserStatusDeleted.String()]
+	if !check {
+		panic("user status in graph/model does not match SQL user_status enum")
+	}
+
+	_, check = userStatusesDB[model.UserStatusActive.String()]
+	if !check {
+		panic("user status in graph/model does not match SQL user_status enum")
+	}
+
+	return &UserRepository{db: db, userStatusesDB: userStatusesDB}
+}
+
+func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
+	return user, err
+}
 
 func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) error {
 	var user models.User
@@ -51,25 +71,9 @@ func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) e
 		return err
 	}
 
-	if userStatusesDB == nil {
-		userStatusesDB, err = r.getUserStatuses()
-		if err != nil {
-			return err
-		}
-	}
-
-	if !isStatusValid(model.UserStatusDeleted.String()) {
-		return fmt.Errorf("user status in graph/model does not match SQL user_status enum: %s", user.Status)
-	}
-
 	user.Status = model.UserStatusDeleted
 
 	return r.db.WithContext(ctx).Save(&user).Error
-}
-
-func isStatusValid(status string) bool {
-	_, ok := userStatusesDB[status]
-	return ok
 }
 
 func (r *UserRepository) GetUserByNickname(ctx context.Context, nickname string) (models.User, error) {
