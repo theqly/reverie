@@ -10,7 +10,7 @@ func MapUserToGraphQL(u *models.User) *model.User {
 		return nil
 	}
 	return &model.User{
-		ID:             u.ID.String(),
+		ID:             u.ID,
 		Nickname:       u.Nickname,
 		Email:          u.Email,
 		NickTag:        u.NickTag,
@@ -27,7 +27,7 @@ func MapGroupToGraphQL(group *models.Group, members []models.Member) *model.Grou
 	}
 
 	return &model.Group{
-		ID:      group.ID.String(),
+		ID:      group.ID,
 		Members: graphqlMembers,
 	}
 }
