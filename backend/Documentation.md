@@ -347,7 +347,7 @@ type Group {
 }
 
 input CreateGroupInput {
-  memberIds: [UUID!]!
+  members: [UUID!]!
 }
 
 ##### Реализованные методы
