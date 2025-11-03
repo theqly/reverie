@@ -14,10 +14,6 @@ input UpdateUserInput {
   description: String
 }
 
-input CreateGroupInput {
-  memberIds: [UUID!]!
-}
-
 type Mutation {
   createUser(input: CreateUserInput!): User!
   updateUser(userId: UUID!, input: UpdateUserInput!): User!
@@ -26,13 +22,5 @@ type Mutation {
   followUser(userId: UUID!, followerId: UUID!): Boolean!
   unfollowUser(userId: UUID!, followerId: UUID!): Boolean!
 
-  createGroup(input: CreateGroupInput!): Group!
-  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
-  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
-  deleteGroup(groupId: UUID!): Boolean!
-  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
-  acceptJoinToGroup(requestId: UUID!): Boolean!
-
   changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
 }
-

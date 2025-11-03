@@ -8,9 +8,5 @@ type Query {
   followersCount(userId: UUID!): Int!
   followingCount(userId: UUID!): Int!
 
-  groupById(groupId: UUID!): [User!]
-  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
-  groupsOfUser(userId: UUID!): [Group!]!
-
   getSettingsStatuses: [SettingsStatuses!]!
 }

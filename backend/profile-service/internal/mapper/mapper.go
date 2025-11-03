@@ -19,15 +19,3 @@ func MapUserToGraphQL(u *models.User) *model.User {
 		UserRating:     u.UserRating,
 	}
 }
-
-func MapGroupToGraphQL(group *models.Group, members []models.Member) *model.Group {
-	var graphqlMembers []*model.User
-	for _, m := range members {
-		graphqlMembers = append(graphqlMembers, MapUserToGraphQL(&m.User))
-	}
-
-	return &model.Group{
-		ID:      group.ID,
-		Members: graphqlMembers,
-	}
-}

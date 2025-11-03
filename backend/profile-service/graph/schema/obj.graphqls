@@ -18,14 +18,8 @@ type User {
   following: [User!]!
 }
 
-type Group {
-  id: UUID!
-  members: [User!]!
-}
-
 type SettingsStatuses {
   id: UUID!
   type: String!
   description: String
 }
-

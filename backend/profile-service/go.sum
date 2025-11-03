@@ -1,5 +1,5 @@
-github.com/99designs/gqlgen v0.17.81 h1:kCkN/xVyRb5rEQpuwOHRTYq83i0IuTQg9vdIiwEerTs=
-github.com/99designs/gqlgen v0.17.81/go.mod h1:vgNcZlLwemsUhYim4dC1pvFP5FX0pr2Y+uYUoHFb1ig=
+github.com/99designs/gqlgen v0.17.73 h1:A3Ki+rHWqKbAOlg5fxiZBnz6OjW3nwupDHEG15gEsrg=
+github.com/99designs/gqlgen v0.17.73/go.mod h1:2RyGWjy2k7W9jxrs8MOQthXGkD3L3oGr0jXW3Pu8lGg=
 github.com/MicahParks/keyfunc v1.9.0 h1:lhKd5xrFHLNOWrDc4Tyb/Q1AJ4LCzQ48GVJyVIID3+o=
 github.com/MicahParks/keyfunc v1.9.0/go.mod h1:IdnCilugA0O/99dW+/MkvlyrsX8+L8+x95xuVNtM5jw=
 github.com/PuerkitoBio/goquery v1.10.3 h1:pFYcNSqHxBD06Fpj/KsbStFRsgRATgnf3LeXiUkhzPo=
