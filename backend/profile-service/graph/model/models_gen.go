@@ -11,21 +11,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateGroupInput struct {
-	MemberIds []uuid.UUID `json:"memberIds"`
-}
-
 type CreateUserInput struct {
 	Nickname       string  `json:"nickname"`
 	Email          string  `json:"email"`
 	NickTag        string  `json:"nick_tag"`
 	ProfilePicture *string `json:"profilePicture,omitempty"`
 	Description    *string `json:"description,omitempty"`
-}
-
-type Group struct {
-	ID      uuid.UUID `json:"id"`
-	Members []*User   `json:"members"`
 }
 
 type Mutation struct {

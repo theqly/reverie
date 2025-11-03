@@ -358,8 +358,7 @@ type Comment {
 ---
 # Профиль
 #### Назначение
-- CRUD операции для пользователей и групп
-- операции по добавлению/удалению пользователей в группы
+- CRUD операции для пользователей
 - подписка на кого-то и отписка (followers)
 - управление настройками пользователя
 
@@ -370,7 +369,7 @@ CREATE TYPE user_status AS ENUM ('active', 'deleted');
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nickname VARCHAR(255) NOT NULL,
-    nick_tag      VARCHAR(255) NOT NULL,
+    nick_tag VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     profile_picture TEXT,
     description TEXT,
@@ -384,29 +383,6 @@ CREATE TABLE followers (
     PRIMARY KEY (user_id, follower_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE groups (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid()
-);
-
-CREATE TABLE members (
-    user_id UUID NOT NULL,
-    group_id UUID NOT NULL,
-    PRIMARY KEY (user_id, group_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
-);
-
-CREATE TYPE request_status AS ENUM ('waited', 'rejected', 'accepted', 'cancelled');
-
-CREATE TABLE join_group_requests (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
-    group_id UUID NOT NULL,
-    status request_status NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
 );
 
 CREATE TABLE settings_statuses (
@@ -432,9 +408,6 @@ CREATE UNIQUE INDEX idx_users_nick_tag ON users(nick_tag);
 
 CREATE INDEX idx_followers_user_id ON followers(user_id);
 CREATE INDEX idx_followers_follower_id ON followers(follower_id);
-
-CREATE INDEX idx_members_user_id ON members(user_id);
-CREATE INDEX idx_members_group_id ON members(group_id);
 
 ```
 #### Взаимодействие с другими микросервисами
@@ -463,11 +436,6 @@ type User {
   following: [User!]!
 }
 
-type Group {
-  id: UUID!
-  members: [User!]!
-}
-
 type SettingsStatuses {
   id: UUID!
   type: String!
@@ -490,9 +458,6 @@ input UpdateUserInput {
   description: String
 }
 
-input CreateGroupInput {
-  memberIds: [UUID!]!
-}
 ```
 ##### Реализованные методы
 ```graphql
@@ -503,21 +468,12 @@ input CreateGroupInput {
 - followersOf(userId: UUID!): [User!]!
 - followingOf(userId: UUID!): [User!]!
 
-- groupById(groupId: UUID!): [User!]
-- isUserInGroup(user_id: UUID!, group_id: UUID!): Boolean!
-- groupsOfUser(userId: UUID!): [Group!]!
-
 - createUser(input: CreateUserInput!): User!
 - updateUser(userId: UUID!, input: UpdateUserInput!): User!
 - deleteUser(userId: UUID!): Boolean
 
 - followUser(userId: UUID!, followerId: ID!): Boolean!
 - unfollowUser(userId: UUID!, followerId: ID!): Boolean!
-
-- createGroup(input: CreateGroupInput!): Group!
-- addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
-- removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
-- ==deleteGroup(groupId: UUID!): Boolean!== (не нужно ничего удалять, ну или удалять только при удалении доски/всех досок во владении группой)
 ```
 
 ##### Необходимо реализовать:
@@ -527,9 +483,6 @@ input CreateGroupInput {
 ```
 (в профиле пользователя явно нужно будет выводить на превью не список всех, на кого подписан юзер и кто подписан на него, а просто количество, поэтому нужно добавить отдельные методы ля этого)
 ```graphql
-- requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
-- acceptJoinToGroup(requestId: UUID!): Boolean! (тут же нужно изменить статус заявки) (может нужно отправлять какой пользователь разрешает доступ?)
-(сейчас есть только конечные методы редактирования состава группы, нужно добавить промежуточный этап в виде бросания приглашения, а только после подтверждения добавлять нового пользователя)
 - getSettingsStatuses: [SettingsStatuses!]!
 - changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
 ```

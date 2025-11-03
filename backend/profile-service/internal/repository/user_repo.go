@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"profile-service/graph/model"
 	"profile-service/internal/models"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type UserRepository struct {
@@ -109,24 +110,6 @@ func (r *UserRepository) DeleteFollow(ctx context.Context, follow models.Followe
 	return r.db.WithContext(ctx).Delete(&follow).Error
 }
 
-func (r *UserRepository) CreateGroup(ctx context.Context, group models.Group) error {
-	return r.db.WithContext(ctx).Create(&group).Error
-}
-
-func (r *UserRepository) CreateMember(ctx context.Context, member models.Member) error {
-	return r.db.WithContext(ctx).Create(&member).Error
-}
-
-func (r *UserRepository) GetMember(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (models.Member, error) {
-	var member models.Member
-	err := r.db.WithContext(ctx).First(&member, "user_id = ? AND group_id = ?", userID, groupID).Error
-	return member, err
-}
-
-func (r *UserRepository) RemoveUserFromGroup(ctx context.Context, member models.Member) error {
-	return r.db.WithContext(ctx).Delete(&member).Error
-}
-
 func (r *UserRepository) GetFollowers(ctx context.Context, userID uuid.UUID) ([]models.Follower, error) {
 	var followerLinks []models.Follower
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&followerLinks).Error
@@ -137,22 +120,4 @@ func (r *UserRepository) GetFollowings(ctx context.Context, userID uuid.UUID) ([
 	var followingLinks []models.Follower
 	err := r.db.WithContext(ctx).Where("follower_id = ?", userID).Find(&followingLinks).Error
 	return followingLinks, err
-}
-
-func (r *UserRepository) GetGroupByID(ctx context.Context, id uuid.UUID) (models.Group, error) {
-	var group models.Group
-	err := r.db.WithContext(ctx).First(&group, "id = ?", id).Error
-	return group, err
-}
-
-func (r *UserRepository) GetMembers(ctx context.Context, groupID uuid.UUID) ([]models.Member, error) {
-	var members []models.Member
-	err := r.db.WithContext(ctx).Where("group_id = ?", groupID).Find(&members).Error
-	return members, err
-}
-
-func (r *UserRepository) GetGroups(ctx context.Context, userID uuid.UUID) ([]models.Member, error) {
-	var members []models.Member
-	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&members).Error
-	return members, err
 }
