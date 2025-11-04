@@ -15,7 +15,7 @@ CREATE TABLE boards (
     owner_id UUID NOT NULL,
     owner_type_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (access_level_id) REFERENCES access_levels(id)
+    FOREIGN KEY (access_level_id) REFERENCES access_levels(id),
     FOREIGN KEY (owner_type_id) REFERENCES owner_types(id)
 );
 

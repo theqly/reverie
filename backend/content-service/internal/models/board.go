@@ -27,7 +27,10 @@ type Board struct {
 	// Опциональные поля, которые будут инициализировать только в том случае, если при graphQL запросе были указаны явно
 	Pins []*Pin `gorm:"many2many:board_pins;"`
 
-	// Это не колонки таблицы Board
-	AccessLevel string `gorm:"-"`
-	OwnerType   string `gorm:"-"`
+	AccessLevel string
+	OwnerType   string
+}
+
+func (Board) TableName() string {
+	return "boards"
 }
