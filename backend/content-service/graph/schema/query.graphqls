@@ -15,4 +15,8 @@ type Query {
   pinsByUser(userId: UUID!): [Pin!]
   pinsByName(name: String!): [Pin!]
   pinsByLocation(query: String!): [Pin!]
+
+  groupById(groupId: UUID!): [User!]
+  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
+  groupsOfUser(userId: UUID!): [Group!]!
 }

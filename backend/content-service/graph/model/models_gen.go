@@ -49,6 +49,10 @@ type CreateBoardInput struct {
 	OwnerTypeID   int       `json:"ownerTypeId"`
 }
 
+type CreateGroupInput struct {
+	Members []uuid.UUID `json:"members"`
+}
+
 type CreatePinInput struct {
 	Name        string    `json:"name"`
 	Latitude    float64   `json:"latitude"`
@@ -58,10 +62,9 @@ type CreatePinInput struct {
 }
 
 type Group struct {
-	ID uuid.UUID `json:"id"`
+	ID      uuid.UUID `json:"id"`
+	Members []*User   `json:"members"`
 }
-
-func (Group) IsEntity() {}
 
 type Mutation struct {
 }

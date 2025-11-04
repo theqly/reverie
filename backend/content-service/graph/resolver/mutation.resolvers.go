@@ -8,8 +8,10 @@ import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
 	"content-service/internal/mapper"
+	"content-service/internal/models"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -226,6 +228,91 @@ func (r *mutationResolver) UpdateImageOrder(ctx context.Context, imageID uuid.UU
 
 	logger.Info("Successfully updated image order")
 	return mapper.ToGraphQLPinImage(pinImage), nil
+}
+
+// CreateGroup is the resolver for the createGroup field.
+func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error) {
+	group := &models.Group{}
+
+	if err := r.BoardRepo.CreateGroup(ctx, *group); err != nil {
+		return nil, fmt.Errorf("failed to create group: %w", err)
+	}
+
+	var members []models.Member
+	for _, userID := range input.Members {
+
+		member := models.Member{
+			UserID:  userID,
+			GroupID: group.ID,
+		}
+
+		if err := r.BoardRepo.CreateMember(ctx, member); err != nil {
+			return nil, fmt.Errorf("failed to add user %s to group: %w", userID, err)
+		}
+
+		members = append(members, member)
+	}
+
+	return mapper.ToGraphQLGroup(group, members), nil
+}
+
+// AddUserToGroup is the resolver for the addUserToGroup field.
+func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
+	if _, err := r.BoardRepo.GetMember(ctx, userID, groupID); err == nil {
+		return false, fmt.Errorf("user already in the group")
+	}
+
+	member := &models.Member{
+		UserID:  userID,
+		GroupID: groupID,
+	}
+
+	if err := r.BoardRepo.CreateMember(ctx, *member); err != nil {
+		return false, fmt.Errorf("failed to add user to group: %w", err)
+	}
+
+	return true, nil
+}
+
+// RemoveUserFromGroup is the resolver for the removeUserFromGroup field.
+func (r *mutationResolver) RemoveUserFromGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
+	member, err := r.BoardRepo.GetMember(ctx, userID, groupID)
+	if err != nil {
+		return false, fmt.Errorf("user %s not in group %s", userID, groupID)
+	}
+
+	if err := r.BoardRepo.RemoveUserFromGroup(ctx, member); err != nil {
+		return false, fmt.Errorf("failed to remove user from group: %w", err)
+	}
+
+	return true, nil
+}
+
+// DeleteGroup is the resolver for the deleteGroup field.
+func (r *mutationResolver) DeleteGroup(ctx context.Context, groupID uuid.UUID) (bool, error) {
+	// Жесткого удаления скорее всего не будет, пока нет требований останется заглушкой
+	return false, nil
+
+	// var group models.Group
+	// if err := r.DB.First(&group, "id = ?", id).Error; err != nil {
+	// 	return false, fmt.Errorf("group not found: %w", err)
+	// }
+
+	// if err := r.DB.Delete(&group).Error; err != nil {
+	// 	return false, fmt.Errorf("failed to delete group: %w", err)
+	// }
+
+	// return true, nil
+}
+
+// RequestJoinGroup is the resolver for the requestJoinGroup field.
+func (r *mutationResolver) RequestJoinGroup(ctx context.Context, groupID uuid.UUID, userID uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: RequestJoinGroup - requestJoinGroup"))
+}
+
+// AcceptJoinToGroup is the resolver for the acceptJoinToGroup field.
+func (r *mutationResolver) AcceptJoinToGroup(ctx context.Context, requestID uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: AcceptJoinToGroup - acceptJoinToGroup"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

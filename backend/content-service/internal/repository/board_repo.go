@@ -104,3 +104,39 @@ func (r *BoardRepository) RemovePinFromBoard(ctx context.Context, pinID uuid.UUI
 
 	return &board, err
 }
+
+func (r *BoardRepository) CreateGroup(ctx context.Context, group models.Group) error {
+	return r.db.WithContext(ctx).Create(&group).Error
+}
+
+func (r *BoardRepository) CreateMember(ctx context.Context, member models.Member) error {
+	return r.db.WithContext(ctx).Create(&member).Error
+}
+
+func (r *BoardRepository) GetMember(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (models.Member, error) {
+	var member models.Member
+	err := r.db.WithContext(ctx).First(&member, "user_id = ? AND group_id = ?", userID, groupID).Error
+	return member, err
+}
+
+func (r *BoardRepository) RemoveUserFromGroup(ctx context.Context, member models.Member) error {
+	return r.db.WithContext(ctx).Delete(&member).Error
+}
+
+func (r *BoardRepository) GetGroupByID(ctx context.Context, id uuid.UUID) (models.Group, error) {
+	var group models.Group
+	err := r.db.WithContext(ctx).First(&group, "id = ?", id).Error
+	return group, err
+}
+
+func (r *BoardRepository) GetMembers(ctx context.Context, groupID uuid.UUID) ([]models.Member, error) {
+	var members []models.Member
+	err := r.db.WithContext(ctx).Where("group_id = ?", groupID).Find(&members).Error
+	return members, err
+}
+
+func (r *BoardRepository) GetGroups(ctx context.Context, userID uuid.UUID) ([]models.Member, error) {
+	var members []models.Member
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&members).Error
+	return members, err
+}

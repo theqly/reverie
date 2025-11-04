@@ -8,6 +8,7 @@ import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
 	"content-service/internal/mapper"
+	"content-service/internal/models"
 	"context"
 	"fmt"
 
@@ -129,6 +130,56 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.P
 // PinsByLocation is the resolver for the pinsByLocation field.
 func (r *queryResolver) PinsByLocation(ctx context.Context, query string) ([]*model.Pin, error) {
 	panic(fmt.Errorf("not implemented: PinsByLocation - pinsByLocation"))
+}
+
+// GroupByID is the resolver for the groupById field.
+func (r *queryResolver) GroupByID(ctx context.Context, groupID uuid.UUID) ([]*model.User, error) {
+	if _, err := r.BoardRepo.GetGroupByID(ctx, groupID); err != nil {
+		return nil, fmt.Errorf("group not found with id %s: %w", groupID, err)
+	}
+
+	var members []models.Member
+	members, err := r.BoardRepo.GetMembers(ctx, groupID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load members for group %s: %w", groupID, err)
+	}
+
+	var users []*model.User
+	for _, member := range members {
+		users = append(users, &model.User{ID: member.UserID})
+	}
+
+	return users, nil
+}
+
+// IsUserInGroup is the resolver for the isUserInGroup field.
+func (r *queryResolver) IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
+	if _, err := r.BoardRepo.GetMember(ctx, userID, groupID); err != nil {
+		return false, fmt.Errorf("failed to check if user is in group: %w", err)
+	}
+
+	return true, nil
+}
+
+// GroupsOfUser is the resolver for the groupsOfUser field.
+func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error) {
+	var members []models.Member
+	members, err := r.BoardRepo.GetGroups(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find groups for user: %w", err)
+	}
+
+	var groups []*model.Group
+	for _, member := range members {
+		var group models.Group
+		if group, err = r.BoardRepo.GetGroupByID(ctx, member.GroupID); err != nil {
+			return nil, fmt.Errorf("failed to find group: %w", err)
+		}
+
+		groups = append(groups, mapper.ToGraphQLGroup(&group, members))
+	}
+
+	return groups, nil
 }
 
 // Query returns generated.QueryResolver implementation.

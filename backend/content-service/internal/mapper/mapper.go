@@ -115,3 +115,15 @@ func ToGraphQLPinImage(p *models.PinImage) *model.PinImage {
 		ImageURL:    p.ImageURL,
 	}
 }
+
+func ToGraphQLGroup(group *models.Group, members []models.Member) *model.Group {
+	var graphqlMembers []*model.User
+	for _, m := range members {
+		graphqlMembers = append(graphqlMembers, &model.User{ID: m.UserID})
+	}
+
+	return &model.Group{
+		ID:      group.ID,
+		Members: graphqlMembers,
+	}
+}
