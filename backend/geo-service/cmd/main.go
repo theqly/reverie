@@ -4,9 +4,7 @@ import (
 	"context"
 	"geo-service/graph/generated"
 	"geo-service/graph/resolver"
-	"geo-service/internal/repository"
 	"geo-service/pkg/config"
-	"geo-service/pkg/database"
 	"geo-service/pkg/middleware"
 	"log"
 
@@ -25,16 +23,7 @@ func main() {
 		log.Fatal("error loading config: %w", err)
 	}
 
-	err = database.Connect()
-	if err != nil {
-		log.Fatal("error loading config: %w", err)
-	}
-
-	geoRepo := repository.NewGeoRepository(database.DB)
-
-	resolver := &resolver.Resolver{
-		GeoRepo: geoRepo,
-	}
+	resolver := &resolver.Resolver{}
 
 	schema := generated.NewExecutableSchema(generated.Config{Resolvers: resolver})
 
