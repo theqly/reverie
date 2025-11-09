@@ -9,7 +9,7 @@
   "event_id": "UUID",
   "event_type": "string",
   "occurred_at": "timestamp",
-  "data": { ... }
+  "data": {}
 }
 ```
 
