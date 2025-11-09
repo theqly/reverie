@@ -1,0 +1,13 @@
+subgraphs:
+  profile:
+    routing_url: http://profile-service:8080/query
+    schema:
+      file: /etc/apollo/schemas/profile.graphql
+  content:
+    routing_url: http://content-service:8080/query
+    schema:
+      file: /etc/apollo/schemas/content.graphql
+  feed:
+    routing_url: http://feed-service:8080/query
+    schema:
+      file: /etc/apollo/schemas/feed.graphql
