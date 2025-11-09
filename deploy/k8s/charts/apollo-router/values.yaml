@@ -1,0 +1,20 @@
+apollo:
+  apiKey: ""
+  graphRef: "reverie@current"
+
+router:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/apollographql/router
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4000
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"

@@ -1,0 +1,24 @@
+dependencies:
+- name: profile-service
+  repository: file://../services-charts/profile-service
+  version: 0.1.0
+- name: profile-db
+  repository: file://../db-charts/profile-db
+  version: 0.1.0
+- name: content-service
+  repository: file://../services-charts/content-service
+  version: 0.1.0
+- name: content-db
+  repository: file://../db-charts/content-db
+  version: 0.1.0
+- name: feed-service
+  repository: file://../services-charts/feed-service
+  version: 0.1.0
+- name: feed-db
+  repository: file://../db-charts/feed-db
+  version: 0.1.0
+- name: apollo-router
+  repository: file://../apollo-router
+  version: 0.1.0
+digest: sha256:20d20b979c3c477c04117af2e19a7d20dda043362c8fb900a5fd4da09843d344
+generated: "2025-10-28T16:51:53.836887963+07:00"

@@ -1,0 +1,28 @@
+apiVersion: v2
+name: main
+description: the main chart to unite others into one
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: profile-service
+    version: 0.1.0
+    repository: "file://../services-charts/profile-service"
+  - name: profile-db
+    version: 0.1.0
+    repository: "file://../db-charts/profile-db"
+  - name: content-service
+    version: 0.1.0
+    repository: "file://../services-charts/content-service"
+  - name: content-db
+    version: 0.1.0
+    repository: "file://../db-charts/content-db"
+  - name: feed-service
+    version: 0.1.0
+    repository: "file://../services-charts/feed-service"
+  - name: feed-db
+    version: 0.1.0
+    repository: "file://../db-charts/feed-db"
+  - name: apollo-router
+    version: 0.1.0
+    repository: "file://../apollo-router"
