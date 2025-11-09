@@ -226,6 +226,7 @@ complaint.created
   "data": {
     "complaint_id": "UUID",
     "owner_id": "UUID",                 // кто подал жалобу
+    "owner_type": "user|group",
     "complaint_object_type": "pin|board|user",
     "complaint_object_id": "UUID",
     "complaint_type": "string",
