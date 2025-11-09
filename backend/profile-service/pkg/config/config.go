@@ -11,6 +11,7 @@ type Config struct {
 	DBPassword    string
 	DBName        string
 	DBHost        string
+	JWKSURL       string
 }
 
 var CFG *Config

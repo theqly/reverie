@@ -1,2 +1,6 @@
 DROP TABLE IF EXISTS followers;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS settings_statuses;
+DROP TABLE IF EXISTS settings;
+
+DROP TYPE IF EXISTS user_status;

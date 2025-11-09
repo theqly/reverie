@@ -1,0 +1,25 @@
+scalar UUID
+
+enum UserStatus {
+  active
+  deleted
+}
+
+type User {
+  id: UUID!
+  nickname: String!
+  email: String!
+  nickTag: String!
+  profilePicture: String
+  description: String
+  status: UserStatus!
+  userRating: Float!
+  followers: [User!]!
+  following: [User!]!
+}
+
+type SettingsStatuses {
+  id: UUID!
+  type: String!
+  description: String
+}

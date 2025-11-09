@@ -1,11 +1,12 @@
-package db
+package database
 
 import (
 	"errors"
 	"fmt"
+	"profile-service/pkg/config"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"profile-service/pkg/config"
 )
 
 var DB *gorm.DB
