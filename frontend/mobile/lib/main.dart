@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'pages/collections_page.dart';
 import 'pages/pins_page.dart';
 import 'pages/search_page.dart';
+import 'pages/create_page.dart';
 import 'pages/notifications_page.dart';
 import 'pages/profile_page.dart';
 
@@ -36,6 +37,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
+  int _sharedTabIndex = 0; // Общее состояние для Рекомендации/Подписки
+  int _lastContentPage = 0; // Последняя просмотренная страница контента (0 - Коллекции, 1 - Пины)
 
   @override
   void dispose() {
@@ -43,11 +46,41 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
+  void _navigateToPage(int index) {
+    setState(() {
+      _currentIndex = index;
+      // Сохраняем последнюю страницу контента (Коллекции или Пины)
+      if (index == 0 || index == 1) {
+        _lastContentPage = index;
+      }
+    });
+    _pageController.jumpToPage(index);
+  }
+
   // Список страниц для навигации
-  final List<Widget> _pages = [
-    const CollectionsPage(),
-    const PinsPage(),
+  List<Widget> get _pages => [
+    CollectionsPage(
+      key: const PageStorageKey('collections'),
+      onSearchTap: () => _navigateToPage(2),
+      initialTab: _sharedTabIndex,
+      onTabChanged: (index) {
+        setState(() {
+          _sharedTabIndex = index;
+        });
+      },
+    ),
+    PinsPage(
+      key: const PageStorageKey('pins'),
+      onSearchTap: () => _navigateToPage(2),
+      initialTab: _sharedTabIndex,
+      onTabChanged: (index) {
+        setState(() {
+          _sharedTabIndex = index;
+        });
+      },
+    ),
     const SearchPage(),
+    const CreatePage(),
     const NotificationsPage(),
     const ProfilePage(),
   ];
@@ -56,6 +89,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
@@ -65,8 +99,42 @@ class _MainScreenState extends State<MainScreen> {
         },
         children: _pages,
       ),
-      extendBody: true, // Позволяет контенту быть под док-станцией
-      bottomNavigationBar: _buildDockStation(),
+      extendBody: true,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Индикатор точками (только для Коллекций и Пинов)
+          if (_currentIndex == 0 || _currentIndex == 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _buildPageIndicator(),
+            ),
+          _buildDockStation(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildDot(0),
+        const SizedBox(width: 8),
+        _buildDot(1),
+      ],
+    );
+  }
+
+  Widget _buildDot(int index) {
+    final isActive = _currentIndex == index;
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isActive ? Colors.white : Colors.grey[400],
+      ),
     );
   }
 
@@ -88,15 +156,15 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildDockItem(Icons.grid_view_rounded, 0),
-                _buildDockItem(Icons.push_pin_outlined, 1),
-                _buildDockItem(Icons.search, 2),
-                _buildDockItem(Icons.notifications_outlined, 3),
-                _buildDockItem(Icons.person_outline, 4),
-              ],
-            ),
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildDockItem(Icons.grid_view_rounded, 0),
+            _buildDockItem(Icons.search, 1),
+            _buildDockItem(Icons.add, 2),
+            _buildDockItem(Icons.notifications_outlined, 3),
+            _buildDockItem(Icons.person_outline, 4),
+          ],
+        ),
           ),
         ),
       ),
@@ -104,13 +172,19 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildDockItem(IconData icon, int index) {
-    final isSelected = _currentIndex == index;
+    // Первая иконка активна если мы на Коллекциях (0) или Пинах (1)
+    final isSelected = (index == 0 && (_currentIndex == 0 || _currentIndex == 1)) || 
+                       (index != 0 && _currentIndex == index + 1);
+    
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-        _pageController.jumpToPage(index);
+        if (index == 0) {
+          // Первая иконка ведет на последнюю просмотренную страницу (Коллекции или Пины)
+          _navigateToPage(_lastContentPage);
+        } else {
+          // Остальные иконки: +1 к индексу из-за добавленной страницы Пинов
+          _navigateToPage(index + 1);
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(12),
