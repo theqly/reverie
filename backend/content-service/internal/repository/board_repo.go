@@ -61,7 +61,7 @@ func (r *BoardRepository) GetByGroup(ctx context.Context, groupID uuid.UUID) ([]
 		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id")
 
-	subQuery := r.db.Model(&models.OwnerType{}).Select("id").Where("type = ?", "group") // пока что подзапросом
+	subQuery := r.db.Model(&models.OwnerType{}).Select("id").Where("type = ?", "group") // ??? пока что подзапросом
 
 	err := tx.Where("boards.owner_type_id = (?) AND boards.owner_id = ?", subQuery, groupID).Find(&boards).Error
 	return boards, err
@@ -71,8 +71,8 @@ func (r *BoardRepository) Update(ctx context.Context, id uuid.UUID, updated mode
 	return r.db.WithContext(ctx).Model(&models.Board{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"name":        updated.Name,
-			"accessLevel": updated.AccessLevelID,
+			"name":            updated.Name,
+			"access_level_id": updated.AccessLevelID,
 		}).Error
 }
 

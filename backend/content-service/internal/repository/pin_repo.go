@@ -23,6 +23,7 @@ func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 
 func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Pin, error) {
 	var pin models.Pin
+
 	err := r.db.WithContext(ctx).First(&pin, "id = ?", id).Error
 	return pin, err
 }

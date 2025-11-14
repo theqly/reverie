@@ -1,0 +1,10 @@
+type Place {
+  id: UUID!
+  gis_id: UUID
+  name: String!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  purpose_name: String
+  type: String
+}

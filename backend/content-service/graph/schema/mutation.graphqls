@@ -1,22 +1,23 @@
 input CreateBoardInput {
   name: String!
-  accessLevelId: Int!
+  accessLevel: AccessLevelType!
   ownerId: UUID!
-  ownerTypeId: Int!
+  ownerType: OwnerType!
 }
 
 input UpdateBoardInput {
   name: String
-  accessLevelId: Int
+  accessLevel: AccessLevelType
   userId: UUID!
 }
 
 input CreatePinInput {
   name: String!
+  ownerId: UUID!
+  address String
   latitude: Float!
   longitude: Float!
   description: String
-  ownerId: UUID!
 }
 
 input UpdatePinInput {

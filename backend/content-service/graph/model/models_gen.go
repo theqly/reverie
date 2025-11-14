@@ -3,15 +3,14 @@
 package model
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-type AccessLevel struct {
-	ID   int    `json:"id"`
-	Type string `json:"type"`
-}
 
 type AddCommentInput struct {
 	PinID   uuid.UUID `json:"pinId"`
@@ -26,13 +25,13 @@ type AddImageInput struct {
 }
 
 type Board struct {
-	ID          uuid.UUID    `json:"id"`
-	Name        string       `json:"name"`
-	AccessLevel *AccessLevel `json:"accessLevel"`
-	OwnerID     uuid.UUID    `json:"ownerId"`
-	OwnerType   *OwnerType   `json:"ownerType"`
-	CreatedAt   time.Time    `json:"createdAt"`
-	Pins        []*Pin       `json:"pins,omitempty"`
+	ID          uuid.UUID       `json:"id"`
+	Name        string          `json:"name"`
+	AccessLevel AccessLevelType `json:"accessLevel"`
+	OwnerID     uuid.UUID       `json:"ownerId"`
+	OwnerType   OwnerType       `json:"ownerType"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	Pins        []*Pin          `json:"pins,omitempty"`
 }
 
 type Comment struct {
@@ -43,10 +42,10 @@ type Comment struct {
 }
 
 type CreateBoardInput struct {
-	Name          string    `json:"name"`
-	AccessLevelID int       `json:"accessLevelId"`
-	OwnerID       uuid.UUID `json:"ownerId"`
-	OwnerTypeID   int       `json:"ownerTypeId"`
+	Name        string          `json:"name"`
+	AccessLevel AccessLevelType `json:"accessLevel"`
+	OwnerID     uuid.UUID       `json:"ownerId"`
+	OwnerType   OwnerType       `json:"ownerType"`
 }
 
 type CreateGroupInput struct {
@@ -55,10 +54,10 @@ type CreateGroupInput struct {
 
 type CreatePinInput struct {
 	Name        string    `json:"name"`
+	OwnerID     uuid.UUID `json:"ownerId"`
 	Latitude    float64   `json:"latitude"`
 	Longitude   float64   `json:"longitude"`
 	Description *string   `json:"description,omitempty"`
-	OwnerID     uuid.UUID `json:"ownerId"`
 }
 
 type Group struct {
@@ -69,18 +68,14 @@ type Group struct {
 type Mutation struct {
 }
 
-type OwnerType struct {
-	ID   int    `json:"id"`
-	Type string `json:"type"`
-}
-
 type Pin struct {
 	ID          uuid.UUID   `json:"id"`
 	Name        string      `json:"name"`
+	Owner       *User       `json:"owner"`
+	Address     *string     `json:"address,omitempty"`
 	Latitude    float64     `json:"latitude"`
 	Longitude   float64     `json:"longitude"`
 	Description *string     `json:"description,omitempty"`
-	Owner       *User       `json:"owner"`
 	Rating      float64     `json:"rating"`
 	CreatedAt   time.Time   `json:"createdAt"`
 	Images      []*PinImage `json:"images,omitempty"`
@@ -99,9 +94,9 @@ type Query struct {
 }
 
 type UpdateBoardInput struct {
-	Name          *string   `json:"name,omitempty"`
-	AccessLevelID *int      `json:"accessLevelId,omitempty"`
-	UserID        uuid.UUID `json:"userId"`
+	Name        *string          `json:"name,omitempty"`
+	AccessLevel *AccessLevelType `json:"accessLevel,omitempty"`
+	UserID      uuid.UUID        `json:"userId"`
 }
 
 type UpdatePinInput struct {
@@ -118,3 +113,117 @@ type User struct {
 }
 
 func (User) IsEntity() {}
+
+type AccessLevelType string
+
+const (
+	AccessLevelTypePrivate     AccessLevelType = "private"
+	AccessLevelTypePublic      AccessLevelType = "public"
+	AccessLevelTypeGroup       AccessLevelType = "group"
+	AccessLevelTypeGroupPublic AccessLevelType = "group_public"
+)
+
+var AllAccessLevelType = []AccessLevelType{
+	AccessLevelTypePrivate,
+	AccessLevelTypePublic,
+	AccessLevelTypeGroup,
+	AccessLevelTypeGroupPublic,
+}
+
+func (e AccessLevelType) IsValid() bool {
+	switch e {
+	case AccessLevelTypePrivate, AccessLevelTypePublic, AccessLevelTypeGroup, AccessLevelTypeGroupPublic:
+		return true
+	}
+	return false
+}
+
+func (e AccessLevelType) String() string {
+	return string(e)
+}
+
+func (e *AccessLevelType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AccessLevelType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AccessLevelType", str)
+	}
+	return nil
+}
+
+func (e AccessLevelType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AccessLevelType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AccessLevelType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type OwnerType string
+
+const (
+	OwnerTypeUser  OwnerType = "user"
+	OwnerTypeGroup OwnerType = "group"
+)
+
+var AllOwnerType = []OwnerType{
+	OwnerTypeUser,
+	OwnerTypeGroup,
+}
+
+func (e OwnerType) IsValid() bool {
+	switch e {
+	case OwnerTypeUser, OwnerTypeGroup:
+		return true
+	}
+	return false
+}
+
+func (e OwnerType) String() string {
+	return string(e)
+}
+
+func (e *OwnerType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OwnerType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OwnerType", str)
+	}
+	return nil
+}
+
+func (e OwnerType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *OwnerType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e OwnerType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}

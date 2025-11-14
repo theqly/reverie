@@ -27,8 +27,9 @@ type Board struct {
 	// Опциональные поля, которые будут инициализировать только в том случае, если при graphQL запросе были указаны явно
 	Pins []*Pin `gorm:"many2many:board_pins;"`
 
-	AccessLevel string
-	OwnerType   string
+	// `gorm:"->"` означает, что эти поля для чтения
+	AccessLevel string `gorm:"->"`
+	OwnerType   string `gorm:"->"`
 }
 
 func (Board) TableName() string {

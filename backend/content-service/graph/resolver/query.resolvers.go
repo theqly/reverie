@@ -22,7 +22,6 @@ func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, 
 	logger.Info("Fetching board")
 
 	board, err := r.BoardRepo.GetByID(ctx, id)
-
 	if err != nil {
 		logger.Error("Failed to fetch board", zap.Error(err))
 		return nil, err

@@ -31,8 +31,10 @@ func (r *mutationResolver) CreateBoard(ctx context.Context, input model.CreateBo
 		logger.Error("Failed to create board", zap.Error(err))
 		return nil, err
 	}
-
 	logger.Info("Successfully created board", zap.String("boardID", board.ID.String()))
+
+	board.AccessLevel = input.AccessLevel.String()
+	board.OwnerType = input.OwnerType.String()
 	return mapper.ToGraphQLBoard(board), nil
 }
 

@@ -1,13 +1,7 @@
 type Query {
   # Поиск доски
-    # ИЗМЕНЕНО:
-    # - добавлена опциональная загрузка Пинов
   board(id: UUID!): Board
-    # ИЗМЕНЕНО
-    # Если "board(id: UUID!): Board" работает, то нужно добавить опциональную загрузку Пинов
   boardByName(name: String!): [Board!]
-    # ИЗМЕНЕНО
-    # Если "board(id: UUID!): Board" работает, то нужно добавить опциональную загрузку Пинов
   boardsByGroup(groupId: UUID!): [Board!]
 
   # Поиск пина
