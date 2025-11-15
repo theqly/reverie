@@ -1,60 +1,47 @@
 package main
 
 import (
-	"context"
-	"geo-service/graph/generated"
-	"geo-service/graph/resolver"
-	"geo-service/pkg/config"
-	"geo-service/pkg/middleware"
 	"log"
+	"net"
 
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gin-gonic/gin"
-	"github.com/vektah/gqlparser/v2/gqlerror"
+	"geo-service/internal/handler"
+	"geo-service/internal/repository"
+	"geo-service/internal/service"
+	"geo-service/pkg/geopb"
+
+	"google.golang.org/grpc"
 )
 
 func main() {
-	err := config.LoadConfig()
+	log.Println("Initializing dependencies...")
+
+	cacheType := "memory" // TODO: Redis Cache
+	cache, err := repository.NewCache(cacheType, "")
 	if err != nil {
-		log.Fatal("error loading config: %w", err)
+		log.Fatalf("Failed to create cache %s: %v", cacheType, err)
 	}
 
-	resolver := &resolver.Resolver{}
+	nominatimRepo := repository.NewNominatimRepo()
+	geoService := service.NewGeoService(nominatimRepo, cache)
+	geoHandler := handler.NewGeoHandler(geoService)
 
-	schema := generated.NewExecutableSchema(generated.Config{Resolvers: resolver})
+	grpcServer := grpc.NewServer(
+	// Можно добавить интерцепторы для логирования, аутентификации и т.д.
+	// grpc.UnaryInterceptor(loggingInterceptor),
+	)
 
-	srv := setupServer(schema)
+	geopb.RegisterGeoServiceServer(grpcServer, geoHandler)
 
-	r := gin.Default()
-
-	r.Use(middleware.CorsMiddleware())
-
-	r.POST("/query", gin.WrapH(srv))
-	r.GET("/", gin.WrapH(playground.Handler("GraphQL", "/query")))
-
-	err = r.Run(config.CFG.ServerAddress)
+	port := ":50051"
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatal("error running gin server: %w", err)
+		log.Fatalf("Failed to listen on port %s: %v", port, err)
 	}
-}
 
-func setupServer(schema graphql.ExecutableSchema) *handler.Server {
-	srv := handler.New(schema)
+	log.Printf("Geo service started successfully on port %s", port)
+	log.Printf("gRPC server is running and ready to accept requests")
 
-	srv.AddTransport(transport.Options{})
-	srv.AddTransport(transport.GET{})
-	srv.AddTransport(transport.POST{})
-	srv.AddTransport(transport.MultipartForm{})
-
-	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
-		return graphql.DefaultErrorPresenter(ctx, err)
-	})
-
-	srv.Use(extension.Introspection{})
-
-	return srv
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server: %v", err)
+	}
 }

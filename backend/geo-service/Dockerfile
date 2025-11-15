@@ -13,6 +13,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/geo-service .
 
-EXPOSE 8080
+EXPOSE 50051
 
 CMD ["./geo-service"]
