@@ -2,26 +2,45 @@ package handler
 
 import (
 	"context"
+	"geo-service/internal/logger"
 	"geo-service/internal/service"
 	"geo-service/pkg/geopb"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 type GeoHandler struct {
 	geopb.UnimplementedGeoServiceServer
 	service *service.GeoService
+	log     *zap.Logger
 }
 
 func NewGeoHandler(geoService *service.GeoService) *GeoHandler {
 	return &GeoHandler{
 		service: geoService,
+		log:     logger.Log.With(zap.String("component", "geo_handler")),
 	}
 }
 
 func (h *GeoHandler) Geocode(ctx context.Context, req *geopb.GeocodeRequest) (*geopb.GeocodeResponse, error) {
+	h.log.Info("gRPC geocode method called", zap.String("address", req.Address))
+
+	start := time.Now()
 	location, err := h.service.Geocode(ctx, req.Address)
 	if err != nil {
+		h.log.Error("gRPC geocode failed",
+			zap.String("address", req.Address),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+		)
 		return nil, err
 	}
+
+	h.log.Info("gRPC geocode completed successfully",
+		zap.String("address", req.Address),
+		zap.Duration("duration", time.Since(start)),
+	)
 
 	return &geopb.GeocodeResponse{
 		PlaceId:     location.PlaceId,
@@ -39,10 +58,28 @@ func (h *GeoHandler) Geocode(ctx context.Context, req *geopb.GeocodeRequest) (*g
 }
 
 func (h *GeoHandler) ReverseGeocode(ctx context.Context, req *geopb.ReverseGeocodeRequest) (*geopb.ReverseGeocodeResponse, error) {
+	h.log.Info("gRPC reverse geocode method called",
+		zap.Float64("lat", req.Lat),
+		zap.Float64("lon", req.Lon),
+	)
+
+	start := time.Now()
 	location, err := h.service.ReverseGeocode(ctx, req.Lat, req.Lon)
 	if err != nil {
+		h.log.Error("gRPC reverse geocode failed",
+			zap.Float64("lat", req.Lat),
+			zap.Float64("lon", req.Lon),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+		)
 		return nil, err
 	}
+
+	h.log.Info("gRPC reverse geocode completed successfully",
+		zap.Float64("lat", req.Lat),
+		zap.Float64("lon", req.Lon),
+		zap.Duration("duration", time.Since(start)),
+	)
 
 	return &geopb.ReverseGeocodeResponse{
 		PlaceId:     location.PlaceId,
