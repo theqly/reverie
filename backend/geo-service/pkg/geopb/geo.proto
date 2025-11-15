@@ -15,7 +15,7 @@ message GeocodeRequest {
 }
 
 message GeocodeResponse {
-  int64 place_id = 1;
+  string place_id = 1;
   double lat = 2;
   double lon = 3;
   string display_name = 4;
@@ -36,7 +36,7 @@ message ReverseGeocodeRequest {
 }
 
 message ReverseGeocodeResponse {
-  int64 place_id = 1;
+  string place_id = 1;
   double lat = 2;
   double lon = 3;
   string display_name = 4;

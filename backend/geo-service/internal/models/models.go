@@ -1,7 +1,7 @@
 package models
 
 type Location struct {
-	PlaceId     int64   `json:"place_id"`
+	PlaceId     string  `json:"place_id"`
 	Lat         float64 `json:"lat"`
 	Lon         float64 `json:"lon"`
 	DisplayName string  `json:"display_name"`

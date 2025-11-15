@@ -67,7 +67,7 @@ func (x *GeocodeRequest) GetAddress() string {
 
 type GeocodeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlaceId       int64                  `protobuf:"varint,1,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
+	PlaceId       string                 `protobuf:"bytes,1,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
 	Lat           float64                `protobuf:"fixed64,2,opt,name=lat,proto3" json:"lat,omitempty"`
 	Lon           float64                `protobuf:"fixed64,3,opt,name=lon,proto3" json:"lon,omitempty"`
 	DisplayName   string                 `protobuf:"bytes,4,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
@@ -106,11 +106,11 @@ func (*GeocodeResponse) Descriptor() ([]byte, []int) {
 	return file_geopb_geo_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GeocodeResponse) GetPlaceId() int64 {
+func (x *GeocodeResponse) GetPlaceId() string {
 	if x != nil {
 		return x.PlaceId
 	}
-	return 0
+	return ""
 }
 
 func (x *GeocodeResponse) GetLat() float64 {
@@ -271,7 +271,7 @@ func (x *ReverseGeocodeRequest) GetLon() float64 {
 
 type ReverseGeocodeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlaceId       int64                  `protobuf:"varint,1,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
+	PlaceId       string                 `protobuf:"bytes,1,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
 	Lat           float64                `protobuf:"fixed64,2,opt,name=lat,proto3" json:"lat,omitempty"`
 	Lon           float64                `protobuf:"fixed64,3,opt,name=lon,proto3" json:"lon,omitempty"`
 	DisplayName   string                 `protobuf:"bytes,4,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
@@ -310,11 +310,11 @@ func (*ReverseGeocodeResponse) Descriptor() ([]byte, []int) {
 	return file_geopb_geo_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ReverseGeocodeResponse) GetPlaceId() int64 {
+func (x *ReverseGeocodeResponse) GetPlaceId() string {
 	if x != nil {
 		return x.PlaceId
 	}
-	return 0
+	return ""
 }
 
 func (x *ReverseGeocodeResponse) GetLat() float64 {
@@ -441,7 +441,7 @@ const file_geopb_geo_proto_rawDesc = "" +
 	"\x0eGeocodeRequest\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\"\x9d\x01\n" +
 	"\x0fGeocodeResponse\x12\x19\n" +
-	"\bplace_id\x18\x01 \x01(\x03R\aplaceId\x12\x10\n" +
+	"\bplace_id\x18\x01 \x01(\tR\aplaceId\x12\x10\n" +
 	"\x03lat\x18\x02 \x01(\x01R\x03lat\x12\x10\n" +
 	"\x03lon\x18\x03 \x01(\x01R\x03lon\x12!\n" +
 	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\x12(\n" +
@@ -456,7 +456,7 @@ const file_geopb_geo_proto_rawDesc = "" +
 	"\x03lat\x18\x01 \x01(\x01R\x03lat\x12\x10\n" +
 	"\x03lon\x18\x02 \x01(\x01R\x03lon\"\xa4\x01\n" +
 	"\x16ReverseGeocodeResponse\x12\x19\n" +
-	"\bplace_id\x18\x01 \x01(\x03R\aplaceId\x12\x10\n" +
+	"\bplace_id\x18\x01 \x01(\tR\aplaceId\x12\x10\n" +
 	"\x03lat\x18\x02 \x01(\x01R\x03lat\x12\x10\n" +
 	"\x03lon\x18\x03 \x01(\x01R\x03lon\x12!\n" +
 	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\x12(\n" +

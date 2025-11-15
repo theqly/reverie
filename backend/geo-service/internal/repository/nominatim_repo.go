@@ -100,7 +100,7 @@ func (r *NominatimRepo) Geocode(address string) (*models.Location, error) {
 	)
 
 	return &models.Location{
-		PlaceId:     result.PlaceId,
+		PlaceId:     strconv.FormatInt(result.PlaceId, 10),
 		Lat:         lat,
 		Lon:         lon,
 		DisplayName: result.DisplayName,
@@ -182,7 +182,7 @@ func (r *NominatimRepo) ReverseGeocode(lat float64, lon float64) (*models.Locati
 	)
 
 	return &models.Location{
-		PlaceId:     result.PlaceId,
+		PlaceId:     strconv.FormatInt(result.PlaceId, 10),
 		Lat:         res_lat,
 		Lon:         res_lon,
 		DisplayName: result.DisplayName,
