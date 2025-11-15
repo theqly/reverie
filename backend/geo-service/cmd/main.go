@@ -10,6 +10,7 @@ import (
 	"geo-service/pkg/geopb"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -31,6 +32,8 @@ func main() {
 	)
 
 	geopb.RegisterGeoServiceServer(grpcServer, geoHandler)
+
+	reflection.Register(grpcServer)
 
 	port := ":50051"
 	lis, err := net.Listen("tcp", port)
