@@ -121,3 +121,4 @@ func (r *UserRepository) GetFollowings(ctx context.Context, userID uuid.UUID) ([
 	err := r.db.WithContext(ctx).Where("follower_id = ?", userID).Find(&followingLinks).Error
 	return followingLinks, err
 }
+
