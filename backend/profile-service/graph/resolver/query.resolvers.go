@@ -185,12 +185,15 @@ func (r *queryResolver) FollowingOf(ctx context.Context, userID uuid.UUID) ([]*m
 
 // FollowersCount is the resolver for the followersCount field.
 func (r *queryResolver) FollowersCount(ctx context.Context, userID uuid.UUID) (int, error) {
-	panic(fmt.Errorf("not implemented: FollowersCount - followersCount"))
+	count, err := r.UserRepo.GetNumberOfFollowers(ctx, userID)
+	return count, err
+
 }
 
 // FollowingCount is the resolver for the followingCount field.
 func (r *queryResolver) FollowingCount(ctx context.Context, userID uuid.UUID) (int, error) {
-	panic(fmt.Errorf("not implemented: FollowingCount - followingCount"))
+	count, err := r.UserRepo.GetNumberOfFollowings(ctx, userID)
+	return count, err
 }
 
 // GetSettingsStatuses is the resolver for the getSettingsStatuses field.

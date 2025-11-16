@@ -7,6 +7,6 @@ import "profile-service/internal/repository"
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	UserRepo *repository.UserRepository
+	UserRepo     *repository.UserRepository
+	SettingsRepo *repository.SettingsRepository
 }
-
