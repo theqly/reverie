@@ -122,3 +122,14 @@ func (r *UserRepository) GetFollowings(ctx context.Context, userID uuid.UUID) ([
 	return followingLinks, err
 }
 
+func (r *UserRepository) GetNumberOfFollowers(ctx context.Context, userID uuid.UUID) (int, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.Follower{}).Where("user_id = ?", userID).Count(&count).Error
+	return int(count), err
+}
+
+func (r *UserRepository) GetNumberOfFollowings(ctx context.Context, userID uuid.UUID) (int, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.Follower{}).Where("follower_id = ?", userID).Count(&count).Error
+	return int(count), err
+}

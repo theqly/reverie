@@ -185,24 +185,15 @@ func (r *queryResolver) FollowingOf(ctx context.Context, userID uuid.UUID) ([]*m
 
 // FollowersCount is the resolver for the followersCount field.
 func (r *queryResolver) FollowersCount(ctx context.Context, userID uuid.UUID) (int, error) {
-	var followerLinks []models.Follower
-	followerLinks, err := r.UserRepo.GetFollowers(ctx, userID)
-	if err != nil {
-		return 0, fmt.Errorf("failed to load followers: %w", err)
-	}
+	count, err := r.UserRepo.GetNumberOfFollowers(ctx, userID)
+	return count, err
 
-	return len(followerLinks), nil
 }
 
 // FollowingCount is the resolver for the followingCount field.
 func (r *queryResolver) FollowingCount(ctx context.Context, userID uuid.UUID) (int, error) {
-	var followingLinks []models.Follower
-	followingLinks, err := r.UserRepo.GetFollowings(ctx, userID)
-	if err != nil {
-		return 0, fmt.Errorf("failed to load following: %w", err)
-	}
-
-	return len(followingLinks), nil
+	count, err := r.UserRepo.GetNumberOfFollowings(ctx, userID)
+	return count, err
 }
 
 // GetSettingsStatuses is the resolver for the getSettingsStatuses field.
