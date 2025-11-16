@@ -606,6 +606,8 @@ message ReverseGeocodeResponse {
 
 ---
 # Нотификация
+#### [Документация событий Notification Service](./notification-service/event-documentation.md)
+
 #### Назначение
 - приглашение для вступления в группу
 - нотификации о публикациях (на кого подписан или апдейты в досках групповых)
