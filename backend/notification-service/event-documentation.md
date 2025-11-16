@@ -66,12 +66,12 @@ content.publication.created
   "event_type": "content.publication.created",
   "occurred_at": "2025-11-03T15:32:00Z",
   "data": {
-    "author_id": "UUID",
-    "author_name": "string",
     "content_type": "pin|board",
+    "author_id": "UUID|null", // нужно добавить валидацию на бэке
+    "author_name": "string|null", // поля не пустые либо (author_id && author_name) либо (group_id)
+    "group_id": "UUID|null",
     "content_id": "UUID",
     "content_name": "string",
-    "group_id": "UUID|null"
   }
 }
 ```
