@@ -37,10 +37,10 @@ CREATE TABLE pins (
     address TEXT,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
-    place_id UUID,
     description TEXT,
     rating FLOAT DEFAULT 0.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    place_id UUID,
     FOREIGN KEY (place_id) REFERENCES places(id)
 );
 
@@ -55,8 +55,8 @@ CREATE TABLE board_pins (
 CREATE TABLE pin_images (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_number INTEGER NOT NULL,
-    pin_id UUID NOT NULL,
     image_url TEXT NOT NULL,
+    pin_id UUID NOT NULL,
     FOREIGN KEY (pin_id) REFERENCES pins(id) ON DELETE CASCADE
 );
 
@@ -161,7 +161,7 @@ INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
     ('group'),
-    ('group public');
+    ('group_public');
 
 INSERT INTO owner_types (type) VALUES
     ('user'),

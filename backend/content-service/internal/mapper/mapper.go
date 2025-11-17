@@ -102,17 +102,22 @@ func ToGraphQLPin(p *models.Pin) *model.Pin {
 		Description: &p.Description,
 		Rating:      p.Rating,
 		CreatedAt:   p.CreatedAt,
-		// Images:      toGraphQLImages(p.Images),
+		Images:      toGraphQLImages(p.Images),
 		// TODO: Comments, Place
 	}
 }
 
-func toGraphQLImages(imgs []string) []*model.PinImage {
+func toGraphQLImages(imgs []models.PinImage) []*model.PinImage {
+	if len(imgs) == 0 {
+		return nil
+	}
+
 	images := make([]*model.PinImage, 0, len(imgs))
-	for i, url := range imgs {
+	for _, img := range imgs {
 		images = append(images, &model.PinImage{
-			ImageURL:    url,
-			OrderNumber: i,
+			ID:          img.ID,
+			OrderNumber: img.OrderNumber,
+			ImageURL:    img.ImageURL,
 		})
 	}
 	return images
@@ -147,11 +152,10 @@ func CreateToDomainPin(input *model.CreatePinInput) *models.Pin {
 	}
 	return &models.Pin{
 		Name:        input.Name,
+		OwnerID:     input.OwnerID,
 		Latitude:    input.Latitude,
 		Longitude:   input.Longitude,
 		Description: desc,
-		OwnerID:     input.OwnerID,
-		Images:      []string{},
 	}
 }
 

@@ -78,8 +78,8 @@ type Pin struct {
 	Description *string     `json:"description,omitempty"`
 	Rating      float64     `json:"rating"`
 	CreatedAt   time.Time   `json:"createdAt"`
+	Place       *Place      `json:"place,omitempty"`
 	Images      []*PinImage `json:"images,omitempty"`
-	Comments    []*Comment  `json:"comments,omitempty"`
 }
 
 func (Pin) IsEntity() {}
@@ -88,6 +88,17 @@ type PinImage struct {
 	ID          uuid.UUID `json:"id"`
 	OrderNumber int       `json:"orderNumber"`
 	ImageURL    string    `json:"imageUrl"`
+}
+
+type Place struct {
+	ID          uuid.UUID  `json:"id"`
+	GisID       *uuid.UUID `json:"gis_id,omitempty"`
+	Name        string     `json:"name"`
+	Address     *string    `json:"address,omitempty"`
+	Latitude    float64    `json:"latitude"`
+	Longitude   float64    `json:"longitude"`
+	PurposeName *string    `json:"purpose_name,omitempty"`
+	Type        *string    `json:"type,omitempty"`
 }
 
 type Query struct {

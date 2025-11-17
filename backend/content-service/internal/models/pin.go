@@ -16,10 +16,10 @@ type Pin struct {
 	Description string
 	Rating      float64   `gorm:"default:0.0"`
 	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	PlaceID     uuid.UUID `gorm:"type:uuid"`
 
-	Images  []string `gorm:"type:jsonb"`
-	BoardID uuid.UUID
+	PlaceID *uuid.UUID `gorm:"type:uuid"`
+	Images  []PinImage `gorm:"foreignKey:PinID"`
+	// BoardID uuid.UUID
 }
 
 type BoardPin struct {
@@ -38,6 +38,6 @@ type Comment struct {
 type PinImage struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	OrderNumber int       `gorm:"not null"`
-	PinID       uuid.UUID `gorm:"type:uuid;not null"`
 	ImageURL    string    `gorm:"not null"`
+	PinID       uuid.UUID `gorm:"type:uuid;not null"`
 }

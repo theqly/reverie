@@ -142,51 +142,6 @@ func (r *mutationResolver) RemovePinFromBoard(ctx context.Context, pinID uuid.UU
 	return mapper.ToGraphQLBoard(board), nil
 }
 
-// AddCommentToPin is the resolver for the addCommentToPin field.
-func (r *mutationResolver) AddCommentToPin(ctx context.Context, input model.AddCommentInput) (*model.Comment, error) {
-	logger := zap.L().With(zap.String("resolver", "AddCommentToPin"), zap.String("pinID", input.PinID.String()))
-	logger.Info("Adding comment to pin")
-
-	comment, err := r.PinRepo.AddComment(ctx, input.PinID, input.UserID, input.Content)
-	if err != nil {
-		logger.Error("Failed to add comment", zap.Error(err))
-		return nil, err
-	}
-
-	logger.Info("Successfully added comment")
-	return mapper.ToGraphQLComment(comment), nil
-}
-
-// UpdateComment is the resolver for the updateComment field.
-func (r *mutationResolver) UpdateComment(ctx context.Context, id uuid.UUID, content string) (*model.Comment, error) {
-	logger := zap.L().With(zap.String("resolver", "UpdateComment"), zap.String("commentID", id.String()))
-	logger.Info("Updating comment")
-
-	comment, err := r.PinRepo.UpdateComment(ctx, id, content)
-	if err != nil {
-		logger.Error("Failed to update comment", zap.Error(err))
-		return nil, err
-	}
-
-	logger.Info("Successfully updated comment")
-	return mapper.ToGraphQLComment(comment), nil
-}
-
-// DeleteComment is the resolver for the deleteComment field.
-func (r *mutationResolver) DeleteComment(ctx context.Context, id uuid.UUID) (bool, error) {
-	logger := zap.L().With(zap.String("resolver", "DeleteComment"), zap.String("commentID", id.String()))
-	logger.Info("Deleting comment")
-
-	err := r.PinRepo.DeleteCommentByID(ctx, id)
-	if err != nil {
-		logger.Error("Failed to delete comment", zap.Error(err))
-		return false, err
-	}
-
-	logger.Info("Successfully deleted comment")
-	return true, nil
-}
-
 // AddImageToPin is the resolver for the addImageToPin field.
 func (r *mutationResolver) AddImageToPin(ctx context.Context, input model.AddImageInput) (*model.PinImage, error) {
 	logger := zap.L().With(zap.String("resolver", "AddImageToPin"), zap.String("pinID", input.PinID.String()))
@@ -230,6 +185,51 @@ func (r *mutationResolver) UpdateImageOrder(ctx context.Context, imageID uuid.UU
 
 	logger.Info("Successfully updated image order")
 	return mapper.ToGraphQLPinImage(pinImage), nil
+}
+
+// AddCommentToPin is the resolver for the addCommentToPin field.
+func (r *mutationResolver) AddCommentToPin(ctx context.Context, input model.AddCommentInput) (*model.Comment, error) {
+	logger := zap.L().With(zap.String("resolver", "AddCommentToPin"), zap.String("pinID", input.PinID.String()))
+	logger.Info("Adding comment to pin")
+
+	comment, err := r.PinRepo.AddComment(ctx, input.PinID, input.UserID, input.Content)
+	if err != nil {
+		logger.Error("Failed to add comment", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Successfully added comment")
+	return mapper.ToGraphQLComment(comment), nil
+}
+
+// UpdateComment is the resolver for the updateComment field.
+func (r *mutationResolver) UpdateComment(ctx context.Context, id uuid.UUID, content string) (*model.Comment, error) {
+	logger := zap.L().With(zap.String("resolver", "UpdateComment"), zap.String("commentID", id.String()))
+	logger.Info("Updating comment")
+
+	comment, err := r.PinRepo.UpdateComment(ctx, id, content)
+	if err != nil {
+		logger.Error("Failed to update comment", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Successfully updated comment")
+	return mapper.ToGraphQLComment(comment), nil
+}
+
+// DeleteComment is the resolver for the deleteComment field.
+func (r *mutationResolver) DeleteComment(ctx context.Context, id uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "DeleteComment"), zap.String("commentID", id.String()))
+	logger.Info("Deleting comment")
+
+	err := r.PinRepo.DeleteCommentByID(ctx, id)
+	if err != nil {
+		logger.Error("Failed to delete comment", zap.Error(err))
+		return false, err
+	}
+
+	logger.Info("Successfully deleted comment")
+	return true, nil
 }
 
 // CreateGroup is the resolver for the createGroup field.

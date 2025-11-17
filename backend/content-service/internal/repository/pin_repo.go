@@ -2,6 +2,7 @@ package repository
 
 import (
 	"content-service/internal/models"
+	"content-service/internal/utils"
 	"context"
 	"fmt"
 
@@ -24,24 +25,47 @@ func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Pin, error) {
 	var pin models.Pin
 
-	err := r.db.WithContext(ctx).First(&pin, "id = ?", id).Error
+	tx := r.db.WithContext(ctx)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	err := tx.First(&pin, "id = ?", id).Error
 	return pin, err
 }
 
 func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]models.Pin, error) {
 	var pins []models.Pin
-	err := r.db.WithContext(ctx).Find(&pins, "owner_id = ?", userID).Error
+
+	tx := r.db.WithContext(ctx)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	err := tx.Find(&pins, "owner_id = ?", userID).Error
 	return pins, err
 }
 
 func (r *PinRepository) GetByName(ctx context.Context, name string) ([]models.Pin, error) {
 	var pins []models.Pin
-	err := r.db.WithContext(ctx).Find(&pins, "name = ?", name).Error
+
+	tx := r.db.WithContext(ctx)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	err := tx.Find(&pins, "name = ?", name).Error
 	return pins, err
 }
 
 func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models.Pin) error {
-	return r.db.WithContext(ctx).Model(&models.Board{}).
+	return r.db.WithContext(ctx).Model(&models.Pin{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"name":        updated.Name,

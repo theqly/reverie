@@ -8,8 +8,8 @@ type Pin @key(fields: "id") {
   description: String
   rating: Float!
   createdAt: Time!
+
   place: Place
-  
   images: [PinImage!]
   # comments: [Comment!]
 }
@@ -25,4 +25,15 @@ type Comment {
   content: String!
   createdAt: Time!
   author: User!
+}
+
+type Place {
+  id: UUID!
+  gis_id: UUID
+  name: String!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  purpose_name: String
+  type: String
 }

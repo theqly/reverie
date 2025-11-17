@@ -14,7 +14,6 @@ input UpdateBoardInput {
 input CreatePinInput {
   name: String!
   ownerId: UUID!
-  address String
   latitude: Float!
   longitude: Float!
   description: String
@@ -55,13 +54,13 @@ type Mutation {
   addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
   removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!
 
-  addCommentToPin(input: AddCommentInput!): Comment!
-  updateComment(id: UUID!, content: String!): Comment!
-  deleteComment(id: UUID!): Boolean!
-
   addImageToPin(input: AddImageInput!): PinImage!
   removeImageFromPin(imageId: UUID!): Boolean!
   updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
+
+  addCommentToPin(input: AddCommentInput!): Comment!
+  updateComment(id: UUID!, content: String!): Comment!
+  deleteComment(id: UUID!): Boolean!
 
   createGroup(input: CreateGroupInput!): Group!
   addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
