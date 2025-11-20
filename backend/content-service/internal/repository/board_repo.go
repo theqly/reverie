@@ -107,7 +107,7 @@ func (r *BoardRepository) RemovePinFromBoard(ctx context.Context, pinID uuid.UUI
 
 func (r *BoardRepository) CreateGroup(ctx context.Context, members []uuid.UUID) (*models.Group, error) {
 	// return r.db.WithContext(ctx).Create(&group).Error
-	var fullGroup *models.Group // тут может быть ошибка
+	fullGroup := &models.Group{} // тут может быть ошибка
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		group := models.Group{}
@@ -172,11 +172,11 @@ func (r *BoardRepository) GetGroupByID(ctx context.Context, id uuid.UUID) (model
 	tx := r.db.WithContext(ctx).
 		Model(&models.Group{}).
 		Select("groups.*").
-		Joins("LEFT JOIN members as m ON m.group_id = group.id")
+		Joins("LEFT JOIN members as m ON m.group_id = groups.id")
 
 	tx = tx.Preload("Members")
 
-	err := tx.First(&group, "group.id = ?", id).Error
+	err := tx.First(&group, "groups.id = ?", id).Error
 	return group, err
 }
 
