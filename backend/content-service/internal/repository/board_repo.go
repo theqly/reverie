@@ -105,18 +105,61 @@ func (r *BoardRepository) RemovePinFromBoard(ctx context.Context, pinID uuid.UUI
 	return &board, err
 }
 
-func (r *BoardRepository) CreateGroup(ctx context.Context, group models.Group) error {
-	return r.db.WithContext(ctx).Create(&group).Error
+func (r *BoardRepository) CreateGroup(ctx context.Context, members []uuid.UUID) (*models.Group, error) {
+	// return r.db.WithContext(ctx).Create(&group).Error
+	var fullGroup *models.Group // тут может быть ошибка
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		group := models.Group{}
+		if err := tx.Create(&group).Error; err != nil {
+			return err
+		}
+
+		if len(members) > 0 {
+			membersModel := make([]models.Member, len(members))
+			for i, userID := range members {
+				membersModel[i] = models.Member{
+					UserID:  userID,
+					GroupID: group.ID,
+				}
+			}
+
+			if err := tx.Create(&membersModel).Error; err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Preload("Members").First(fullGroup, "id = ?", group.ID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return fullGroup, nil
 }
 
 func (r *BoardRepository) CreateMember(ctx context.Context, member models.Member) error {
 	return r.db.WithContext(ctx).Create(&member).Error
 }
 
-func (r *BoardRepository) GetMember(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (models.Member, error) {
+func (r *BoardRepository) GetMember(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
 	var member models.Member
-	err := r.db.WithContext(ctx).First(&member, "user_id = ? AND group_id = ?", userID, groupID).Error
-	return member, err
+	result := r.db.WithContext(ctx).Find(&member, "user_id = ? AND group_id = ?", userID, groupID)
+
+	if result.Error != nil {
+		return false, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (r *BoardRepository) RemoveUserFromGroup(ctx context.Context, member models.Member) error {
@@ -125,15 +168,23 @@ func (r *BoardRepository) RemoveUserFromGroup(ctx context.Context, member models
 
 func (r *BoardRepository) GetGroupByID(ctx context.Context, id uuid.UUID) (models.Group, error) {
 	var group models.Group
-	err := r.db.WithContext(ctx).First(&group, "id = ?", id).Error
+
+	tx := r.db.WithContext(ctx).
+		Model(&models.Group{}).
+		Select("groups.*").
+		Joins("LEFT JOIN members as m ON m.group_id = group.id")
+
+	tx = tx.Preload("Members")
+
+	err := tx.First(&group, "group.id = ?", id).Error
 	return group, err
 }
 
-func (r *BoardRepository) GetMembers(ctx context.Context, groupID uuid.UUID) ([]models.Member, error) {
-	var members []models.Member
-	err := r.db.WithContext(ctx).Where("group_id = ?", groupID).Find(&members).Error
-	return members, err
-}
+// func (r *BoardRepository) GetMembers(ctx context.Context, groupID uuid.UUID) ([]models.Member, error) {
+// 	var members []models.Member
+// 	err := r.db.WithContext(ctx).Where("group_id = ?", groupID).Find(&members).Error
+// 	return members, err
+// }
 
 func (r *BoardRepository) GetGroups(ctx context.Context, userID uuid.UUID) ([]models.Member, error) {
 	var members []models.Member

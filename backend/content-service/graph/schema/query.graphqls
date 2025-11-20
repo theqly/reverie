@@ -10,7 +10,7 @@ type Query {
   pinsByName(name: String!): [Pin!]
   pinsByLocation(query: String!): [Pin!]
 
-  groupById(groupId: UUID!): [User!]
+  groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
   groupsOfUser(userId: UUID!): [Group!]!
 }

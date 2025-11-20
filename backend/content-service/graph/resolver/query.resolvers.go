@@ -132,50 +132,66 @@ func (r *queryResolver) PinsByLocation(ctx context.Context, query string) ([]*mo
 }
 
 // GroupByID is the resolver for the groupById field.
-func (r *queryResolver) GroupByID(ctx context.Context, groupID uuid.UUID) ([]*model.User, error) {
-	if _, err := r.BoardRepo.GetGroupByID(ctx, groupID); err != nil {
-		return nil, fmt.Errorf("group not found with id %s: %w", groupID, err)
-	}
+func (r *queryResolver) GroupByID(ctx context.Context, groupID uuid.UUID) (*model.Group, error) {
+	logger := zap.L().With(zap.String("resolver", "GroupByID"), zap.String("groupID", groupID.String()))
+	logger.Info("Fetching group")
 
-	var members []models.Member
-	members, err := r.BoardRepo.GetMembers(ctx, groupID)
+	group, err := r.BoardRepo.GetGroupByID(ctx, groupID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load members for group %s: %w", groupID, err)
+		logger.Error("Failed to fetch group", zap.Error(err))
+		return nil, err
 	}
 
-	var users []*model.User
-	for _, member := range members {
-		users = append(users, &model.User{ID: member.UserID})
-	}
+	// var members []models.Member
+	// members, err := r.BoardRepo.GetMembers(ctx, groupID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to load members for group %s: %w", groupID, err)
+	// }
 
-	return users, nil
+	// var users []*model.User
+	// for _, member := range members {
+	// 	users = append(users, &model.User{ID: member.UserID})
+	// }
+
+	logger.Info("Successfully fetched group")
+	return mapper.ToGraphQLGroup(&group), nil
 }
 
 // IsUserInGroup is the resolver for the isUserInGroup field.
 func (r *queryResolver) IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
-	if _, err := r.BoardRepo.GetMember(ctx, userID, groupID); err != nil {
-		return false, fmt.Errorf("failed to check if user is in group: %w", err)
+	logger := zap.L().With(zap.String("resolver", "IsUserInGroup"), zap.String("groupID", groupID.String()), zap.String("userID", userID.String()))
+	logger.Info("Checking if the user is in the group")
+
+	isMember, err := r.BoardRepo.GetMember(ctx, userID, groupID)
+	if err != nil {
+		logger.Error("Failed to check if the user is in the group", zap.Error(err))
+		return false, err
 	}
 
-	return true, nil
+	return isMember, nil
 }
 
 // GroupsOfUser is the resolver for the groupsOfUser field.
 func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error) {
+	logger := zap.L().With(zap.String("resolver", "GroupsOfUser"), zap.String("userID", userID.String()))
+	logger.Info("Fetching groups of user")
+
 	var members []models.Member
 	members, err := r.BoardRepo.GetGroups(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find groups for user: %w", err)
+		logger.Error("Failed to find groups for user", zap.Error(err))
+		return nil, err
 	}
 
 	var groups []*model.Group
 	for _, member := range members {
 		var group models.Group
 		if group, err = r.BoardRepo.GetGroupByID(ctx, member.GroupID); err != nil {
-			return nil, fmt.Errorf("failed to find group: %w", err)
+			logger.Error("Failed to get composition of groups with user", zap.Error(err))
+			return nil, err
 		}
 
-		groups = append(groups, mapper.ToGraphQLGroup(&group, members))
+		groups = append(groups, mapper.ToGraphQLGroup(&group))
 	}
 
 	return groups, nil

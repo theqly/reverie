@@ -234,34 +234,58 @@ func (r *mutationResolver) DeleteComment(ctx context.Context, id uuid.UUID) (boo
 
 // CreateGroup is the resolver for the createGroup field.
 func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error) {
-	group := &models.Group{}
-
-	if err := r.BoardRepo.CreateGroup(ctx, *group); err != nil {
-		return nil, fmt.Errorf("failed to create group: %w", err)
+	memberStrings := make([]string, len(input.Members))
+	for i, member := range input.Members {
+		memberStrings[i] = member.String()
 	}
 
-	var members []models.Member
-	for _, userID := range input.Members {
+	logger := zap.L().With(zap.String("resolver", "CreateGroup"), zap.Strings("members", memberStrings))
+	logger.Info("Creating group")
 
-		member := models.Member{
-			UserID:  userID,
-			GroupID: group.ID,
-		}
+	// group := &models.Group{}
 
-		if err := r.BoardRepo.CreateMember(ctx, member); err != nil {
-			return nil, fmt.Errorf("failed to add user %s to group: %w", userID, err)
-		}
-
-		members = append(members, member)
+	group, err := r.BoardRepo.CreateGroup(ctx, input.Members)
+	if err != nil {
+		logger.Error("Failed to create group", zap.Error(err))
+		return nil, err
 	}
 
-	return mapper.ToGraphQLGroup(group, members), nil
+	// var members []models.Member
+	// for _, userID := range input.Members {
+
+	// 	member := models.Member{
+	// 		UserID:  userID,
+	// 		GroupID: group.ID,
+	// 	}
+
+	// 	if err := r.BoardRepo.CreateMember(ctx, member); err != nil {
+	// 		logger.Error("Failed to add user to group",
+	// 			zap.String("userID", userID.String()),
+	// 			zap.String("groupID", group.ID.String()),
+	// 			zap.Error(err),
+	// 		)
+	// 		return nil, err
+	// 	}
+
+	// 	members = append(members, member)
+	// }
+
+	return mapper.ToGraphQLGroup(group), nil
 }
 
 // AddUserToGroup is the resolver for the addUserToGroup field.
 func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
-	if _, err := r.BoardRepo.GetMember(ctx, userID, groupID); err == nil {
-		return false, fmt.Errorf("user already in the group")
+	logger := zap.L().With(zap.String("resolver", "AddUserToGroup"), zap.String("userID", userID.String()), zap.String("groupID", groupID.String()))
+	logger.Info("Adding user to group")
+
+	isMember, err := r.BoardRepo.GetMember(ctx, userID, groupID)
+	if err != nil {
+		logger.Error("Failed to check if the user is in the group", zap.Error(err))
+		return false, err
+	}
+	if isMember == true {
+		logger.Error("User already in the group")
+		return false, fmt.Errorf("User already in the group")
 	}
 
 	member := &models.Member{
@@ -269,8 +293,10 @@ func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID uuid.UUID,
 		GroupID: groupID,
 	}
 
-	if err := r.BoardRepo.CreateMember(ctx, *member); err != nil {
-		return false, fmt.Errorf("failed to add user to group: %w", err)
+	err = r.BoardRepo.CreateMember(ctx, *member)
+	if err != nil {
+		logger.Error("Failed to add user to group", zap.Error(err))
+		return false, err
 	}
 
 	return true, nil
@@ -278,13 +304,27 @@ func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID uuid.UUID,
 
 // RemoveUserFromGroup is the resolver for the removeUserFromGroup field.
 func (r *mutationResolver) RemoveUserFromGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
-	member, err := r.BoardRepo.GetMember(ctx, userID, groupID)
+	logger := zap.L().With(zap.String("resolver", "RemoveUserFromGroup"), zap.String("userID", userID.String()), zap.String("groupID", groupID.String()))
+	logger.Info("Removing user from group")
+
+	isMember, err := r.BoardRepo.GetMember(ctx, userID, groupID)
 	if err != nil {
-		return false, fmt.Errorf("user %s not in group %s", userID, groupID)
+		logger.Error("Failed to check if the user is in the group", zap.Error(err))
+		return false, err
+	}
+	if isMember == false {
+		logger.Error("User not in group", zap.String("userID", userID.String()), zap.String("groupID", groupID.String()))
+		return false, fmt.Errorf("User not in group")
 	}
 
-	if err := r.BoardRepo.RemoveUserFromGroup(ctx, member); err != nil {
-		return false, fmt.Errorf("failed to remove user from group: %w", err)
+	member := &models.Member{
+		UserID:  userID,
+		GroupID: groupID,
+	}
+
+	if err := r.BoardRepo.RemoveUserFromGroup(ctx, *member); err != nil {
+		logger.Error("Failed to remove user from group", zap.Error(err))
+		return false, err
 	}
 
 	return true, nil

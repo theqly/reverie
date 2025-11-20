@@ -183,7 +183,7 @@ type QueryResolver interface {
 	PinsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Pin, error)
 	PinsByName(ctx context.Context, name string) ([]*model.Pin, error)
 	PinsByLocation(ctx context.Context, query string) ([]*model.Pin, error)
-	GroupByID(ctx context.Context, groupID uuid.UUID) ([]*model.User, error)
+	GroupByID(ctx context.Context, groupID uuid.UUID) (*model.Group, error)
 	IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
 	GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error)
 }
@@ -981,8 +981,8 @@ type Board {
   description: String
   rating: Float!
   createdAt: Time!
+
   place: Place
-  
   images: [PinImage!]
   # comments: [Comment!]
 }
@@ -1026,7 +1026,7 @@ type Place {
   pinsByName(name: String!): [Pin!]
   pinsByLocation(query: String!): [Pin!]
 
-  groupById(groupId: UUID!): [User!]
+  groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
   groupsOfUser(userId: UUID!): [Group!]!
 }`, BuiltIn: false},
@@ -5682,9 +5682,9 @@ func (ec *executionContext) _Query_groupById(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.User)
+	res := resTmp.(*model.Group)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalOGroup2ᚖcontentᚑserviceᚋgraphᚋmodelᚐGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_groupById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5696,9 +5696,11 @@ func (ec *executionContext) fieldContext_Query_groupById(ctx context.Context, fi
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_User_id(ctx, field)
+				return ec.fieldContext_Group_id(ctx, field)
+			case "members":
+				return ec.fieldContext_Group_members(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Group", field.Name)
 		},
 	}
 	defer func() {
@@ -10560,6 +10562,13 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) marshalOGroup2ᚖcontentᚑserviceᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v *model.Group) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Group(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐPinᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Pin) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -10714,53 +10723,6 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	_ = ctx
 	res := graphql.MarshalUUID(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOUser2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUser2ᚖcontentᚑserviceᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalO_Entity2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐEntity(ctx context.Context, sel ast.SelectionSet, v fedruntime.Entity) graphql.Marshaler {
