@@ -1,3 +1,11 @@
+КАК ДЕЛАТЬ go get
+
+go env -w GOPRIVATE=github.com/theqly
+
+git config --global url."https://api:ПОПРОСИТЕ_ТОКЕН_У_АРТЕМА@github.com/theqly".insteadOf "https://github.com/theqly"
+
+go get github.com/theqly/reverie/backend/geo-service/pkg/geopb
+
 ПРИМЕР ИСПОЛЬЗОВАНИЯ МОДУЛЯ GEO CLIENT
 
 package main
