@@ -37,7 +37,7 @@ CREATE TABLE boards (
     owner_id UUID NOT NULL,
     owner_type_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (access_level_id) REFERENCES access_levels(id)
+    FOREIGN KEY (access_level_id) REFERENCES access_levels(id),
     FOREIGN KEY (owner_type_id) REFERENCES owner_types(id)
 );
 
@@ -59,10 +59,10 @@ CREATE TABLE pins (
     address TEXT,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
-    place_id UUID,
     description TEXT,
     rating FLOAT DEFAULT 0.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    place_id UUID,
     FOREIGN KEY (place_id) REFERENCES places(id)
 );
 
@@ -77,8 +77,8 @@ CREATE TABLE board_pins (
 CREATE TABLE pin_images (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_number INTEGER NOT NULL,
-    pin_id UUID NOT NULL,
     image_url TEXT NOT NULL,
+    pin_id UUID NOT NULL,
     FOREIGN KEY (pin_id) REFERENCES pins(id) ON DELETE CASCADE
 );
 
@@ -190,11 +190,15 @@ INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
     ('group'),
-    ('group public');
+    ('group_public');
 
 INSERT INTO owner_types (type) VALUES
     ('user'),
     ('group');
+
+CREATE INDEX idx_members_user_id ON members(user_id);
+CREATE INDEX idx_members_group_id ON members(group_id);
+
 
 CREATE INDEX idx_boards_owner_id ON boards(owner_id);
 CREATE INDEX idx_boards_name ON boards(name);
@@ -205,9 +209,6 @@ CREATE INDEX idx_pins_name ON pins(name);
 
 CREATE INDEX idx_board_pins_pin_id ON board_pins(pin_id);
 CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
-
-CREATE INDEX idx_members_user_id ON members(user_id);
-CREATE INDEX idx_members_group_id ON members(group_id);
 ```
 
 
@@ -215,7 +216,7 @@ CREATE INDEX idx_members_group_id ON members(group_id);
 - приватный (только сами смотрим и редактируем)
 - публичный (смотрят все, но редактируем только мы, остальные могут себе скопировать и тогда уже редактировать копию свою)
 - групповой (смотрят и редактируют те, кто находят в группе)
-- ==групповой публичный (смотрят все, но редактировать могут только те, кто находится в группе)==
+- групповой публичный (смотрят все, но редактировать могут только те, кто находится в группе)
 #### Взаимодействие с другими микросервисами
 - user_id и group_id исходят из бд микросервиса Профиль. Поэтому нужно обеспечивать согласованность данных
 - проверка прав доступа на редактирование доски
@@ -228,61 +229,81 @@ CREATE INDEX idx_members_group_id ON members(group_id);
 #### Методы
 ##### input/output objects
 
-type AccessLevel {
-  id: Int!
-  type: String!
+enum AccessLevelType {
+  private
+  public
+  group
+  group_public
 }
 
-type OwnerType {
-  id: Int!
-  type: String!
+enum OwnerType {
+  user
+  group
 }
 
 type Board {
   id: UUID!
   name: String!
-  accessLevel: AccessLevel!
+  accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
 }
 
+type CommentToBoard {
+  id: UUID!
+  boardId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+
+type Group {
+  id: UUID!
+  members: [User!]! @external
+}
+
 input CreateBoardInput {
   name: String!
-  accessLevelId: Int!
+  accessLevel: AccessLevelType!
   ownerId: UUID!
-  ownerTypeId: Int!
+  ownerType: OwnerType!
 }
 
 input UpdateBoardInput {
   name: String
-  accessLevelId: Int
+  accessLevel: AccessLevelType
   userId: UUID!
 }
 
 input CreatePinInput {
   name: String!
-  latitude: ==Double==!
-  longitude: ==Double==!
-  description: String
   ownerId: UUID!
-  ==boardId: UUID!==
+  latitude: Float!
+  longitude: Float!
+  description: String
 }
 
 input UpdatePinInput {
   name: String
-  latitude: ==Double==
-  longitude: ==Double==
+  latitude: Float
+  longitude: Float
   description: String
   rating: Float
-  ==~~userId: UUID!~~==
+  userId: UUID!
 }
 
-input AddCommentInput {
-  ==contentId==: UUID!
+input AddCommentToPinInput {
+  pinId: UUID!
   userId: UUID!
-  ==message==: String!
+  message: String!
+}
+
+input AddCommentToBoardInput {
+  boardId: UUID!
+  userId: UUID!
+  message: String!
 }
 
 input AddImageInput {
@@ -291,99 +312,58 @@ input AddImageInput {
   orderNumber: Int!
 }
 
-type Pin @key(fields: "id") {
-  id: UUID!
-  name: String!
-  latitude: Float!
-  longitude: Float!
-  description: String
-  owner: User!
-  rating: Float!
-  createdAt: Time!
-  images: [PinImage!]
-  comments: [Comment!]
-}
-
-type PinImage {
-  id: UUID!
-  orderNumber: Int!
-  imageUrl: String!
-}
-
-type Comment {
-  id: UUID!
-  content: String!
-  createdAt: Time!
-  author: User!
-}
-
-==type ComplaintInput {
-  complaintTypeId: UUID!
-  content: String
-}==
-
-==type Reaction {
-  id: UUID!
-  type: String!
-  description: String
-}==
-
-==type ComplaintStatuses {
-  id: UUID!
-  type: String!
-  description: String
-}==
-
-==type ComplaintTypes {
-  id: UUID!
-  type: String!
-  description: String
-}==
-
-type Group {
-  id: UUID!
-  members: [User!]!
-}
-
 input CreateGroupInput {
   members: [UUID!]!
 }
 
+type User @key(fields: "id") {
+  id: UUID! @external
+}
+
 ##### Реализованные методы
-- board(id: UUID!): Board
-- boardByName(name: String!): [Board!]
-- boardsByGroup(groupId: UUID!): [Board!]
+  board(id: UUID!): Board
+  boardByName(name: String!): [Board!]
+  boardsByGroup(groupId: UUID!): [Board!]
 
-- pin(id: UUID!): Pin
-- pinsByUser(userId: UUID!): [Pin!]
-- pinsByName(name: String!): [Pin!]
-- pinsByLocation(query: String!): [Pin!]
+  pin(id: UUID!): Pin
+  pinsByUser(userId: UUID!): [Pin!]
+  pinsByName(name: String!): [Pin!]
+  pinsByLocation(query: String!): [Pin!]
 
-- createBoard(input: CreateBoardInput!): Board!
-- updateBoard(==boardId==: UUID!, input: UpdateBoardInput!): Board!
+  groupById(groupId: UUID!): Group
+  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
+  groupsOfUser(userId: UUID!): [Group!]!
 
-- ==createPin(input: CreatePinInput!): Pin!== @policy(service: "coprocessor", query: "checkBoardApproval") (см взаимодействие с другими микросервисами)
-- updatePin(==pinId==: UUID!, input: UpdatePinInput!, ==userId: UUID!==): Pin! (проверка, что редактирует владелец)
+  commentsByBoard(boardId: UUID!): [CommentToBoard]!
+  commentsByPin(pinId: UUID!): [CommentToPin]!
 
-- addPinToBoard(pinId: UUID!, boardId: UUID!, ==userId: UUID!==): Board! @policy(service: "coprocessor", query: "checkBoardApproval") (см взаимодействие с другими микросервисами)
-- removePinFromBoard(pinId: UUID!, boardId: UUID!): Board! (проверка, что этот пользователь уже ставил такую реакцию)
+  createBoard(input: CreateBoardInput!): Board!
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
 
-- ==addCommentToPin(input: AddCommentInput!): Comment!== (переделать из-за изменений в бд)
-- updateComment(==commentId==: UUID!, ==message==: String!, ==userId: UUID!==): Comment! (проверка, что обновляет владелец)
-- deleteComment(==commentId==: UUID!, ==userId: UUID!==): Boolean! (проверка, что удаляет владелец)
+  createPin(input: CreatePinInput!): Pin!
+  updatePin(id: UUID!, input: UpdatePinInput!): Pin!
 
-- addImageToPin(input: AddImageInput!, ==userId: UUID!==): PinImage! (проверка, что обновляет владелец)
-- removeImageFromPin(imageId: UUID!, ==userId: UUID!==): Boolean! (проверка, что удаляет владелец)
-- updateImageOrder(imageId: UUID!, newOrder: Int!, ==userId: UUID!==): PinImage! (проверка, что обновляет владелец)
+  addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
+  removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!
 
-- groupById(groupId: UUID!): [User!]
-- isUserInGroup(user_id: UUID!, group_id: UUID!): Boolean!
-- groupsOfUser(userId: UUID!): [Group!]!
+  addImageToPin(input: AddImageInput!): PinImage!
+  removeImageFromPin(imageId: UUID!): Boolean!
+  updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
 
-- createGroup(input: CreateGroupInput!): Group!
-- addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
-- removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
-- ==deleteGroup(groupId: UUID!): Boolean!== (не нужно ничего удалять, ну или удалять только при удалении доски/всех досок во владении группой)
+  addCommentToPin(input: AddCommentToPinInput!): CommentToPin!
+  updateCommentToPin(id: UUID!, message: String!): CommentToPin!
+  deleteCommentToPin(id: UUID!): Boolean!
+
+  addCommentToBoard(input: AddCommentToBoardInput!): CommentToBoard!
+  updateCommentToBoard(id: UUID!, message: String!): CommentToBoard!
+  deleteCommentToBoard(id: UUID!): Boolean!
+
+  createGroup(input: CreateGroupInput!): Group!
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+  deleteGroup(groupId: UUID!): Boolean!
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+  acceptJoinToGroup(requestId: UUID!): Boolean!
 
 ##### Необходимо реализовать:
 - boardsByUser(userId: UUID!): [Board!] (вернуть список всех досок, где пользователь владелец)
@@ -394,7 +374,6 @@ input CreateGroupInput {
 - removePinFromBookmarks(pinId: UUID!, userId: UUID!): Boolean!
 - copyPin(pinId: UUID!, userId: UUID!, boardId: UUID!): Pin! (возвращаем id нового пина, возможно хватит возвращать UUID!)
 - copyBoard(boardId: UUID!, userId: UUID!): Board! (возвращаем id новой доски, возможно хватит возвращать UUID!)
-- addCommentToBoard(input: AddCommentInput!): Comment!
 - reactions(): [Reaction!]!
 - addReactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 - removeReactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean! (проверка, что удаляет владелец)
