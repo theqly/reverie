@@ -1,13 +1,29 @@
-type AccessLevel {
-  id: UUID!
-  type: String!
+enum AccessLevelType {
+  private
+  public
+  group
+  group_public
+}
+
+enum OwnerType {
+  user
+  group
 }
 
 type Board {
   id: UUID!
   name: String!
-  accessLevel: AccessLevel!
-  groupId: Group!
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
+}
+
+type CommentToBoard {
+  id: UUID!
+  boardId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
 }

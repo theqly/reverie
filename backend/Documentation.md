@@ -25,27 +25,20 @@ CREATE TABLE access_levels (
     type VARCHAR(255) NOT NULL UNIQUE
 );
 
+CREATE TABLE owner_types (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(255) NOT NULL UNIQUE
+);
+
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
+    owner_type_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (access_level_id) REFERENCES access_levels(id)
-);
-
-CREATE TABLE pins (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
-    owner_id UUID NOT NULL,
-    address TEXT,
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    place_id UUID,
-    description TEXT,
-    rating FLOAT DEFAULT 0.0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (place_id) REFERENCES places(id)
+    FOREIGN KEY (access_level_id) REFERENCES access_levels(id),
+    FOREIGN KEY (owner_type_id) REFERENCES owner_types(id)
 );
 
 CREATE TABLE places (
@@ -59,6 +52,20 @@ CREATE TABLE places (
     type VARCHAR(255)
 );
 
+CREATE TABLE pins (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    owner_id UUID NOT NULL,
+    address TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    description TEXT,
+    rating FLOAT DEFAULT 0.0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    place_id UUID,
+    FOREIGN KEY (place_id) REFERENCES places(id)
+);
+
 CREATE TABLE board_pins (
     board_id UUID NOT NULL,
     pin_id UUID NOT NULL,
@@ -70,20 +77,27 @@ CREATE TABLE board_pins (
 CREATE TABLE pin_images (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_number INTEGER NOT NULL,
-    pin_id UUID NOT NULL,
     image_url TEXT NOT NULL,
+    pin_id UUID NOT NULL,
     FOREIGN KEY (pin_id) REFERENCES pins(id) ON DELETE CASCADE
 );
 
-CREATE TYPE content_type AS ENUM ('pin', 'board');
-
-CREATE TABLE comments (
+CREATE TABLE pin_comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    for_type content_type NOT NULL,
-    content_id UUID NOT NULL,
+    pin_id UUID NOT NULL,
     owner_id UUID NOT NULL,
     message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pin_id) REFERENCES pins(id) ON DELETE CASCADE
+);
+
+CREATE TABLE board_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL,
+    owner_id UUID NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
 );
 
 CREATE TYPE complaint_object_type AS ENUM ('pin', 'board', 'user');
@@ -151,11 +165,40 @@ CREATE TABLE bookmarks_boards (
     FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
 );
 
+CREATE TABLE groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+);
+
+CREATE TABLE members (
+    user_id UUID NOT NULL,
+    group_id UUID NOT NULL,
+    PRIMARY KEY (user_id, group_id),
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+);
+
+CREATE TYPE request_status AS ENUM ('waited', 'rejected', 'accepted', 'cancelled');
+
+CREATE TABLE join_group_requests (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    group_id UUID NOT NULL,
+    status request_status NOT NULL,
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+);
+
 INSERT INTO access_levels (type) VALUES
     ('private'),
     ('public'),
     ('group'),
-    ('group public');
+    ('group_public');
+
+INSERT INTO owner_types (type) VALUES
+    ('user'),
+    ('group');
+
+CREATE INDEX idx_members_user_id ON members(user_id);
+CREATE INDEX idx_members_group_id ON members(group_id);
+
 
 CREATE INDEX idx_boards_owner_id ON boards(owner_id);
 CREATE INDEX idx_boards_name ON boards(name);
@@ -173,7 +216,7 @@ CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
 - приватный (только сами смотрим и редактируем)
 - публичный (смотрят все, но редактируем только мы, остальные могут себе скопировать и тогда уже редактировать копию свою)
 - групповой (смотрят и редактируют те, кто находят в группе)
-- ==групповой публичный (смотрят все, но редактировать могут только те, кто находится в группе)==
+- групповой публичный (смотрят все, но редактировать могут только те, кто находится в группе)
 #### Взаимодействие с другими микросервисами
 - user_id и group_id исходят из бд микросервиса Профиль. Поэтому нужно обеспечивать согласованность данных
 - проверка прав доступа на редактирование доски
@@ -186,54 +229,81 @@ CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
 #### Методы
 ##### input/output objects
 
-type AccessLevel {
-  id: UUID!
-  type: String!
+enum AccessLevelType {
+  private
+  public
+  group
+  group_public
+}
+
+enum OwnerType {
+  user
+  group
 }
 
 type Board {
   id: UUID!
   name: String!
-  accessLevel: AccessLevel!
-  groupId: Group!
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
 }
 
+type CommentToBoard {
+  id: UUID!
+  boardId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+
+type Group {
+  id: UUID!
+  members: [User!]! @external
+}
+
 input CreateBoardInput {
   name: String!
-  accessLevelId: UUID!
-  groupId: UUID!
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  ownerType: OwnerType!
 }
 
 input UpdateBoardInput {
   name: String
-  accessLevelId: UUID
+  accessLevel: AccessLevelType
   userId: UUID!
 }
 
 input CreatePinInput {
   name: String!
-  latitude: ==Double==!
-  longitude: ==Double==!
-  description: String
   ownerId: UUID!
-  ==boardId: UUID!==
+  latitude: Float!
+  longitude: Float!
+  description: String
 }
 
 input UpdatePinInput {
   name: String
-  latitude: ==Double==
-  longitude: ==Double==
+  latitude: Float
+  longitude: Float
   description: String
   rating: Float
-  ==~~userId: UUID!~~==
+  userId: UUID!
 }
 
-input AddCommentInput {
-  ==contentId==: UUID!
+input AddCommentToPinInput {
+  pinId: UUID!
   userId: UUID!
-  ==message==: String!
+  message: String!
+}
+
+input AddCommentToBoardInput {
+  boardId: UUID!
+  userId: UUID!
+  message: String!
 }
 
 input AddImageInput {
@@ -242,80 +312,58 @@ input AddImageInput {
   orderNumber: Int!
 }
 
-type Pin @key(fields: "id") {
-  id: UUID!
-  name: String!
-  latitude: Float!
-  longitude: Float!
-  description: String
-  owner: User!
-  rating: Float!
-  createdAt: Time!
-  images: [PinImage!]
-  comments: [Comment!]
+input CreateGroupInput {
+  members: [UUID!]!
 }
 
-type PinImage {
-  id: UUID!
-  orderNumber: Int!
-  imageUrl: String!
+type User @key(fields: "id") {
+  id: UUID! @external
 }
 
-type Comment {
-  id: UUID!
-  content: String!
-  createdAt: Time!
-  author: User!
-}
-
-==type ComplaintInput {
-  complaintTypeId: UUID!
-  content: String
-}==
-
-==type Reaction {
-  id: UUID!
-  type: String!
-  description: String
-}==
-
-==type ComplaintStatuses {
-  id: UUID!
-  type: String!
-  description: String
-}==
-
-==type ComplaintTypes {
-  id: UUID!
-  type: String!
-  description: String
-}==
 ##### Реализованные методы
-- board(id: UUID!): Board
-- boardByName(name: String!): [Board!]
-- boardsByGroup(groupId: UUID!): [Board!]
+  board(id: UUID!): Board
+  boardByName(name: String!): [Board!]
+  boardsByGroup(groupId: UUID!): [Board!]
 
-- pin(id: UUID!): Pin
-- pinsByUser(userId: UUID!): [Pin!]
-- pinsByName(name: String!): [Pin!]
-- pinsByLocation(query: String!): [Pin!]
+  pin(id: UUID!): Pin
+  pinsByUser(userId: UUID!): [Pin!]
+  pinsByName(name: String!): [Pin!]
+  pinsByLocation(query: String!): [Pin!]
 
-- createBoard(input: CreateBoardInput!): Board!
-- updateBoard(==boardId==: UUID!, input: UpdateBoardInput!): Board! @policy(service: "coprocessor", query: "checkBoardApproval") (см взаимодействие с другими микросервисами)
+  groupById(groupId: UUID!): Group
+  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
+  groupsOfUser(userId: UUID!): [Group!]!
 
-- ==createPin(input: CreatePinInput!): Pin!== @policy(service: "coprocessor", query: "checkBoardApproval") (см взаимодействие с другими микросервисами)
-- updatePin(==pinId==: UUID!, input: UpdatePinInput!, ==userId: UUID!==): Pin! (проверка, что редактирует владелец)
+  commentsByBoard(boardId: UUID!): [CommentToBoard]!
+  commentsByPin(pinId: UUID!): [CommentToPin]!
 
-- addPinToBoard(pinId: UUID!, boardId: UUID!, ==userId: UUID!==): Board! @policy(service: "coprocessor", query: "checkBoardApproval") (см взаимодействие с другими микросервисами)
-- removePinFromBoard(pinId: UUID!, boardId: UUID!): Board! (проверка, что этот пользователь уже ставил такую реакцию)
+  createBoard(input: CreateBoardInput!): Board!
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
 
-- ==addCommentToPin(input: AddCommentInput!): Comment!== (переделать из-за изменений в бд)
-- updateComment(==commentId==: UUID!, ==message==: String!, ==userId: UUID!==): Comment! (проверка, что обновляет владелец)
-- deleteComment(==commentId==: UUID!, ==userId: UUID!==): Boolean! (проверка, что удаляет владелец)
+  createPin(input: CreatePinInput!): Pin!
+  updatePin(id: UUID!, input: UpdatePinInput!): Pin!
 
-- addImageToPin(input: AddImageInput!, ==userId: UUID!==): PinImage! (проверка, что обновляет владелец)
-- removeImageFromPin(imageId: UUID!, ==userId: UUID!==): Boolean! (проверка, что удаляет владелец)
-- updateImageOrder(imageId: UUID!, newOrder: Int!, ==userId: UUID!==): PinImage! (проверка, что обновляет владелец)
+  addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
+  removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!
+
+  addImageToPin(input: AddImageInput!): PinImage!
+  removeImageFromPin(imageId: UUID!): Boolean!
+  updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
+
+  addCommentToPin(input: AddCommentToPinInput!): CommentToPin!
+  updateCommentToPin(id: UUID!, message: String!): CommentToPin!
+  deleteCommentToPin(id: UUID!): Boolean!
+
+  addCommentToBoard(input: AddCommentToBoardInput!): CommentToBoard!
+  updateCommentToBoard(id: UUID!, message: String!): CommentToBoard!
+  deleteCommentToBoard(id: UUID!): Boolean!
+
+  createGroup(input: CreateGroupInput!): Group!
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+  deleteGroup(groupId: UUID!): Boolean!
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+  acceptJoinToGroup(requestId: UUID!): Boolean!
 
 ##### Необходимо реализовать:
 - boardsByUser(userId: UUID!): [Board!] (вернуть список всех досок, где пользователь владелец)
@@ -326,7 +374,6 @@ type Comment {
 - removePinFromBookmarks(pinId: UUID!, userId: UUID!): Boolean!
 - copyPin(pinId: UUID!, userId: UUID!, boardId: UUID!): Pin! (возвращаем id нового пина, возможно хватит возвращать UUID!)
 - copyBoard(boardId: UUID!, userId: UUID!): Board! (возвращаем id новой доски, возможно хватит возвращать UUID!)
-- addCommentToBoard(input: AddCommentInput!): Comment!
 - reactions(): [Reaction!]!
 - addReactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 - removeReactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean! (проверка, что удаляет владелец)
@@ -337,6 +384,11 @@ type Comment {
 - complainAboutUser(creatorId: UUID!, userId: UUID!, complaint: ComplaintInput): Boolean! (если тип жалобы другое, то комментарий обязателен)
 - complainAboutPin(creatorId: UUID!, pinId: UUID!, complaint: ComplaintInput): Boolean! (если тип жалобы другое, то комментарий обязателен)
 - complainAboutBoard(creatorId: UUID!, boardId: UUID!, complaint: ComplaintInput): Boolean! (если тип жалобы другое, то комментарий обязателен)
+- requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+- acceptJoinToGroup(requestId: UUID!): Boolean! (тут же нужно изменить статус заявки) (может нужно отправлять какой пользователь разрешает доступ?)
+(сейчас есть только конечные методы редактирования состава группы, нужно добавить промежуточный этап в виде бросания приглашения, а только после подтверждения добавлять нового пользователя)
+- getSettingsStatuses: [SettingsStatuses!]!
+- changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
 
 (Я прописала не все геттеры и соответствующие им объекты, нужно будет самостоятельно проследить при реализации)
 
@@ -345,7 +397,6 @@ type Comment {
 - banBoard(id: UUID!): Boolean! (не удаляем, а помечаем скрытым, чтобы больше нигде не отображался контент)
 - unbanPin(id: UUID!): Boolean!
 - unbanBoard(id: UUID!): Boolean!
-
 
 ---
 # Профиль

@@ -12,13 +12,8 @@ import (
 var DB *gorm.DB
 
 func Connect() {
-
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.CFG.DBHost, config.CFG.DBUser, config.CFG.DBPassword, config.CFG.DBName)
-
-	if dsn == "" {
-		log.Fatal("Failed to build dsn from environment variables")
-	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

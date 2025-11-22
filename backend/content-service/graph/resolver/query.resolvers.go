@@ -8,6 +8,7 @@ import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
 	"content-service/internal/mapper"
+	"content-service/internal/models"
 	"context"
 	"fmt"
 
@@ -128,6 +129,101 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.P
 // PinsByLocation is the resolver for the pinsByLocation field.
 func (r *queryResolver) PinsByLocation(ctx context.Context, query string) ([]*model.Pin, error) {
 	panic(fmt.Errorf("not implemented: PinsByLocation - pinsByLocation"))
+}
+
+// GroupByID is the resolver for the groupById field.
+func (r *queryResolver) GroupByID(ctx context.Context, groupID uuid.UUID) (*model.Group, error) {
+	logger := zap.L().With(zap.String("resolver", "GroupByID"), zap.String("groupID", groupID.String()))
+	logger.Info("Fetching group")
+
+	group, err := r.BoardRepo.GetGroupByID(ctx, groupID)
+	if err != nil {
+		logger.Error("Failed to fetch group", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Successfully fetched group")
+	return mapper.ToGraphQLGroup(&group), nil
+}
+
+// IsUserInGroup is the resolver for the isUserInGroup field.
+func (r *queryResolver) IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "IsUserInGroup"), zap.String("groupID", groupID.String()), zap.String("userID", userID.String()))
+	logger.Info("Checking if the user is in the group")
+
+	isMember, err := r.BoardRepo.GetMember(ctx, userID, groupID)
+	if err != nil {
+		logger.Error("Failed to check if the user is in the group", zap.Error(err))
+		return false, err
+	}
+
+	return isMember, nil
+}
+
+// GroupsOfUser is the resolver for the groupsOfUser field.
+func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error) {
+	logger := zap.L().With(zap.String("resolver", "GroupsOfUser"), zap.String("userID", userID.String()))
+	logger.Info("Fetching groups of user")
+
+	var members []models.Member
+	members, err := r.BoardRepo.GetGroups(ctx, userID)
+	if err != nil {
+		logger.Error("Failed to find groups for user", zap.Error(err))
+		return nil, err
+	}
+
+	var groups []*model.Group
+	for _, member := range members {
+		var group models.Group
+		if group, err = r.BoardRepo.GetGroupByID(ctx, member.GroupID); err != nil {
+			logger.Error("Failed to get composition of groups with user", zap.Error(err))
+			return nil, err
+		}
+
+		groups = append(groups, mapper.ToGraphQLGroup(&group))
+	}
+
+	return groups, nil
+}
+
+// CommentsByBoard is the resolver for the commentsByBoard field.
+func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]*model.CommentToBoard, error) {
+	logger := zap.L().With(zap.String("resolver", "CommentsByBoard"), zap.String("boardID", boardID.String()))
+	logger.Info("Fetching comments by board")
+
+	comments_row, err := r.BoardRepo.GetCommentsByBoard(ctx, boardID)
+	if err != nil {
+		logger.Error("Failed to fetch comments by board", zap.Error(err))
+		return nil, err
+	}
+
+	var comments []*model.CommentToBoard
+	for _, comment := range comments_row {
+		comments = append(comments, mapper.ToGraphQLCommentToBoard(&comment))
+	}
+
+	logger.Info("Successfully fetched comments by board")
+	return comments, nil
+}
+
+// CommentsByPin is the resolver for the commentsByPin field.
+func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*model.CommentToPin, error) {
+	logger := zap.L().With(zap.String("resolver", "CommentsByPin"), zap.String("pinID", pinID.String()))
+	logger.Info("Fetching comments by pin")
+
+	comments_row, err := r.PinRepo.GetCommentsByPin(ctx, pinID)
+	if err != nil {
+		logger.Error("Failed to fetch comments by pin", zap.Error(err))
+		return nil, err
+	}
+
+	var comments []*model.CommentToPin
+	for _, comment := range comments_row {
+		comments = append(comments, mapper.ToGraphQLCommentToPin(&comment))
+	}
+
+	logger.Info("Successfully fetched comments by pin")
+	return comments, nil
 }
 
 // Query returns generated.QueryResolver implementation.
