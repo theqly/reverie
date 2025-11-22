@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "content-db.fullname" . }}
+  labels:
+    {{- include "content-db.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "content-db.fullname" . }}-headless
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "content-db.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "content-db.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: {{ .Values.credentials.secretName }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h localhost
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h localhost
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- with .Values.resources }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.affinity }}
+      affinity:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "content-db.labels" . | nindent 8 }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode | default "ReadWriteOnce" }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | default "10Gi" }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: "{{ .Values.persistence.storageClass }}"
+        {{- end }}

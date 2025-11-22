@@ -1,21 +1,11 @@
-supergraph:
-  introspection: true
-  listen: 0.0.0.0:${ROUTER_PORT:-4000}
-  path: /graphql
-sandbox:
-  enabled: false
-include_subgraph_errors:
-  all: true
+server:
+  bind:
+    host: 0.0.0.0
+    port: 4000
+  readable_health: true
 
-cors:
-  allow_any_origin: false
-  allow_headers:
-    - "x-requested-with"
-    - "content-type"
-    - "authorization"
-  expose_headers:
-    - "authorization"
-  methods:
-    - "GET"
-    - "POST"
-    - "OPTIONS"
+logging:
+  level: info
+
+supergraph:
+  path: /etc/apollo/rover/supergraph-schema.graphql

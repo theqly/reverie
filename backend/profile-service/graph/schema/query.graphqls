@@ -1,0 +1,12 @@
+type Query {
+  userById(userId: UUID!): User
+  userByNickname(nickname: String!): User
+  userByEmail(email: String!): User
+
+  followersOf(userId: UUID!): [User!]!
+  followingOf(userId: UUID!): [User!]!
+  followersCount(userId: UUID!): Int!
+  followingCount(userId: UUID!): Int!
+
+  getSettingsStatuses: [SettingsStatuses!]!
+}

@@ -1,0 +1,2 @@
+Команда для генерирования контракта:
+reverie/backend/geo-service/pkg$ protoc --go_out=. --go-grpc_out=. ./geopb/geo.proto

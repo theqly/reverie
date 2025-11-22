@@ -8,14 +8,6 @@
 - Оплата (Billing) (заглушка)
 
 ---
-
-==(То, что выделено цветом, нужно не забыть исправить/добавить)==
-
-- Микросервис Лента сейчас нет смысла прописывать, там еще многое нужно продумать в рамках отдельных задач, первая из которых будет ресерч алгоритмов поиска и подобных сервисов (чтобы велосипед по возможности не изобретать)
-
-- Гео микросервис не прописан до конца, без api и нормального штудирования документации и понимания потребностей микросервиса Лента тут сложно что либо расписать
-
----
 # Контент (Content)
 #### Назначение
 - CRUD операции для досок и пинов
@@ -427,28 +419,26 @@ input CreateGroupInput {
 - unbanPin(id: UUID!): Boolean!
 - unbanBoard(id: UUID!): Boolean!
 
-
 ---
 # Профиль
 #### Назначение
-- CRUD операции для пользователей и групп
-- операции по добавлению/удалению пользователей в группы
+- CRUD операции для пользователей
 - подписка на кого-то и отписка (followers)
 - управление настройками пользователя
 
 #### БД
-```
+```sql
 CREATE TYPE user_status AS ENUM ('active', 'deleted');
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nickname VARCHAR(255) NOT NULL,
+    nick_tag VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    nick_tag      VARCHAR(255) NOT NULL,
     profile_picture TEXT,
     description TEXT,
     user_rating FLOAT DEFAULT 0.0,
-    status user_status NOT NULL
+    status user_status NOT NULL DEFAULT 'active'
 );
 
 CREATE TABLE followers (
@@ -459,29 +449,6 @@ CREATE TABLE followers (
     FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE groups (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid()
-);
-
-CREATE TABLE members (
-    user_id UUID NOT NULL,
-    group_id UUID NOT NULL,
-    PRIMARY KEY (user_id, group_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
-);
-
-CREATE TYPE request_status AS ENUM ('waited', 'rejected', 'accepted', 'cancelled');
-
-CREATE TABLE join_group_requests (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
-    group_id UUID NOT NULL,
-    status request_status NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
-);
-
 CREATE TABLE settings_statuses (
     id SERIAL PRIMARY KEY,
     type VARCHAR(255) NOT NULL UNIQUE,
@@ -490,10 +457,14 @@ CREATE TABLE settings_statuses (
 
 CREATE TABLE settings (
     user_id UUID NOT NULL,
-    bookmarks_status_id UUID NOT NULL,
+    bookmarks_status_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (bookmarks_status_id) REFERENCES settings_statuses(id) ON DELETE CASCADE
 );
+
+INSERT INTO settings_statuses (type) VALUES
+    ('private'),
+    ('public');
 
 CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
 CREATE UNIQUE INDEX idx_users_email ON users(email);
@@ -502,8 +473,6 @@ CREATE UNIQUE INDEX idx_users_nick_tag ON users(nick_tag);
 CREATE INDEX idx_followers_user_id ON followers(user_id);
 CREATE INDEX idx_followers_follower_id ON followers(follower_id);
 
-CREATE INDEX idx_members_user_id ON members(user_id);
-CREATE INDEX idx_members_group_id ON members(group_id);
 ```
 #### Взаимодействие с другими микросервисами
 - связь с Keycloak будет (требует дополнительного изучения)
@@ -512,27 +481,35 @@ CREATE INDEX idx_members_group_id ON members(group_id);
 #### Методы
 
 ##### input/output objects
+```graphql
+enum UserStatus {
+  active
+  deleted
+}
 
 type User {
-  id: ID!
+  id: UUID!
   nickname: String!
   email: String!
+  nick_tag: String!
   profilePicture: String
   description: String
+  status: UserStatus!
   userRating: Float!
   followers: [User!]!
   following: [User!]!
 }
 
-type Group {
-  id: ID!
-  members: [User!]!
+type SettingsStatuses {
+  id: UUID!
+  type: String!
+  description: String
 }
 
 input CreateUserInput {
   nickname: String!
   email: String!
-  ==~~password: String!~~==
+  nick_tag: String!
   profilePicture: String
   description: String
 }
@@ -540,54 +517,39 @@ input CreateUserInput {
 input UpdateUserInput {
   nickname: String
   email: String
-  ==~~password: String~~==
+  nick_tag: String!
   profilePicture: String
   description: String
 }
 
-input CreateGroupInput {
-  memberIds: [ID!]!
-}
-
-==type settingsStatuses {
-  id: UUID!
-  type: String!
-  description: String
-}==
+```
 ##### Реализованные методы
-- userById(==userId==: ID!): User
+```graphql
+- userById(userId: UUID!): User
 - userByNickname(nickname: String!): User
 - userByEmail(email: String!): User
 
-- followersOf(userId: ID!): [User!]!
-- followingOf(userId: ID!): [User!]!
-
-- groupById(==groupId==: ID!): [User!]
-- isUserInGroup(user_id: ID!, group_id: ID!): Boolean!
-- groupsOfUser(userId: ID!): [Group!]!
+- followersOf(userId: UUID!): [User!]!
+- followingOf(userId: UUID!): [User!]!
 
 - createUser(input: CreateUserInput!): User!
-- updateUser(==userId==: ID!, input: UpdateUserInput!): User!
-- ==deleteUser(id: ID!): Boolean!== (не нужно ничего удалять, нужно в доп поле занести пометку, что неактивный аккаунт)
+- updateUser(userId: UUID!, input: UpdateUserInput!): User!
+- deleteUser(userId: UUID!): Boolean
 
-- followUser(userId: ID!, followerId: ID!): Boolean!
-- unfollowUser(userId: ID!, followerId: ID!): Boolean!
-
-- createGroup(input: CreateGroupInput!): Group!
-- addUserToGroup(userId: ID!, groupId: ID!): Boolean!
-- removeUserFromGroup(userId: ID!, groupId: ID!): Boolean!
-- ==deleteGroup(id: ID!): Boolean!== (не нужно ничего удалять, ну или удалять только при удалении доски/всех досок во владении группой)
+- followUser(userId: UUID!, followerId: ID!): Boolean!
+- unfollowUser(userId: UUID!, followerId: ID!): Boolean!
+```
 
 ##### Необходимо реализовать:
-- followersCount(userId: ID!): Integer!
-- followingCount(userId: ID!): Integer!
+```graphql
+- followersCount(userId: UUID!): Integer!
+- followingCount(userId: UUID!): Integer!
+```
 (в профиле пользователя явно нужно будет выводить на превью не список всех, на кого подписан юзер и кто подписан на него, а просто количество, поэтому нужно добавить отдельные методы ля этого)
-- requestJoinGroup(groupId: ID!, userId: ID!): Boolean!
-- acceptJoinToGroup(requestId: ID!): Boolean! (тут же нужно изменить статус заявки) (может нужно отправлять какой пользователь разрешает доступ?)
-(сейчас есть только конечные методы редактирования состава группы, нужно добавить промежуточный этап в виде бросания приглашения, а только после подтверждения добавлять нового пользователя)
-- settingsStatuses():[settingsStatuses!]!
-- changeAccessBookmarks(userId: ID!, newStatus: ID!): Boolean!
-
+```graphql
+- getSettingsStatuses: [SettingsStatuses!]!
+- changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
+```
 (Я прописала не все геттеры и соответствующие им объекты, нужно будет самостоятельно проследить при реализации)
 
 Позже еще:
@@ -656,49 +618,68 @@ CREATE INDEX idx_tagged_pins_tag_id ON tagged_pins(tag_id);
 #### БД
 В бд нет смысла, этот микросервис является не хранилкой, а прослойкой, чтобы все остальные микросервисы не были жестко привязаны к определенному gis service.
 #### Взаимодействие с другими микросервисами
+Микрач Geo не включен в общую схему GraphQL, так как он нужен как вспомогательный для других микровервисов (от приложения не будет обращения к нему). Для связи с другими микросервисами используется gRPC. В каждом микраче, где нужна связь с Geo, необходимо прописать клиента.
+
 - получать гео точки нужно с пинов - Контент
 
 #### Методы
 ##### input/output objects
 
-type Point {
-  lat: Double!
-  lon: Double!
+message GeocodeRequest {
+  string address = 1;
 }
 
-type ID {
-  id: String! (возможно будет не один id, а группа: айди региона, города, здания и тд)
+message GeocodeResponse {
+  string place_id = 1;
+  double lat = 2;
+  double lon = 3;
+  string display_name = 4;
+  Address address = 5;
 }
 
-type Object {
-  id: ID! (возможно будет не один id, а группа: айди региона, города, здания и тд, поэтому добавим прослойку в виде типа ID)
-  name: String
-  fullName: String
-  address: String
-  point: Point
-  type: String
+message Address {
+  string country = 1;
+  string city = 2;
+  string street = 3;
+  string house_number = 4;
+  string postcode = 5;
+}
+
+message ReverseGeocodeRequest {
+  double lat = 1;
+  double lon = 2;
+}
+
+message ReverseGeocodeResponse {
+  string place_id = 1;
+  double lat = 2;
+  double lon = 3;
+  string display_name = 4;
+  Address address = 5;
 }
 
 
 ##### Необходимо реализовать:
+- Geocode(GeocodeRequest) returns (GeocodeResponse);
+- ReverseGeocode(ReverseGeocodeRequest) returns (ReverseGeocodeResponse);
+#### Что добавить
 - objectByPoint(point: Point!): [Object] (когда пользователь ставит точку, мы должны предложить ряд place для выбора (+ опция другое), которые нам известны, это поможет при поиске, если к пину будет закреплено конкретное место с gis service)
 - objectByQuery(query: String!): [Object] (у 2 гис вообще без разницы, что в запрос кидать, это все будет строка по параметру q: это может быть адрес, а может быть описание места)
 - objectById(id: ID!): Object
 - UrlByObject(obj: Object!) (чтобы пользователя пересылать на сайт gis service и сразу там выделить нужный объект)
 - UrlById(id: ID!) (чтобы пользователя пересылать на сайт gis service и сразу там выделить нужный объект)
-- (остальное нет смысла сейчас продумывать, так как все будет зависеть от нашего движка поиска)
-#### Что добавить
 - шаринг карты в сторонние сервисы (социальные сети)
 		нужно делать карту красивую, чтобы ей потом делиться
 - шаринг маршрута в gis-сервисы
 		шаринг подборки в gis-сервисы (чтобы построить например там маршрут) (PS: нужно смотреть, что позволяет API для этого, и в какой форме вообще можно реализовать такую функцию)
--
 
 #### Под вопросом из функционала (не оч понятно, а от этого будет зависеть, что нужно добавить и где):
 18. Шаринг построенного маршрута в gis-сервисы или шаринг мест для построние маршрута (рисерч + разработка). (в 2гис в веб версии я не вижу подборки, можно списки создавать, но это в аккаунте личном, мы не сможем сами генерить такие списки и давать ссылку пользователю)
 
 ---
 # Нотификация
+#### [Документация событий Notification Service](./notification-service/event-documentation.md)
+
 #### Назначение
 - приглашение для вступления в группу
 - нотификации о публикациях (на кого подписан или апдейты в досках групповых)

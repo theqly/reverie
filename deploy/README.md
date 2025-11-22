@@ -1,13 +1,20 @@
-стандартный .env файл для dev раскатки 
-```
-keycloak
-KEYCLOAK_ADMIN=admin
-KEYCLOAK_ADMIN_PASSWORD=password
-KEYCLOAK_POSTGRES_USER=keycloakuser
-KEYCLOAK_POSTGRES_PASSWORD=keycloakpassword
-KEYCLOAK_POSTGRES_URL=jdbc:postgresql://keycloak-db:5432/keycloak
+### привет пишу как собирать эту всю ерунду у себя локально
 
-geo api
-GEO_API_URL=https://geocode-maps.yandex.ru/v1
-GEO_API_KEY=
+1. вам нужен .env файл с тестовыми переменными окружения для баз и т.д. поэтому когда будете собирать, нужно написать некому артему гаану и попросить этот файл, чтобы я его не заливал на гит
+2. после этого нужно совместить схемы graphql в одну для каждого сервиса. для этого существует простой файлик unificate.sh в папочке apollo. делаем:
+
 ```
+cd apollo/
+```
+```
+bash unificate.sh
+```
+3. теперь осталось поднять все контейнеры через docker compose. для этого, логично, у вас должен стоять на машине docker, если нужна помощь - ко мне в лсик. после этого пишем:
+
+```
+docker compose up --build 
+```
+
+(если хочется запустить без кучи логов и занятия докером одной из консолей, то добавляем аргументик -d после --build)
+
+4. ждем 

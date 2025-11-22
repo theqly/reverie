@@ -1,0 +1,33 @@
+{{- if .Values.migrator.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "content-db.fullname" . }}-migrator
+  labels:
+    {{- include "content-db.labels" . | nindent 4 }}
+  {{- if .Values.migrator.runAsHelmHook }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  {{- end }}
+spec:
+  backoffLimit: {{ .Values.migrator.backoffLimit | default 1 }}
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrator
+          image: "{{ .Values.migrator.image.repository }}:{{ .Values.migrator.image.tag }}"
+          imagePullPolicy: {{ .Values.migrator.image.pullPolicy | default "IfNotPresent" }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.migrator.envFromSecret.secretName | default .Values.credentials.secretName }}
+          {{- if .Values.migrator.command }}
+          command: {{ toYaml .Values.migrator.command | indent 12 }}
+          {{- end }}
+      {{- with .Values.migrator.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml . | indent 6 }}
+      {{- end }}
+{{- end }}
