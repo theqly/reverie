@@ -12,10 +12,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type AddCommentInput struct {
+type AddCommentToBoardInput struct {
+	BoardID uuid.UUID `json:"boardId"`
+	UserID  uuid.UUID `json:"userId"`
+	Message string    `json:"message"`
+}
+
+type AddCommentToPinInput struct {
 	PinID   uuid.UUID `json:"pinId"`
 	UserID  uuid.UUID `json:"userId"`
-	Content string    `json:"content"`
+	Message string    `json:"message"`
 }
 
 type AddImageInput struct {
@@ -34,11 +40,20 @@ type Board struct {
 	Pins        []*Pin          `json:"pins,omitempty"`
 }
 
-type Comment struct {
+type CommentToBoard struct {
 	ID        uuid.UUID `json:"id"`
-	Content   string    `json:"content"`
+	BoardID   uuid.UUID `json:"boardId"`
+	Message   string    `json:"message"`
 	CreatedAt time.Time `json:"createdAt"`
-	Author    *User     `json:"author"`
+	Owner     *User     `json:"owner"`
+}
+
+type CommentToPin struct {
+	ID        uuid.UUID `json:"id"`
+	PinID     uuid.UUID `json:"pinId"`
+	Message   string    `json:"message"`
+	CreatedAt time.Time `json:"createdAt"`
+	Owner     *User     `json:"owner"`
 }
 
 type CreateBoardInput struct {

@@ -19,3 +19,11 @@ type Board {
   createdAt: Time!
   pins: [Pin!]
 }
+
+type CommentToBoard {
+  id: UUID!
+  boardId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}

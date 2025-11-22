@@ -20,11 +20,12 @@ type PinImage {
   imageUrl: String!
 }
 
-type Comment {
+type CommentToPin {
   id: UUID!
-  content: String!
+  pinId: UUID!
+  message: String!
   createdAt: Time!
-  author: User!
+  owner: User!
 }
 
 type Place {

@@ -22,17 +22,29 @@ type Pin struct {
 	// BoardID uuid.UUID
 }
 
+func (Pin) TableName() string {
+	return "pins"
+}
+
 type BoardPin struct {
 	BoardID uuid.UUID `gorm:"primaryKey"`
 	PinID   uuid.UUID `gorm:"primaryKey"`
 }
 
-type Comment struct {
+func (BoardPin) TableName() string {
+	return "board_pins"
+}
+
+type PinComment struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	PinID     uuid.UUID `gorm:"type:uuid;not null"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null"`
-	Content   string
-	CreatedAt time.Time
+	PinID     uuid.UUID `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE"`
+	OwnerID   uuid.UUID `gorm:"type:uuid;not null"`
+	Message   string    `gorm:"type:text;not null"`
+	CreatedAt time.Time `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP"`
+}
+
+func (PinComment) TableName() string {
+	return "pin_comments"
 }
 
 type PinImage struct {
@@ -40,4 +52,8 @@ type PinImage struct {
 	OrderNumber int       `gorm:"not null"`
 	ImageURL    string    `gorm:"not null"`
 	PinID       uuid.UUID `gorm:"type:uuid;not null"`
+}
+
+func (PinImage) TableName() string {
+	return "pin_images"
 }

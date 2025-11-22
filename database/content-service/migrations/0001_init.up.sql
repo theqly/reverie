@@ -60,15 +60,22 @@ CREATE TABLE pin_images (
     FOREIGN KEY (pin_id) REFERENCES pins(id) ON DELETE CASCADE
 );
 
-CREATE TYPE content_type AS ENUM ('pin', 'board');
-
-CREATE TABLE comments (
+CREATE TABLE pin_comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    for_type content_type NOT NULL,
-    content_id UUID NOT NULL,
+    pin_id UUID NOT NULL,
     owner_id UUID NOT NULL,
     message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pin_id) REFERENCES pins(id) ON DELETE CASCADE
+);
+
+CREATE TABLE board_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL,
+    owner_id UUID NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
 );
 
 CREATE TYPE complaint_object_type AS ENUM ('pin', 'board', 'user');

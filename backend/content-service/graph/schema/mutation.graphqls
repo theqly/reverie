@@ -28,10 +28,16 @@ input UpdatePinInput {
   userId: UUID!
 }
 
-input AddCommentInput {
+input AddCommentToPinInput {
   pinId: UUID!
   userId: UUID!
-  content: String!
+  message: String!
+}
+
+input AddCommentToBoardInput {
+  boardId: UUID!
+  userId: UUID!
+  message: String!
 }
 
 input AddImageInput {
@@ -58,9 +64,13 @@ type Mutation {
   removeImageFromPin(imageId: UUID!): Boolean!
   updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
 
-  addCommentToPin(input: AddCommentInput!): Comment!
-  updateComment(id: UUID!, content: String!): Comment!
-  deleteComment(id: UUID!): Boolean!
+  addCommentToPin(input: AddCommentToPinInput!): CommentToPin!
+  updateCommentToPin(id: UUID!, message: String!): CommentToPin!
+  deleteCommentToPin(id: UUID!): Boolean!
+
+  addCommentToBoard(input: AddCommentToBoardInput!): CommentToBoard!
+  updateCommentToBoard(id: UUID!, message: String!): CommentToBoard!
+  deleteCommentToBoard(id: UUID!): Boolean!
 
   createGroup(input: CreateGroupInput!): Group!
   addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!

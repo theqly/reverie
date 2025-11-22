@@ -4,6 +4,7 @@ import (
 	"content-service/internal/models"
 	"content-service/internal/utils"
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -180,14 +181,59 @@ func (r *BoardRepository) GetGroupByID(ctx context.Context, id uuid.UUID) (model
 	return group, err
 }
 
-// func (r *BoardRepository) GetMembers(ctx context.Context, groupID uuid.UUID) ([]models.Member, error) {
-// 	var members []models.Member
-// 	err := r.db.WithContext(ctx).Where("group_id = ?", groupID).Find(&members).Error
-// 	return members, err
-// }
-
 func (r *BoardRepository) GetGroups(ctx context.Context, userID uuid.UUID) ([]models.Member, error) {
 	var members []models.Member
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&members).Error
 	return members, err
+}
+
+func (r *BoardRepository) GetCommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]models.BoardComment, error) {
+	var comments []models.BoardComment
+
+	err := r.db.WithContext(ctx).Find(&comments, "board_id = ?", boardID).Error
+
+	return comments, err
+}
+
+func (r *BoardRepository) AddCommentToBoard(ctx context.Context, boardID uuid.UUID, userID uuid.UUID, message string) (*models.BoardComment, error) {
+	comment := &models.BoardComment{
+		BoardID: boardID,
+		OwnerID: userID,
+		Message: message,
+	}
+
+	if err := r.db.WithContext(ctx).Create(comment).Error; err != nil {
+		return nil, err
+	}
+
+	return comment, nil
+}
+
+func (r *BoardRepository) DeleteCommentToBoardByID(ctx context.Context, commentID uuid.UUID) error {
+	return r.db.WithContext(ctx).
+		Where("id = ?", commentID).
+		Delete(&models.BoardComment{}).Error
+}
+
+func (r *BoardRepository) UpdateCommentToBoard(ctx context.Context, commentID uuid.UUID, newMessage string) (*models.BoardComment, error) {
+	res := r.db.WithContext(ctx).
+		Model(&models.BoardComment{}).
+		Where("id = ?", commentID).
+		Update("message", newMessage)
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil, fmt.Errorf("comment not found")
+	}
+
+	var updatedComment models.BoardComment
+	err := r.db.WithContext(ctx).
+		First(&updatedComment, "id = ?", commentID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &updatedComment, nil
 }

@@ -142,17 +142,6 @@ func (r *queryResolver) GroupByID(ctx context.Context, groupID uuid.UUID) (*mode
 		return nil, err
 	}
 
-	// var members []models.Member
-	// members, err := r.BoardRepo.GetMembers(ctx, groupID)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to load members for group %s: %w", groupID, err)
-	// }
-
-	// var users []*model.User
-	// for _, member := range members {
-	// 	users = append(users, &model.User{ID: member.UserID})
-	// }
-
 	logger.Info("Successfully fetched group")
 	return mapper.ToGraphQLGroup(&group), nil
 }
@@ -195,6 +184,46 @@ func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*
 	}
 
 	return groups, nil
+}
+
+// CommentsByBoard is the resolver for the commentsByBoard field.
+func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]*model.CommentToBoard, error) {
+	logger := zap.L().With(zap.String("resolver", "CommentsByBoard"), zap.String("boardID", boardID.String()))
+	logger.Info("Fetching comments by board")
+
+	comments_row, err := r.BoardRepo.GetCommentsByBoard(ctx, boardID)
+	if err != nil {
+		logger.Error("Failed to fetch comments by board", zap.Error(err))
+		return nil, err
+	}
+
+	var comments []*model.CommentToBoard
+	for _, comment := range comments_row {
+		comments = append(comments, mapper.ToGraphQLCommentToBoard(&comment))
+	}
+
+	logger.Info("Successfully fetched comments by board")
+	return comments, nil
+}
+
+// CommentsByPin is the resolver for the commentsByPin field.
+func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*model.CommentToPin, error) {
+	logger := zap.L().With(zap.String("resolver", "CommentsByPin"), zap.String("pinID", pinID.String()))
+	logger.Info("Fetching comments by pin")
+
+	comments_row, err := r.PinRepo.GetCommentsByPin(ctx, pinID)
+	if err != nil {
+		logger.Error("Failed to fetch comments by pin", zap.Error(err))
+		return nil, err
+	}
+
+	var comments []*model.CommentToPin
+	for _, comment := range comments_row {
+		comments = append(comments, mapper.ToGraphQLCommentToPin(&comment))
+	}
+
+	logger.Info("Successfully fetched comments by pin")
+	return comments, nil
 }
 
 // Query returns generated.QueryResolver implementation.

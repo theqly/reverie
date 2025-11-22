@@ -76,31 +76,39 @@ func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models
 		}).Error
 }
 
-func (r *PinRepository) AddComment(ctx context.Context, pinID uuid.UUID, userID uuid.UUID, content string) (*models.Comment, error) {
-	comment := models.Comment{
+func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID) ([]models.PinComment, error) {
+	var comments []models.PinComment
+
+	err := r.db.WithContext(ctx).Find(&comments, "pin_id = ?", pinID).Error
+
+	return comments, err
+}
+
+func (r *PinRepository) AddCommentToPin(ctx context.Context, pinID uuid.UUID, userID uuid.UUID, message string) (*models.PinComment, error) {
+	comment := &models.PinComment{
 		PinID:   pinID,
-		UserID:  userID,
-		Content: content,
+		OwnerID: userID,
+		Message: message,
 	}
 
 	if err := r.db.WithContext(ctx).Create(comment).Error; err != nil {
 		return nil, err
 	}
 
-	return &comment, nil
+	return comment, nil
 }
 
-func (r *PinRepository) DeleteCommentByID(ctx context.Context, commentID uuid.UUID) error {
+func (r *PinRepository) DeleteCommentToPinByID(ctx context.Context, commentID uuid.UUID) error {
 	return r.db.WithContext(ctx).
 		Where("id = ?", commentID).
-		Delete(&models.Comment{}).Error
+		Delete(&models.PinComment{}).Error
 }
 
-func (r *PinRepository) UpdateComment(ctx context.Context, commentID uuid.UUID, newContent string) (*models.Comment, error) {
+func (r *PinRepository) UpdateCommentToPin(ctx context.Context, commentID uuid.UUID, newMessage string) (*models.PinComment, error) {
 	res := r.db.WithContext(ctx).
-		Model(&models.Comment{}).
+		Model(&models.PinComment{}).
 		Where("id = ?", commentID).
-		Update("content", newContent)
+		Update("message", newMessage)
 
 	if res.Error != nil {
 		return nil, res.Error
@@ -108,7 +116,8 @@ func (r *PinRepository) UpdateComment(ctx context.Context, commentID uuid.UUID, 
 	if res.RowsAffected == 0 {
 		return nil, fmt.Errorf("comment not found")
 	}
-	var updatedComment models.Comment
+
+	var updatedComment models.PinComment
 	err := r.db.WithContext(ctx).
 		First(&updatedComment, "id = ?", commentID).Error
 	if err != nil {

@@ -1,10 +1,8 @@
 type Query {
-  # Поиск доски
   board(id: UUID!): Board
   boardByName(name: String!): [Board!]
   boardsByGroup(groupId: UUID!): [Board!]
 
-  # Поиск пина
   pin(id: UUID!): Pin
   pinsByUser(userId: UUID!): [Pin!]
   pinsByName(name: String!): [Pin!]
@@ -13,4 +11,7 @@ type Query {
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
   groupsOfUser(userId: UUID!): [Group!]!
+
+  commentsByBoard(boardId: UUID!): [CommentToBoard]!
+  commentsByPin(pinId: UUID!): [CommentToPin]!
 }

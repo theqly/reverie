@@ -159,12 +159,23 @@ func CreateToDomainPin(input *model.CreatePinInput) *models.Pin {
 	}
 }
 
-func ToGraphQLComment(c *models.Comment) *model.Comment {
-	return &model.Comment{
+func ToGraphQLCommentToPin(c *models.PinComment) *model.CommentToPin {
+	return &model.CommentToPin{
 		ID:        c.ID,
-		Content:   c.Content,
+		PinID:     c.PinID,
+		Message:   c.Message,
 		CreatedAt: c.CreatedAt,
-		Author:    &model.User{ID: c.UserID},
+		Owner:     &model.User{ID: c.OwnerID},
+	}
+}
+
+func ToGraphQLCommentToBoard(c *models.BoardComment) *model.CommentToBoard {
+	return &model.CommentToBoard{
+		ID:        c.ID,
+		BoardID:   c.BoardID,
+		Message:   c.Message,
+		CreatedAt: c.CreatedAt,
+		Owner:     &model.User{ID: c.OwnerID},
 	}
 }
 

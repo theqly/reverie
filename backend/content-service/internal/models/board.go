@@ -35,3 +35,15 @@ type Board struct {
 func (Board) TableName() string {
 	return "boards"
 }
+
+type BoardComment struct {
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	BoardID   uuid.UUID `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE"`
+	OwnerID   uuid.UUID `gorm:"type:uuid;not null"`
+	Message   string    `gorm:"type:text;not null"`
+	CreatedAt time.Time `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP"`
+}
+
+func (BoardComment) TableName() string {
+	return "board_comments"
+}

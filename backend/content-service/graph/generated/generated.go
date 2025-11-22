@@ -60,11 +60,20 @@ type ComplexityRoot struct {
 		Pins        func(childComplexity int) int
 	}
 
-	Comment struct {
-		Author    func(childComplexity int) int
-		Content   func(childComplexity int) int
+	CommentToBoard struct {
+		BoardID   func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Message   func(childComplexity int) int
+		Owner     func(childComplexity int) int
+	}
+
+	CommentToPin struct {
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Message   func(childComplexity int) int
+		Owner     func(childComplexity int) int
+		PinID     func(childComplexity int) int
 	}
 
 	Entity struct {
@@ -77,24 +86,27 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AcceptJoinToGroup   func(childComplexity int, requestID uuid.UUID) int
-		AddCommentToPin     func(childComplexity int, input model.AddCommentInput) int
-		AddImageToPin       func(childComplexity int, input model.AddImageInput) int
-		AddPinToBoard       func(childComplexity int, pinID uuid.UUID, boardID uuid.UUID) int
-		AddUserToGroup      func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
-		CreateBoard         func(childComplexity int, input model.CreateBoardInput) int
-		CreateGroup         func(childComplexity int, input model.CreateGroupInput) int
-		CreatePin           func(childComplexity int, input model.CreatePinInput) int
-		DeleteComment       func(childComplexity int, id uuid.UUID) int
-		DeleteGroup         func(childComplexity int, groupID uuid.UUID) int
-		RemoveImageFromPin  func(childComplexity int, imageID uuid.UUID) int
-		RemovePinFromBoard  func(childComplexity int, pinID uuid.UUID, boardID uuid.UUID) int
-		RemoveUserFromGroup func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
-		RequestJoinGroup    func(childComplexity int, groupID uuid.UUID, userID uuid.UUID) int
-		UpdateBoard         func(childComplexity int, id uuid.UUID, input model.UpdateBoardInput) int
-		UpdateComment       func(childComplexity int, id uuid.UUID, content string) int
-		UpdateImageOrder    func(childComplexity int, imageID uuid.UUID, newOrder int) int
-		UpdatePin           func(childComplexity int, id uuid.UUID, input model.UpdatePinInput) int
+		AcceptJoinToGroup    func(childComplexity int, requestID uuid.UUID) int
+		AddCommentToBoard    func(childComplexity int, input model.AddCommentToBoardInput) int
+		AddCommentToPin      func(childComplexity int, input model.AddCommentToPinInput) int
+		AddImageToPin        func(childComplexity int, input model.AddImageInput) int
+		AddPinToBoard        func(childComplexity int, pinID uuid.UUID, boardID uuid.UUID) int
+		AddUserToGroup       func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
+		CreateBoard          func(childComplexity int, input model.CreateBoardInput) int
+		CreateGroup          func(childComplexity int, input model.CreateGroupInput) int
+		CreatePin            func(childComplexity int, input model.CreatePinInput) int
+		DeleteCommentToBoard func(childComplexity int, id uuid.UUID) int
+		DeleteCommentToPin   func(childComplexity int, id uuid.UUID) int
+		DeleteGroup          func(childComplexity int, groupID uuid.UUID) int
+		RemoveImageFromPin   func(childComplexity int, imageID uuid.UUID) int
+		RemovePinFromBoard   func(childComplexity int, pinID uuid.UUID, boardID uuid.UUID) int
+		RemoveUserFromGroup  func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
+		RequestJoinGroup     func(childComplexity int, groupID uuid.UUID, userID uuid.UUID) int
+		UpdateBoard          func(childComplexity int, id uuid.UUID, input model.UpdateBoardInput) int
+		UpdateCommentToBoard func(childComplexity int, id uuid.UUID, message string) int
+		UpdateCommentToPin   func(childComplexity int, id uuid.UUID, message string) int
+		UpdateImageOrder     func(childComplexity int, imageID uuid.UUID, newOrder int) int
+		UpdatePin            func(childComplexity int, id uuid.UUID, input model.UpdatePinInput) int
 	}
 
 	Pin struct {
@@ -132,6 +144,8 @@ type ComplexityRoot struct {
 		Board              func(childComplexity int, id uuid.UUID) int
 		BoardByName        func(childComplexity int, name string) int
 		BoardsByGroup      func(childComplexity int, groupID uuid.UUID) int
+		CommentsByBoard    func(childComplexity int, boardID uuid.UUID) int
+		CommentsByPin      func(childComplexity int, pinID uuid.UUID) int
 		GroupByID          func(childComplexity int, groupID uuid.UUID) int
 		GroupsOfUser       func(childComplexity int, userID uuid.UUID) int
 		IsUserInGroup      func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
@@ -165,9 +179,12 @@ type MutationResolver interface {
 	AddImageToPin(ctx context.Context, input model.AddImageInput) (*model.PinImage, error)
 	RemoveImageFromPin(ctx context.Context, imageID uuid.UUID) (bool, error)
 	UpdateImageOrder(ctx context.Context, imageID uuid.UUID, newOrder int) (*model.PinImage, error)
-	AddCommentToPin(ctx context.Context, input model.AddCommentInput) (*model.Comment, error)
-	UpdateComment(ctx context.Context, id uuid.UUID, content string) (*model.Comment, error)
-	DeleteComment(ctx context.Context, id uuid.UUID) (bool, error)
+	AddCommentToPin(ctx context.Context, input model.AddCommentToPinInput) (*model.CommentToPin, error)
+	UpdateCommentToPin(ctx context.Context, id uuid.UUID, message string) (*model.CommentToPin, error)
+	DeleteCommentToPin(ctx context.Context, id uuid.UUID) (bool, error)
+	AddCommentToBoard(ctx context.Context, input model.AddCommentToBoardInput) (*model.CommentToBoard, error)
+	UpdateCommentToBoard(ctx context.Context, id uuid.UUID, message string) (*model.CommentToBoard, error)
+	DeleteCommentToBoard(ctx context.Context, id uuid.UUID) (bool, error)
 	CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error)
 	AddUserToGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
 	RemoveUserFromGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
@@ -186,6 +203,8 @@ type QueryResolver interface {
 	GroupByID(ctx context.Context, groupID uuid.UUID) (*model.Group, error)
 	IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
 	GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error)
+	CommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]*model.CommentToBoard, error)
+	CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*model.CommentToPin, error)
 }
 
 type executableSchema struct {
@@ -256,33 +275,75 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Board.Pins(childComplexity), true
 
-	case "Comment.author":
-		if e.complexity.Comment.Author == nil {
+	case "CommentToBoard.boardId":
+		if e.complexity.CommentToBoard.BoardID == nil {
 			break
 		}
 
-		return e.complexity.Comment.Author(childComplexity), true
+		return e.complexity.CommentToBoard.BoardID(childComplexity), true
 
-	case "Comment.content":
-		if e.complexity.Comment.Content == nil {
+	case "CommentToBoard.createdAt":
+		if e.complexity.CommentToBoard.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Comment.Content(childComplexity), true
+		return e.complexity.CommentToBoard.CreatedAt(childComplexity), true
 
-	case "Comment.createdAt":
-		if e.complexity.Comment.CreatedAt == nil {
+	case "CommentToBoard.id":
+		if e.complexity.CommentToBoard.ID == nil {
 			break
 		}
 
-		return e.complexity.Comment.CreatedAt(childComplexity), true
+		return e.complexity.CommentToBoard.ID(childComplexity), true
 
-	case "Comment.id":
-		if e.complexity.Comment.ID == nil {
+	case "CommentToBoard.message":
+		if e.complexity.CommentToBoard.Message == nil {
 			break
 		}
 
-		return e.complexity.Comment.ID(childComplexity), true
+		return e.complexity.CommentToBoard.Message(childComplexity), true
+
+	case "CommentToBoard.owner":
+		if e.complexity.CommentToBoard.Owner == nil {
+			break
+		}
+
+		return e.complexity.CommentToBoard.Owner(childComplexity), true
+
+	case "CommentToPin.createdAt":
+		if e.complexity.CommentToPin.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.CommentToPin.CreatedAt(childComplexity), true
+
+	case "CommentToPin.id":
+		if e.complexity.CommentToPin.ID == nil {
+			break
+		}
+
+		return e.complexity.CommentToPin.ID(childComplexity), true
+
+	case "CommentToPin.message":
+		if e.complexity.CommentToPin.Message == nil {
+			break
+		}
+
+		return e.complexity.CommentToPin.Message(childComplexity), true
+
+	case "CommentToPin.owner":
+		if e.complexity.CommentToPin.Owner == nil {
+			break
+		}
+
+		return e.complexity.CommentToPin.Owner(childComplexity), true
+
+	case "CommentToPin.pinId":
+		if e.complexity.CommentToPin.PinID == nil {
+			break
+		}
+
+		return e.complexity.CommentToPin.PinID(childComplexity), true
 
 	case "Entity.findPinByID":
 		if e.complexity.Entity.FindPinByID == nil {
@@ -322,6 +383,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.AcceptJoinToGroup(childComplexity, args["requestId"].(uuid.UUID)), true
 
+	case "Mutation.addCommentToBoard":
+		if e.complexity.Mutation.AddCommentToBoard == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addCommentToBoard_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddCommentToBoard(childComplexity, args["input"].(model.AddCommentToBoardInput)), true
+
 	case "Mutation.addCommentToPin":
 		if e.complexity.Mutation.AddCommentToPin == nil {
 			break
@@ -332,7 +405,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddCommentToPin(childComplexity, args["input"].(model.AddCommentInput)), true
+		return e.complexity.Mutation.AddCommentToPin(childComplexity, args["input"].(model.AddCommentToPinInput)), true
 
 	case "Mutation.addImageToPin":
 		if e.complexity.Mutation.AddImageToPin == nil {
@@ -406,17 +479,29 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.CreatePin(childComplexity, args["input"].(model.CreatePinInput)), true
 
-	case "Mutation.deleteComment":
-		if e.complexity.Mutation.DeleteComment == nil {
+	case "Mutation.deleteCommentToBoard":
+		if e.complexity.Mutation.DeleteCommentToBoard == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteComment_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_deleteCommentToBoard_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteComment(childComplexity, args["id"].(uuid.UUID)), true
+		return e.complexity.Mutation.DeleteCommentToBoard(childComplexity, args["id"].(uuid.UUID)), true
+
+	case "Mutation.deleteCommentToPin":
+		if e.complexity.Mutation.DeleteCommentToPin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteCommentToPin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteCommentToPin(childComplexity, args["id"].(uuid.UUID)), true
 
 	case "Mutation.deleteGroup":
 		if e.complexity.Mutation.DeleteGroup == nil {
@@ -490,17 +575,29 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.UpdateBoard(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateBoardInput)), true
 
-	case "Mutation.updateComment":
-		if e.complexity.Mutation.UpdateComment == nil {
+	case "Mutation.updateCommentToBoard":
+		if e.complexity.Mutation.UpdateCommentToBoard == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateComment_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_updateCommentToBoard_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateComment(childComplexity, args["id"].(uuid.UUID), args["content"].(string)), true
+		return e.complexity.Mutation.UpdateCommentToBoard(childComplexity, args["id"].(uuid.UUID), args["message"].(string)), true
+
+	case "Mutation.updateCommentToPin":
+		if e.complexity.Mutation.UpdateCommentToPin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateCommentToPin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateCommentToPin(childComplexity, args["id"].(uuid.UUID), args["message"].(string)), true
 
 	case "Mutation.updateImageOrder":
 		if e.complexity.Mutation.UpdateImageOrder == nil {
@@ -716,6 +813,30 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.BoardsByGroup(childComplexity, args["groupId"].(uuid.UUID)), true
 
+	case "Query.commentsByBoard":
+		if e.complexity.Query.CommentsByBoard == nil {
+			break
+		}
+
+		args, err := ec.field_Query_commentsByBoard_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CommentsByBoard(childComplexity, args["boardId"].(uuid.UUID)), true
+
+	case "Query.commentsByPin":
+		if e.complexity.Query.CommentsByPin == nil {
+			break
+		}
+
+		args, err := ec.field_Query_commentsByPin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CommentsByPin(childComplexity, args["pinId"].(uuid.UUID)), true
+
 	case "Query.groupById":
 		if e.complexity.Query.GroupByID == nil {
 			break
@@ -841,7 +962,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputAddCommentInput,
+		ec.unmarshalInputAddCommentToBoardInput,
+		ec.unmarshalInputAddCommentToPinInput,
 		ec.unmarshalInputAddImageInput,
 		ec.unmarshalInputCreateBoardInput,
 		ec.unmarshalInputCreateGroupInput,
@@ -970,6 +1092,14 @@ type Board {
   ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
+}
+
+type CommentToBoard {
+  id: UUID!
+  boardId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
 }`, BuiltIn: false},
 	{Name: "../schema/pin.graphqls", Input: `type Pin @key(fields: "id") {
   id: UUID!
@@ -993,11 +1123,12 @@ type PinImage {
   imageUrl: String!
 }
 
-type Comment {
+type CommentToPin {
   id: UUID!
-  content: String!
+  pinId: UUID!
+  message: String!
   createdAt: Time!
-  author: User!
+  owner: User!
 }
 
 type Place {
@@ -1015,12 +1146,10 @@ type Place {
   members: [User!]! @external
 }`, BuiltIn: false},
 	{Name: "../schema/query.graphqls", Input: `type Query {
-  # Поиск доски
   board(id: UUID!): Board
   boardByName(name: String!): [Board!]
   boardsByGroup(groupId: UUID!): [Board!]
 
-  # Поиск пина
   pin(id: UUID!): Pin
   pinsByUser(userId: UUID!): [Pin!]
   pinsByName(name: String!): [Pin!]
@@ -1029,6 +1158,9 @@ type Place {
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
   groupsOfUser(userId: UUID!): [Group!]!
+
+  commentsByBoard(boardId: UUID!): [CommentToBoard]!
+  commentsByPin(pinId: UUID!): [CommentToPin]!
 }`, BuiltIn: false},
 	{Name: "../schema/mutation.graphqls", Input: `input CreateBoardInput {
   name: String!
@@ -1060,10 +1192,16 @@ input UpdatePinInput {
   userId: UUID!
 }
 
-input AddCommentInput {
+input AddCommentToPinInput {
   pinId: UUID!
   userId: UUID!
-  content: String!
+  message: String!
+}
+
+input AddCommentToBoardInput {
+  boardId: UUID!
+  userId: UUID!
+  message: String!
 }
 
 input AddImageInput {
@@ -1090,9 +1228,13 @@ type Mutation {
   removeImageFromPin(imageId: UUID!): Boolean!
   updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
 
-  addCommentToPin(input: AddCommentInput!): Comment!
-  updateComment(id: UUID!, content: String!): Comment!
-  deleteComment(id: UUID!): Boolean!
+  addCommentToPin(input: AddCommentToPinInput!): CommentToPin!
+  updateCommentToPin(id: UUID!, message: String!): CommentToPin!
+  deleteCommentToPin(id: UUID!): Boolean!
+
+  addCommentToBoard(input: AddCommentToBoardInput!): CommentToBoard!
+  updateCommentToBoard(id: UUID!, message: String!): CommentToBoard!
+  deleteCommentToBoard(id: UUID!): Boolean!
 
   createGroup(input: CreateGroupInput!): Group!
   addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
@@ -1191,6 +1333,34 @@ func (ec *executionContext) field_Mutation_acceptJoinToGroup_argsRequestID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_addCommentToBoard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_addCommentToBoard_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_addCommentToBoard_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.AddCommentToBoardInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.AddCommentToBoardInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNAddCommentToBoardInput2contentᚑserviceᚋgraphᚋmodelᚐAddCommentToBoardInput(ctx, tmp)
+	}
+
+	var zeroVal model.AddCommentToBoardInput
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_addCommentToPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1204,18 +1374,18 @@ func (ec *executionContext) field_Mutation_addCommentToPin_args(ctx context.Cont
 func (ec *executionContext) field_Mutation_addCommentToPin_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (model.AddCommentInput, error) {
+) (model.AddCommentToPinInput, error) {
 	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal model.AddCommentInput
+		var zeroVal model.AddCommentToPinInput
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNAddCommentInput2contentᚑserviceᚋgraphᚋmodelᚐAddCommentInput(ctx, tmp)
+		return ec.unmarshalNAddCommentToPinInput2contentᚑserviceᚋgraphᚋmodelᚐAddCommentToPinInput(ctx, tmp)
 	}
 
-	var zeroVal model.AddCommentInput
+	var zeroVal model.AddCommentToPinInput
 	return zeroVal, nil
 }
 
@@ -1433,17 +1603,45 @@ func (ec *executionContext) field_Mutation_createPin_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteComment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_deleteCommentToBoard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_deleteComment_argsID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_deleteCommentToBoard_argsID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_deleteComment_argsID(
+func (ec *executionContext) field_Mutation_deleteCommentToBoard_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteCommentToPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteCommentToPin_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteCommentToPin_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (uuid.UUID, error) {
@@ -1721,22 +1919,22 @@ func (ec *executionContext) field_Mutation_updateBoard_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_updateComment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_updateCommentToBoard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_updateComment_argsID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_updateCommentToBoard_argsID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateComment_argsContent(ctx, rawArgs)
+	arg1, err := ec.field_Mutation_updateCommentToBoard_argsMessage(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["content"] = arg1
+	args["message"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_updateComment_argsID(
+func (ec *executionContext) field_Mutation_updateCommentToBoard_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (uuid.UUID, error) {
@@ -1754,17 +1952,68 @@ func (ec *executionContext) field_Mutation_updateComment_argsID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_updateComment_argsContent(
+func (ec *executionContext) field_Mutation_updateCommentToBoard_argsMessage(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	if _, ok := rawArgs["content"]; !ok {
+	if _, ok := rawArgs["message"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
-	if tmp, ok := rawArgs["content"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
+	if tmp, ok := rawArgs["message"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateCommentToPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateCommentToPin_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Mutation_updateCommentToPin_argsMessage(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["message"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateCommentToPin_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateCommentToPin_argsMessage(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["message"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
+	if tmp, ok := rawArgs["message"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -2007,6 +2256,62 @@ func (ec *executionContext) field_Query_boardsByGroup_argsGroupID(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
 	if tmp, ok := rawArgs["groupId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_commentsByBoard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_commentsByBoard_argsBoardID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["boardId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_commentsByBoard_argsBoardID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["boardId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("boardId"))
+	if tmp, ok := rawArgs["boardId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_commentsByPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_commentsByPin_argsPinID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["pinId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_commentsByPin_argsPinID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["pinId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pinId"))
+	if tmp, ok := rawArgs["pinId"]; ok {
 		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
 	}
 
@@ -2682,8 +2987,8 @@ func (ec *executionContext) fieldContext_Board_pins(_ context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Comment_id(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Comment_id(ctx, field)
+func (ec *executionContext) _CommentToBoard_id(ctx context.Context, field graphql.CollectedField, obj *model.CommentToBoard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToBoard_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2713,9 +3018,9 @@ func (ec *executionContext) _Comment_id(ctx context.Context, field graphql.Colle
 	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Comment_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CommentToBoard_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Comment",
+		Object:     "CommentToBoard",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2726,8 +3031,8 @@ func (ec *executionContext) fieldContext_Comment_id(_ context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Comment_content(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Comment_content(ctx, field)
+func (ec *executionContext) _CommentToBoard_boardId(ctx context.Context, field graphql.CollectedField, obj *model.CommentToBoard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToBoard_boardId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2740,7 +3045,51 @@ func (ec *executionContext) _Comment_content(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Content, nil
+		return obj.BoardID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CommentToBoard_boardId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentToBoard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentToBoard_message(ctx context.Context, field graphql.CollectedField, obj *model.CommentToBoard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToBoard_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2757,9 +3106,9 @@ func (ec *executionContext) _Comment_content(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Comment_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CommentToBoard_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Comment",
+		Object:     "CommentToBoard",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2770,8 +3119,8 @@ func (ec *executionContext) fieldContext_Comment_content(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Comment_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Comment_createdAt(ctx, field)
+func (ec *executionContext) _CommentToBoard_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.CommentToBoard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToBoard_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2801,9 +3150,9 @@ func (ec *executionContext) _Comment_createdAt(ctx context.Context, field graphq
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Comment_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CommentToBoard_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Comment",
+		Object:     "CommentToBoard",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2814,8 +3163,8 @@ func (ec *executionContext) fieldContext_Comment_createdAt(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Comment_author(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Comment_author(ctx, field)
+func (ec *executionContext) _CommentToBoard_owner(ctx context.Context, field graphql.CollectedField, obj *model.CommentToBoard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToBoard_owner(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2828,7 +3177,7 @@ func (ec *executionContext) _Comment_author(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Author, nil
+		return obj.Owner, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2845,9 +3194,233 @@ func (ec *executionContext) _Comment_author(ctx context.Context, field graphql.C
 	return ec.marshalNUser2ᚖcontentᚑserviceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Comment_author(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CommentToBoard_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Comment",
+		Object:     "CommentToBoard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentToPin_id(ctx context.Context, field graphql.CollectedField, obj *model.CommentToPin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToPin_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CommentToPin_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentToPin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentToPin_pinId(ctx context.Context, field graphql.CollectedField, obj *model.CommentToPin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToPin_pinId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PinID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CommentToPin_pinId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentToPin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentToPin_message(ctx context.Context, field graphql.CollectedField, obj *model.CommentToPin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToPin_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CommentToPin_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentToPin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentToPin_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.CommentToPin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToPin_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CommentToPin_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentToPin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentToPin_owner(ctx context.Context, field graphql.CollectedField, obj *model.CommentToPin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentToPin_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖcontentᚑserviceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CommentToPin_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentToPin",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3670,7 +4243,7 @@ func (ec *executionContext) _Mutation_addCommentToPin(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddCommentToPin(rctx, fc.Args["input"].(model.AddCommentInput))
+		return ec.resolvers.Mutation().AddCommentToPin(rctx, fc.Args["input"].(model.AddCommentToPinInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3682,9 +4255,9 @@ func (ec *executionContext) _Mutation_addCommentToPin(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Comment)
+	res := resTmp.(*model.CommentToPin)
 	fc.Result = res
-	return ec.marshalNComment2ᚖcontentᚑserviceᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNCommentToPin2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addCommentToPin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3696,15 +4269,17 @@ func (ec *executionContext) fieldContext_Mutation_addCommentToPin(ctx context.Co
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Comment_id(ctx, field)
-			case "content":
-				return ec.fieldContext_Comment_content(ctx, field)
+				return ec.fieldContext_CommentToPin_id(ctx, field)
+			case "pinId":
+				return ec.fieldContext_CommentToPin_pinId(ctx, field)
+			case "message":
+				return ec.fieldContext_CommentToPin_message(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_Comment_createdAt(ctx, field)
-			case "author":
-				return ec.fieldContext_Comment_author(ctx, field)
+				return ec.fieldContext_CommentToPin_createdAt(ctx, field)
+			case "owner":
+				return ec.fieldContext_CommentToPin_owner(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CommentToPin", field.Name)
 		},
 	}
 	defer func() {
@@ -3721,8 +4296,8 @@ func (ec *executionContext) fieldContext_Mutation_addCommentToPin(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateComment(ctx, field)
+func (ec *executionContext) _Mutation_updateCommentToPin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateCommentToPin(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3735,7 +4310,7 @@ func (ec *executionContext) _Mutation_updateComment(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateComment(rctx, fc.Args["id"].(uuid.UUID), fc.Args["content"].(string))
+		return ec.resolvers.Mutation().UpdateCommentToPin(rctx, fc.Args["id"].(uuid.UUID), fc.Args["message"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3747,12 +4322,12 @@ func (ec *executionContext) _Mutation_updateComment(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Comment)
+	res := resTmp.(*model.CommentToPin)
 	fc.Result = res
-	return ec.marshalNComment2ᚖcontentᚑserviceᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNCommentToPin2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateComment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateCommentToPin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -3761,15 +4336,17 @@ func (ec *executionContext) fieldContext_Mutation_updateComment(ctx context.Cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Comment_id(ctx, field)
-			case "content":
-				return ec.fieldContext_Comment_content(ctx, field)
+				return ec.fieldContext_CommentToPin_id(ctx, field)
+			case "pinId":
+				return ec.fieldContext_CommentToPin_pinId(ctx, field)
+			case "message":
+				return ec.fieldContext_CommentToPin_message(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_Comment_createdAt(ctx, field)
-			case "author":
-				return ec.fieldContext_Comment_author(ctx, field)
+				return ec.fieldContext_CommentToPin_createdAt(ctx, field)
+			case "owner":
+				return ec.fieldContext_CommentToPin_owner(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CommentToPin", field.Name)
 		},
 	}
 	defer func() {
@@ -3779,15 +4356,15 @@ func (ec *executionContext) fieldContext_Mutation_updateComment(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateComment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateCommentToPin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteComment(ctx, field)
+func (ec *executionContext) _Mutation_deleteCommentToPin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteCommentToPin(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3800,7 +4377,7 @@ func (ec *executionContext) _Mutation_deleteComment(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteComment(rctx, fc.Args["id"].(uuid.UUID))
+		return ec.resolvers.Mutation().DeleteCommentToPin(rctx, fc.Args["id"].(uuid.UUID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3817,7 +4394,7 @@ func (ec *executionContext) _Mutation_deleteComment(ctx context.Context, field g
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteComment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteCommentToPin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -3834,7 +4411,196 @@ func (ec *executionContext) fieldContext_Mutation_deleteComment(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteComment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteCommentToPin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addCommentToBoard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addCommentToBoard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddCommentToBoard(rctx, fc.Args["input"].(model.AddCommentToBoardInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommentToBoard)
+	fc.Result = res
+	return ec.marshalNCommentToBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addCommentToBoard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CommentToBoard_id(ctx, field)
+			case "boardId":
+				return ec.fieldContext_CommentToBoard_boardId(ctx, field)
+			case "message":
+				return ec.fieldContext_CommentToBoard_message(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CommentToBoard_createdAt(ctx, field)
+			case "owner":
+				return ec.fieldContext_CommentToBoard_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CommentToBoard", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addCommentToBoard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateCommentToBoard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateCommentToBoard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateCommentToBoard(rctx, fc.Args["id"].(uuid.UUID), fc.Args["message"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommentToBoard)
+	fc.Result = res
+	return ec.marshalNCommentToBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateCommentToBoard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CommentToBoard_id(ctx, field)
+			case "boardId":
+				return ec.fieldContext_CommentToBoard_boardId(ctx, field)
+			case "message":
+				return ec.fieldContext_CommentToBoard_message(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CommentToBoard_createdAt(ctx, field)
+			case "owner":
+				return ec.fieldContext_CommentToBoard_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CommentToBoard", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateCommentToBoard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteCommentToBoard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteCommentToBoard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteCommentToBoard(rctx, fc.Args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteCommentToBoard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteCommentToBoard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5827,6 +6593,140 @@ func (ec *executionContext) fieldContext_Query_groupsOfUser(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_groupsOfUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_commentsByBoard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_commentsByBoard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CommentsByBoard(rctx, fc.Args["boardId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CommentToBoard)
+	fc.Result = res
+	return ec.marshalNCommentToBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_commentsByBoard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CommentToBoard_id(ctx, field)
+			case "boardId":
+				return ec.fieldContext_CommentToBoard_boardId(ctx, field)
+			case "message":
+				return ec.fieldContext_CommentToBoard_message(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CommentToBoard_createdAt(ctx, field)
+			case "owner":
+				return ec.fieldContext_CommentToBoard_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CommentToBoard", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_commentsByBoard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_commentsByPin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_commentsByPin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CommentsByPin(rctx, fc.Args["pinId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CommentToPin)
+	fc.Result = res
+	return ec.marshalNCommentToPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_commentsByPin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CommentToPin_id(ctx, field)
+			case "pinId":
+				return ec.fieldContext_CommentToPin_pinId(ctx, field)
+			case "message":
+				return ec.fieldContext_CommentToPin_message(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CommentToPin_createdAt(ctx, field)
+			case "owner":
+				return ec.fieldContext_CommentToPin_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CommentToPin", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_commentsByPin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -8103,14 +9003,55 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputAddCommentInput(ctx context.Context, obj any) (model.AddCommentInput, error) {
-	var it model.AddCommentInput
+func (ec *executionContext) unmarshalInputAddCommentToBoardInput(ctx context.Context, obj any) (model.AddCommentToBoardInput, error) {
+	var it model.AddCommentToBoardInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"pinId", "userId", "content"}
+	fieldsInOrder := [...]string{"boardId", "userId", "message"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "boardId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("boardId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BoardID = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "message":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Message = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAddCommentToPinInput(ctx context.Context, obj any) (model.AddCommentToPinInput, error) {
+	var it model.AddCommentToPinInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"pinId", "userId", "message"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8131,13 +9072,13 @@ func (ec *executionContext) unmarshalInputAddCommentInput(ctx context.Context, o
 				return it, err
 			}
 			it.UserID = data
-		case "content":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+		case "message":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Content = data
+			it.Message = data
 		}
 	}
 
@@ -8515,34 +9456,98 @@ func (ec *executionContext) _Board(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
-var commentImplementors = []string{"Comment"}
+var commentToBoardImplementors = []string{"CommentToBoard"}
 
-func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, obj *model.Comment) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, commentImplementors)
+func (ec *executionContext) _CommentToBoard(ctx context.Context, sel ast.SelectionSet, obj *model.CommentToBoard) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commentToBoardImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Comment")
+			out.Values[i] = graphql.MarshalString("CommentToBoard")
 		case "id":
-			out.Values[i] = ec._Comment_id(ctx, field, obj)
+			out.Values[i] = ec._CommentToBoard_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "content":
-			out.Values[i] = ec._Comment_content(ctx, field, obj)
+		case "boardId":
+			out.Values[i] = ec._CommentToBoard_boardId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._CommentToBoard_message(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "createdAt":
-			out.Values[i] = ec._Comment_createdAt(ctx, field, obj)
+			out.Values[i] = ec._CommentToBoard_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "author":
-			out.Values[i] = ec._Comment_author(ctx, field, obj)
+		case "owner":
+			out.Values[i] = ec._CommentToBoard_owner(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var commentToPinImplementors = []string{"CommentToPin"}
+
+func (ec *executionContext) _CommentToPin(ctx context.Context, sel ast.SelectionSet, obj *model.CommentToPin) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commentToPinImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommentToPin")
+		case "id":
+			out.Values[i] = ec._CommentToPin_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pinId":
+			out.Values[i] = ec._CommentToPin_pinId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._CommentToPin_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._CommentToPin_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "owner":
+			out.Values[i] = ec._CommentToPin_owner(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -8766,16 +9771,37 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateComment":
+		case "updateCommentToPin":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateComment(ctx, field)
+				return ec._Mutation_updateCommentToPin(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteComment":
+		case "deleteCommentToPin":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteComment(ctx, field)
+				return ec._Mutation_deleteCommentToPin(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addCommentToBoard":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addCommentToBoard(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateCommentToBoard":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateCommentToBoard(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteCommentToBoard":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteCommentToBoard(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -9236,6 +10262,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_groupsOfUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "commentsByBoard":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_commentsByBoard(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "commentsByPin":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_commentsByPin(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -9743,8 +10813,13 @@ func (ec *executionContext) marshalNAccessLevelType2contentᚑserviceᚋgraphᚋ
 	return v
 }
 
-func (ec *executionContext) unmarshalNAddCommentInput2contentᚑserviceᚋgraphᚋmodelᚐAddCommentInput(ctx context.Context, v any) (model.AddCommentInput, error) {
-	res, err := ec.unmarshalInputAddCommentInput(ctx, v)
+func (ec *executionContext) unmarshalNAddCommentToBoardInput2contentᚑserviceᚋgraphᚋmodelᚐAddCommentToBoardInput(ctx context.Context, v any) (model.AddCommentToBoardInput, error) {
+	res, err := ec.unmarshalInputAddCommentToBoardInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAddCommentToPinInput2contentᚑserviceᚋgraphᚋmodelᚐAddCommentToPinInput(ctx context.Context, v any) (model.AddCommentToPinInput, error) {
+	res, err := ec.unmarshalInputAddCommentToPinInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -9783,18 +10858,108 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNComment2contentᚑserviceᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v model.Comment) graphql.Marshaler {
-	return ec._Comment(ctx, sel, &v)
+func (ec *executionContext) marshalNCommentToBoard2contentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx context.Context, sel ast.SelectionSet, v model.CommentToBoard) graphql.Marshaler {
+	return ec._CommentToBoard(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNComment2ᚖcontentᚑserviceᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v *model.Comment) graphql.Marshaler {
+func (ec *executionContext) marshalNCommentToBoard2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx context.Context, sel ast.SelectionSet, v []*model.CommentToBoard) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCommentToBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCommentToBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx context.Context, sel ast.SelectionSet, v *model.CommentToBoard) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Comment(ctx, sel, v)
+	return ec._CommentToBoard(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommentToPin2contentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx context.Context, sel ast.SelectionSet, v model.CommentToPin) graphql.Marshaler {
+	return ec._CommentToPin(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCommentToPin2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx context.Context, sel ast.SelectionSet, v []*model.CommentToPin) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCommentToPin2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCommentToPin2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx context.Context, sel ast.SelectionSet, v *model.CommentToPin) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CommentToPin(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCreateBoardInput2contentᚑserviceᚋgraphᚋmodelᚐCreateBoardInput(ctx context.Context, v any) (model.CreateBoardInput, error) {
@@ -10543,6 +11708,20 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	_ = ctx
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOCommentToBoard2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToBoard(ctx context.Context, sel ast.SelectionSet, v *model.CommentToBoard) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CommentToBoard(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCommentToPin2ᚖcontentᚑserviceᚋgraphᚋmodelᚐCommentToPin(ctx context.Context, sel ast.SelectionSet, v *model.CommentToPin) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CommentToPin(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {
