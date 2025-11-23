@@ -1,0 +1,17 @@
+overwrite: true
+# пока так
+schema:
+  - '../../../**/*.graphql'
+  - '../../../**/*.graphqls'
+
+# путь для поиска запросов, для которых нужно gql доки сгенерить
+documents: './src/graphql/**/*.graphql'
+generates:
+  src/graphql/generated/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      withHooks: true
+      apolloClientVersion: 3

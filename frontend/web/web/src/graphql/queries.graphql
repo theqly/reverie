@@ -1,0 +1,144 @@
+query GetPinBasicById($id: UUID!) {
+  pin(id: $id) {
+    id
+    name
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+
+query GetPinFullById($id: UUID!) {
+  pin(id: $id) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+    comments {
+      id
+      content
+      createdAt
+      author {
+        id
+        nickname
+        profilePicture
+      }
+    }
+  }
+}
+
+mutation CreatePin($input: CreatePinInput!) {
+  createPin(input: $input) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+
+mutation UpdatePin($id: UUID!, $input: UpdatePinInput!) {
+  updatePin(id: $id, input: $input) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    comments {
+      id
+      content
+      createdAt
+      author {
+        id
+        nickname
+        profilePicture
+      }
+    }
+  }
+}
+
+mutation AddPinToBoard($pinId: UUID!, $boardId: UUID!) {
+  addPinToBoard(pinId: $pinId, boardId: $boardId) {
+    id
+    name
+    pins {
+      id
+      name
+    }
+  }
+}
+
+mutation RemovePinFromBoard($pinId: UUID!, $boardId: UUID!) {
+  removePinFromBoard(pinId: $pinId, boardId: $boardId) {
+    id
+    name
+    pins {
+      id
+      name
+    }
+  }
+}
+
+mutation AddCommentToPin($input: AddCommentInput!) {
+  addCommentToPin(input: $input) {
+    id
+    content
+    createdAt
+    author {
+      id
+    }
+  }
+}
+
+mutation UpdateComment($id: UUID!, $content: String!) {
+  updateComment(id: $id, content: $content) {
+    id
+    content
+    createdAt
+  }
+}
+
+mutation DeleteComment($id: UUID!) {
+  deleteComment(id: $id)
+}
+
+mutation AddImageToPin($input: AddImageInput!) {
+  addImageToPin(input: $input) {
+    id
+    imageUrl
+    orderNumber
+  }
+}
+
+mutation RemoveImageFromPin($imageId: UUID!) {
+  removeImageFromPin(imageId: $imageId)
+}
