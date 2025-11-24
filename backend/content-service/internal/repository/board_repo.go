@@ -273,11 +273,7 @@ func (r *BoardRepository) GetGroupBoardsByUser(ctx context.Context, userID uuid.
 		Where("boards.owner_id IN (?)", userGroupsSubQuery).
 		Scan(&boards).Error
 
-	if err != nil {
-		return nil, err
-	}
-
-	return boards, nil
+	return boards, err
 }
 
 func (r *BoardRepository) CountBoardsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
