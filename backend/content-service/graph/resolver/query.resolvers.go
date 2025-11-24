@@ -273,7 +273,7 @@ func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID)
 // CountOwnBoardsByUser is the resolver for the countOwnBoardsByUser field.
 func (r *queryResolver) CountOwnBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error) {
 	logger := zap.L().With(zap.String("resolver", "CountOwnBoardsByUser"), zap.String("userID", userID.String()))
-	logger.Info("Fetching own boards by user")
+	logger.Info("Counting own boards by user")
 
 	boardsNumber, err := r.BoardRepo.CountBoardsByUser(ctx, userID)
 	if err != nil {
