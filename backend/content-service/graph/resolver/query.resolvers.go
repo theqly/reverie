@@ -291,7 +291,7 @@ func (r *queryResolver) CountGroupBoardsByUser(ctx context.Context, userID uuid.
 
 	boardsNumber, err := r.BoardRepo.CountGroupBoardsByUser(ctx, userID)
 	if err != nil {
-		logger.Error("Failed to fetch group boards by user", zap.Error(err))
+		logger.Error("Failed to count group boards by user", zap.Error(err))
 		return 0, err
 	}
 
