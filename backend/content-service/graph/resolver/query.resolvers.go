@@ -226,6 +226,78 @@ func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*
 	return comments, nil
 }
 
+// OwnBoardsByUser is the resolver for the ownBoardsByUser field.
+func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error) {
+	logger := zap.L().With(zap.String("resolver", "OwnBoardsByUser"), zap.String("userID", userID.String()))
+	logger.Info("Fetching own boards by user")
+
+	var boards []models.Board
+	boards, err := r.BoardRepo.GetOwnBoardsByUser(ctx, userID)
+	if err != nil {
+		logger.Error("Failed to fetch own boards by user", zap.Error(err))
+		return nil, err
+	}
+
+	retBoards := make([]*model.Board, len(boards))
+	for i := range boards {
+		retBoards[i] = mapper.ToGraphQLBoard(&boards[i])
+	}
+
+	logger.Info("Successfully fetched own boards by user", zap.Int("count", len(retBoards)))
+	return retBoards, nil
+
+}
+
+// GroupBoardsByUser is the resolver for the groupBoardsByUser field.
+func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error) {
+	logger := zap.L().With(zap.String("resolver", "GroupBoardsByUser"), zap.String("userID", userID.String()))
+	logger.Info("Fetching group boards by user")
+
+	var boards []models.Board
+	boards, err := r.BoardRepo.GetGroupBoardsByUser(ctx, userID)
+	if err != nil {
+		logger.Error("Failed to fetch group boards by user", zap.Error(err))
+		return nil, err
+	}
+
+	retBoards := make([]*model.Board, len(boards))
+	for i := range boards {
+		retBoards[i] = mapper.ToGraphQLBoard(&boards[i])
+	}
+
+	logger.Info("Successfully fetched group boards by user", zap.Int("count", len(retBoards)))
+	return retBoards, nil
+
+}
+
+// CountOwnBoardsByUser is the resolver for the countOwnBoardsByUser field.
+func (r *queryResolver) CountOwnBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error) {
+	logger := zap.L().With(zap.String("resolver", "CountOwnBoardsByUser"), zap.String("userID", userID.String()))
+	logger.Info("Fetching own boards by user")
+
+	boardsNumber, err := r.BoardRepo.CountBoardsByUser(ctx, userID)
+	if err != nil {
+		logger.Error("Failed to fetch own boards by user", zap.Error(err))
+		return 0, err
+	}
+
+	return int(boardsNumber), nil
+}
+
+// CountGroupBoardsByUser is the resolver for the countGroupBoardsByUser field.
+func (r *queryResolver) CountGroupBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error) {
+	logger := zap.L().With(zap.String("resolver", "CountGroupBoardsByUser"), zap.String("userID", userID.String()))
+	logger.Info("Fetching group boards by user")
+
+	boardsNumber, err := r.BoardRepo.CountGroupBoardsByUser(ctx, userID)
+	if err != nil {
+		logger.Error("Failed to fetch group boards by user", zap.Error(err))
+		return 0, err
+	}
+
+	return int(boardsNumber), nil
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

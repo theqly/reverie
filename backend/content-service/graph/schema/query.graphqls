@@ -14,4 +14,10 @@ type Query {
 
   commentsByBoard(boardId: UUID!): [CommentToBoard]!
   commentsByPin(pinId: UUID!): [CommentToPin]!
+
+  ownBoardsByUser(userId: UUID!): [Board!]!
+  groupBoardsByUser(userId: UUID!): [Board!]!
+  countOwnBoardsByUser(userId: UUID!): Int!
+  countGroupBoardsByUser(userId: UUID!): Int!
 }
+
