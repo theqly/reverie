@@ -237,3 +237,85 @@ func (r *BoardRepository) UpdateCommentToBoard(ctx context.Context, commentID uu
 
 	return &updatedComment, nil
 }
+
+func (r *BoardRepository) GetOwnBoardsByUser(ctx context.Context, userID uuid.UUID) ([]models.Board, error) {
+	var boards []models.Board
+
+	err := r.db.WithContext(ctx).
+		Model(&models.Board{}).
+		Select("boards.*, al.type as access_level, ot.type as owner_type").
+		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
+		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
+		Where("ot.type = ?", "user").
+		Where("boards.owner_id = ?", userID).
+		Find(&boards).Error
+
+	return boards, err
+}
+
+func (r *BoardRepository) GetGroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]models.Board, error) {
+	var boards []models.Board
+
+	userGroupsSubQuery := r.db.Model(&models.Member{}).
+		Select("group_id").
+		Where("user_id = ?", userID)
+
+	ownerTypeGroupSubQuery := r.db.Model(&models.OwnerType{}).
+		Select("id").
+		Where("type = ?", "group")
+
+	err := r.db.WithContext(ctx).
+		Model(&models.Board{}).
+		Select("boards.*, al.type as access_level, ot.type as owner_type").
+		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
+		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
+		Where("boards.owner_type_id = (?)", ownerTypeGroupSubQuery).
+		Where("boards.owner_id IN (?)", userGroupsSubQuery).
+		Find(&boards).Error
+
+	return boards, err
+}
+
+func (r *BoardRepository) CountBoardsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	var boardsNumber int64
+
+	err := r.db.WithContext(ctx).
+		Model(&models.Board{}).
+		Joins("JOIN owner_types AS ot ON ot.id = boards.owner_type_id").
+		Where("ot.type = ?", "user").
+		Where("boards.owner_id = ?", userID).
+		Count(&boardsNumber).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return boardsNumber, nil
+}
+
+func (r *BoardRepository) CountGroupBoardsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	var boardsNumber int64
+
+	userGroupsSubQuery := r.db.Model(&models.Member{}).
+		Select("group_id").
+		Where("user_id = ?", userID)
+
+	ownerTypeGroupSubQuery := r.db.Model(&models.OwnerType{}).
+		Select("id").
+		Where("type = ?", "group")
+
+	err := r.db.WithContext(ctx).
+		Model(&models.Board{}).
+		Where("boards.owner_type_id = (?)", ownerTypeGroupSubQuery).
+		Where("boards.owner_id IN (?)", userGroupsSubQuery).
+		Count(&boardsNumber).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return boardsNumber, nil
+
+}
+
+

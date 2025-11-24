@@ -365,9 +365,12 @@ type User @key(fields: "id") {
   requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
   acceptJoinToGroup(requestId: UUID!): Boolean!
 
+  ownBoardsByUser(userId: UUID!): [Board!]!
+  groupBoardsByUser(userId: UUID!): [Board!]!
+  countOwnBoardsByUser(userId: UUID!): Int!
+  countGroupBoardsByUser(userId: UUID!): Int!
+
 ##### Необходимо реализовать:
-- boardsByUser(userId: UUID!): [Board!] (вернуть список всех досок, где пользователь владелец)
-- groupBoardsByUser(groupIds: [UUID!]!): [Board!] (вернуть доски, где пользователь в группе состоит (получаем от Профиля список групп пользователя и ищем по ним) (см взаимодействие с другими микросервисами))
 - boardToBookmarks(boardId: UUID!, userId: UUID!): Boolean!
 - pinToBookmarks(pinId: UUID!, userId: UUID!): Boolean!
 - removeBoardFromBookmarks(boardId: UUID!, userId: UUID!): Boolean!
