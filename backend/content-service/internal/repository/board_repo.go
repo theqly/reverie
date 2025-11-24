@@ -281,12 +281,11 @@ func (r *BoardRepository) CountBoardsByUser(ctx context.Context, userID uuid.UUI
 
 	err := r.db.WithContext(ctx).
 		Model(&models.Board{}).
-		Select("boards.*, al.type as access_level, ot.type as owner_type").
-		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
-		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
+		Joins("JOIN owner_types AS ot ON ot.id = boards.owner_type_id").
 		Where("ot.type = ?", "user").
 		Where("boards.owner_id = ?", userID).
 		Count(&boardsNumber).Error
+
 	if err != nil {
 		return 0, err
 	}
@@ -307,8 +306,6 @@ func (r *BoardRepository) CountGroupBoardsByUser(ctx context.Context, userID uui
 
 	err := r.db.WithContext(ctx).
 		Model(&models.Board{}).
-		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
-		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("boards.owner_type_id = (?)", ownerTypeGroupSubQuery).
 		Where("boards.owner_id IN (?)", userGroupsSubQuery).
 		Count(&boardsNumber).Error
