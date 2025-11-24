@@ -307,7 +307,6 @@ func (r *BoardRepository) CountGroupBoardsByUser(ctx context.Context, userID uui
 
 	err := r.db.WithContext(ctx).
 		Model(&models.Board{}).
-		Select("boards.*, al.type as access_level, ot.type as owner_type").
 		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("boards.owner_type_id = (?)", ownerTypeGroupSubQuery).
