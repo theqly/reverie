@@ -68,6 +68,9 @@ func (r *ReactionRepository) ToggleReaction(ctx context.Context, pinID, reaction
 		}
 	}
 
-	return true, tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
