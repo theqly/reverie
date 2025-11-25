@@ -203,3 +203,12 @@ func ToGraphQLGroup(group *models.Group) *model.Group {
 		Members: graphqlMembers,
 	}
 }
+
+func ToGraphQLReaction(reaction *models.Reaction) *model.Reaction {
+	return &model.Reaction{
+		ID:        reaction.ID,
+		Type:      reaction.Type,
+		Description: reaction.Description,
+	}
+}
+

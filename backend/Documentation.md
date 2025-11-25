@@ -320,6 +320,12 @@ type User @key(fields: "id") {
   id: UUID! @external
 }
 
+type Reaction {
+  id: UUID!
+  type: String!
+  description: String!
+}
+
 ##### Реализованные методы
   board(id: UUID!): Board
   boardByName(name: String!): [Board!]
@@ -370,6 +376,11 @@ type User @key(fields: "id") {
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
 
+  reactions: [Reaction!]!
+  countAllReactionsToPin(pinId: UUID!): Int!
+
+  reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+
 ##### Необходимо реализовать:
 - boardToBookmarks(boardId: UUID!, userId: UUID!): Boolean!
 - pinToBookmarks(pinId: UUID!, userId: UUID!): Boolean!
@@ -377,9 +388,6 @@ type User @key(fields: "id") {
 - removePinFromBookmarks(pinId: UUID!, userId: UUID!): Boolean!
 - copyPin(pinId: UUID!, userId: UUID!, boardId: UUID!): Pin! (возвращаем id нового пина, возможно хватит возвращать UUID!)
 - copyBoard(boardId: UUID!, userId: UUID!): Board! (возвращаем id новой доски, возможно хватит возвращать UUID!)
-- reactions(): [Reaction!]!
-- addReactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
-- removeReactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean! (проверка, что удаляет владелец)
 - addReactionToBoard(boardId: UUID!, reactionId: UUID!), userId: UUID!: Boolean!
 - removeReactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean! (проверка, что удаляет владелец)
 - complaintStatuses(): [complaintStatuses!]!

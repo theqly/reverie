@@ -78,4 +78,7 @@ type Mutation {
   deleteGroup(groupId: UUID!): Boolean!
   requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
   acceptJoinToGroup(requestId: UUID!): Boolean!
+
+  reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 }
+

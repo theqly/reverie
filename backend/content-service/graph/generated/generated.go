@@ -98,6 +98,7 @@ type ComplexityRoot struct {
 		DeleteCommentToBoard func(childComplexity int, id uuid.UUID) int
 		DeleteCommentToPin   func(childComplexity int, id uuid.UUID) int
 		DeleteGroup          func(childComplexity int, groupID uuid.UUID) int
+		ReactionToPin        func(childComplexity int, pinID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) int
 		RemoveImageFromPin   func(childComplexity int, imageID uuid.UUID) int
 		RemovePinFromBoard   func(childComplexity int, pinID uuid.UUID, boardID uuid.UUID) int
 		RemoveUserFromGroup  func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
@@ -146,6 +147,7 @@ type ComplexityRoot struct {
 		BoardsByGroup          func(childComplexity int, groupID uuid.UUID) int
 		CommentsByBoard        func(childComplexity int, boardID uuid.UUID) int
 		CommentsByPin          func(childComplexity int, pinID uuid.UUID) int
+		CountAllReactionsToPin func(childComplexity int, pinID uuid.UUID) int
 		CountGroupBoardsByUser func(childComplexity int, userID uuid.UUID) int
 		CountOwnBoardsByUser   func(childComplexity int, userID uuid.UUID) int
 		GroupBoardsByUser      func(childComplexity int, userID uuid.UUID) int
@@ -157,8 +159,15 @@ type ComplexityRoot struct {
 		PinsByLocation         func(childComplexity int, query string) int
 		PinsByName             func(childComplexity int, name string) int
 		PinsByUser             func(childComplexity int, userID uuid.UUID) int
+		Reactions              func(childComplexity int) int
 		__resolve__service     func(childComplexity int) int
 		__resolve_entities     func(childComplexity int, representations []map[string]any) int
+	}
+
+	Reaction struct {
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Type        func(childComplexity int) int
 	}
 
 	User struct {
@@ -195,6 +204,7 @@ type MutationResolver interface {
 	DeleteGroup(ctx context.Context, groupID uuid.UUID) (bool, error)
 	RequestJoinGroup(ctx context.Context, groupID uuid.UUID, userID uuid.UUID) (bool, error)
 	AcceptJoinToGroup(ctx context.Context, requestID uuid.UUID) (bool, error)
+	ReactionToPin(ctx context.Context, pinID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) (bool, error)
 }
 type QueryResolver interface {
 	Board(ctx context.Context, id uuid.UUID) (*model.Board, error)
@@ -213,6 +223,8 @@ type QueryResolver interface {
 	GroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error)
 	CountOwnBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error)
 	CountGroupBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error)
+	Reactions(ctx context.Context) ([]*model.Reaction, error)
+	CountAllReactionsToPin(ctx context.Context, pinID uuid.UUID) (int, error)
 }
 
 type executableSchema struct {
@@ -522,6 +534,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteGroup(childComplexity, args["groupId"].(uuid.UUID)), true
+
+	case "Mutation.reactionToPin":
+		if e.complexity.Mutation.ReactionToPin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reactionToPin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReactionToPin(childComplexity, args["pinId"].(uuid.UUID), args["reactionId"].(uuid.UUID), args["userId"].(uuid.UUID)), true
 
 	case "Mutation.removeImageFromPin":
 		if e.complexity.Mutation.RemoveImageFromPin == nil {
@@ -845,6 +869,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.CommentsByPin(childComplexity, args["pinId"].(uuid.UUID)), true
 
+	case "Query.countAllReactionsToPin":
+		if e.complexity.Query.CountAllReactionsToPin == nil {
+			break
+		}
+
+		args, err := ec.field_Query_countAllReactionsToPin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CountAllReactionsToPin(childComplexity, args["pinId"].(uuid.UUID)), true
+
 	case "Query.countGroupBoardsByUser":
 		if e.complexity.Query.CountGroupBoardsByUser == nil {
 			break
@@ -977,6 +1013,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.PinsByUser(childComplexity, args["userId"].(uuid.UUID)), true
 
+	case "Query.reactions":
+		if e.complexity.Query.Reactions == nil {
+			break
+		}
+
+		return e.complexity.Query.Reactions(childComplexity), true
+
 	case "Query._service":
 		if e.complexity.Query.__resolve__service == nil {
 			break
@@ -995,6 +1038,27 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.__resolve_entities(childComplexity, args["representations"].([]map[string]any)), true
+
+	case "Reaction.description":
+		if e.complexity.Reaction.Description == nil {
+			break
+		}
+
+		return e.complexity.Reaction.Description(childComplexity), true
+
+	case "Reaction.id":
+		if e.complexity.Reaction.ID == nil {
+			break
+		}
+
+		return e.complexity.Reaction.ID(childComplexity), true
+
+	case "Reaction.type":
+		if e.complexity.Reaction.Type == nil {
+			break
+		}
+
+		return e.complexity.Reaction.Type(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -1125,6 +1189,13 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../schema/scalars.graphqls", Input: `scalar Time
 scalar UUID`, BuiltIn: false},
+	{Name: "../schema/reaction.graphqls", Input: `type Reaction {
+  id: UUID!
+  type: String!
+  description: String!
+}
+
+`, BuiltIn: false},
 	{Name: "../schema/user.graphqls", Input: `type User @key(fields: "id") {
   id: UUID! @external
 }`, BuiltIn: false},
@@ -1222,6 +1293,9 @@ type Place {
   groupBoardsByUser(userId: UUID!): [Board!]!
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
+
+  reactions: [Reaction!]!
+  countAllReactionsToPin(pinId: UUID!): Int!
 }
 
 `, BuiltIn: false},
@@ -1305,7 +1379,11 @@ type Mutation {
   deleteGroup(groupId: UUID!): Boolean!
   requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
   acceptJoinToGroup(requestId: UUID!): Boolean!
-}`, BuiltIn: false},
+
+  reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+}
+
+`, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
 	directive @key(fields: _FieldSet!) repeatable on OBJECT | INTERFACE
 	directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
@@ -1743,6 +1821,80 @@ func (ec *executionContext) field_Mutation_deleteGroup_argsGroupID(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
 	if tmp, ok := rawArgs["groupId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_reactionToPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_reactionToPin_argsPinID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["pinId"] = arg0
+	arg1, err := ec.field_Mutation_reactionToPin_argsReactionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["reactionId"] = arg1
+	arg2, err := ec.field_Mutation_reactionToPin_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_reactionToPin_argsPinID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["pinId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pinId"))
+	if tmp, ok := rawArgs["pinId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_reactionToPin_argsReactionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["reactionId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("reactionId"))
+	if tmp, ok := rawArgs["reactionId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_reactionToPin_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["userId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
 		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
 	}
 
@@ -2365,6 +2517,34 @@ func (ec *executionContext) field_Query_commentsByPin_args(ctx context.Context, 
 	return args, nil
 }
 func (ec *executionContext) field_Query_commentsByPin_argsPinID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["pinId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pinId"))
+	if tmp, ok := rawArgs["pinId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_countAllReactionsToPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_countAllReactionsToPin_argsPinID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["pinId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_countAllReactionsToPin_argsPinID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (uuid.UUID, error) {
@@ -5118,6 +5298,61 @@ func (ec *executionContext) fieldContext_Mutation_acceptJoinToGroup(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_reactionToPin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_reactionToPin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ReactionToPin(rctx, fc.Args["pinId"].(uuid.UUID), fc.Args["reactionId"].(uuid.UUID), fc.Args["userId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_reactionToPin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reactionToPin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Pin_id(ctx context.Context, field graphql.CollectedField, obj *model.Pin) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Pin_id(ctx, field)
 	if err != nil {
@@ -7160,6 +7395,113 @@ func (ec *executionContext) fieldContext_Query_countGroupBoardsByUser(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_reactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_reactions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Reactions(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Reaction)
+	fc.Result = res
+	return ec.marshalNReaction2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐReactionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_reactions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Reaction_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Reaction_type(ctx, field)
+			case "description":
+				return ec.fieldContext_Reaction_description(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_countAllReactionsToPin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_countAllReactionsToPin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CountAllReactionsToPin(rctx, fc.Args["pinId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_countAllReactionsToPin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_countAllReactionsToPin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query__entities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query__entities(ctx, field)
 	if err != nil {
@@ -7389,6 +7731,138 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_id(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reaction_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reaction_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_type(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reaction_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reaction_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_description(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reaction_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reaction_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10275,6 +10749,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "reactionToPin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reactionToPin(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10833,6 +11314,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "reactions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_reactions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "countAllReactionsToPin":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_countAllReactionsToPin(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "_entities":
 			field := field
 
@@ -10885,6 +11410,55 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var reactionImplementors = []string{"Reaction"}
+
+func (ec *executionContext) _Reaction(ctx context.Context, sel ast.SelectionSet, obj *model.Reaction) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reactionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Reaction")
+		case "id":
+			out.Values[i] = ec._Reaction_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._Reaction_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Reaction_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11662,6 +12236,60 @@ func (ec *executionContext) marshalNPinImage2ᚖcontentᚑserviceᚋgraphᚋmode
 		return graphql.Null
 	}
 	return ec._PinImage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNReaction2ᚕᚖcontentᚑserviceᚋgraphᚋmodelᚐReactionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Reaction) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNReaction2ᚖcontentᚑserviceᚋgraphᚋmodelᚐReaction(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNReaction2ᚖcontentᚑserviceᚋgraphᚋmodelᚐReaction(ctx context.Context, sel ast.SelectionSet, v *model.Reaction) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Reaction(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
