@@ -373,7 +373,16 @@ func (r *mutationResolver) AcceptJoinToGroup(ctx context.Context, requestID uuid
 
 // ReactionToPin is the resolver for the reactionToPin field.
 func (r *mutationResolver) ReactionToPin(ctx context.Context, pinID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) (bool, error) {
-	return r.ReactionRepo.ToggleReaction(ctx, pinID, reactionID, userID)
+	logger := zap.L().With(zap.String("resolver", "ReactionToPin"), zap.String("pinID", pinID.String()), zap.String("userID", userID.String()), zap.String("reactionID", reactionID.String()))
+	logger.Info("Making reaction to pin")
+
+	res, err := r.ReactionRepo.ToggleReaction(ctx, pinID, reactionID, userID)
+	if err != nil {
+		logger.Error("Failed to make reaction to pin", zap.Error(err))
+		return false, err
+	}
+	
+	return res, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
