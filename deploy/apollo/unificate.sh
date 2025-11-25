@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-rm -rf schemas/*.graphql
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+SCHEMAS_DIR="$SCRIPT_DIR/schemas"
 
-cat ../../backend/profile-service/graph/schema/*.graphqls > schemas/profile.graphql
-cat ../../backend/content-service/graph/schema/*.graphqls > schemas/content.graphql
-cat ../../backend/feed-service/graph/schema/*.graphqls > schemas/feed.graphql
+rm -rf "$SCHEMAS_DIR"
+mkdir -p "$SCHEMAS_DIR"
+
+for svc in profile content feed; do
+  out="$SCHEMAS_DIR/${svc}.graphql"
+  : > "$out"
+
+  for f in "$SCRIPT_DIR/../../backend/${svc}-service/graph/schema/"*.graphqls; do
+    cat "$f" >> "$out"
+    printf '\n' >> "$out"
+  done
+done

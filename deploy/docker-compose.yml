@@ -181,8 +181,9 @@ services:
     #  retries: 10
     #  start_period: 5s
 
-  # Infra (maybe hueta)
+  # Infra
 
+  # keycloak
   keycloak:
     image: quay.io/keycloak/keycloak:20.0.0
     container_name: keycloak
@@ -226,8 +227,41 @@ services:
       retries: 5
       start_period: 30s
 
-  # graphql stuff
+  # opensearch
 
+  opensearch:
+    image: opensearchproject/opensearch:3
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - reverie-network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3
+    container_name: opensearch-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+    ports:
+      - "5601:5601"
+    depends_on:
+      - opensearch
+    networks:
+      - reverie-network
+
+  # graphql stuff
   rover:
     build:
       context: ./apollo
@@ -273,6 +307,7 @@ volumes:
   feed_data:
   keycloak_postgres_db_data:
   rover_data:
+  opensearch_data:
 
 networks:
   reverie-network:
