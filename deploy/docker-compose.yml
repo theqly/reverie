@@ -266,7 +266,7 @@ services:
     container_name: router
     image: ghcr.io/apollographql/apollo-runtime:latest
     ports:
-      - "4000:4000"
+      - "${ROUTER_PORT}:${ROUTER_INNER_PORT}"
     volumes:
       - rover_data:/config
     environment:
