@@ -17,7 +17,20 @@ var idToOwnerType map[int]model.OwnerType
 func LoadMappings(db *gorm.DB) error {
 	// 1. Загрузка Access Levels
 	var accessLevels []models.AccessLevel
-	if err := db.Find(&accessLevels).Error; err != nil {
+	
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 30 * time.Second // максимум ждать 30 секунд
+	b.MaxInterval = 5 * time.Second     // максимум между попытками — 5 сек
+
+	operation := func() error {
+		accessLevels = nil
+		if err := db.Find(&accessLevels).Error; err != nil {
+			return fmt.Errorf("failed to load access levels: %w", err)
+		}
+		return nil
+	}
+
+	if err := backoff.Retry(operation, b); err != nil {
 		return fmt.Errorf("failed to load access levels: %w", err) // log
 	}
 
