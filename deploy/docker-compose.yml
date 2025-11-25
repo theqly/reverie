@@ -262,44 +262,18 @@ services:
       - reverie-network
 
   # graphql stuff
-  rover:
-    build:
-      context: ./apollo
-      dockerfile: Dockerfile.rover
-    container_name: rover
-    working_dir: /app
-    environment:
-      - APOLLO_ELV2_LICENSE=accept
-      - APOLLO_TELEMETRY_DISABLED=true
-    volumes:
-      - ./apollo:/etc/apollo
-      - rover_data:/etc/apollo/rover
-    entrypoint: []
-    command: ["/bin/sh", "-c",
-      "rover supergraph compose --config /etc/apollo/supergraph-config.yaml --output /etc/apollo/rover/supergraph-schema.graphql --log=debug && echo \"supergraph written\" && tail -f /dev/null"
-    ]
-    networks:
-      - reverie-network
-
-
   router:
-    image: ghcr.io/apollographql/router:v2.2.1
     container_name: router
+    image: ghcr.io/apollographql/apollo-runtime:latest
     ports:
-      - "${ROUTER_PORT}:${ROUTER_INNER_PORT}"
+      - "4000:4000"
     volumes:
-      - rover_data:/etc/apollo/rover:ro
-    entrypoint: []
-    command: ["/bin/sh","-c", 
-      "until [ -f /etc/apollo/rover/supergraph-schema.graphql ]; do echo waiting for schema && sleep 1; done; \
-       echo 'schema found, launching router'; \
-       exec router --supergraph /etc/apollo/rover/supergraph-schema.graphql"
-    ]
+      - rover_data:/config
+    environment:
+      APOLLO_ROUTER_CONFIG_PATH: /config/router_config.yaml
+      APOLLO_ROUTER_SUPERGRAPH_PATH: /config/schema.graphql
     networks:
       - reverie-network
-    depends_on:
-      - rover
-
 
 volumes:
   profile_data:
@@ -307,6 +281,7 @@ volumes:
   feed_data:
   keycloak_postgres_db_data:
   rover_data:
+    external: true
   opensearch_data:
 
 networks:
