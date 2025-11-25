@@ -119,6 +119,12 @@ type Place struct {
 type Query struct {
 }
 
+type Reaction struct {
+	ID          uuid.UUID `json:"id"`
+	Type        string    `json:"type"`
+	Description string    `json:"description"`
+}
+
 type UpdateBoardInput struct {
 	Name        *string          `json:"name,omitempty"`
 	AccessLevel *AccessLevelType `json:"accessLevel,omitempty"`

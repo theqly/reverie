@@ -1,5 +1,6 @@
 schema:
   - graph/schema/scalars.graphqls
+  - graph/schema/reaction.graphqls
   - graph/schema/user.graphqls
   - graph/schema/board.graphqls
   - graph/schema/pin.graphqls

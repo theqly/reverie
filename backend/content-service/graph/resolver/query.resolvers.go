@@ -245,7 +245,6 @@ func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID) (
 
 	logger.Info("Successfully fetched own boards by user", zap.Int("count", len(retBoards)))
 	return retBoards, nil
-
 }
 
 // GroupBoardsByUser is the resolver for the groupBoardsByUser field.
@@ -267,7 +266,6 @@ func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID)
 
 	logger.Info("Successfully fetched group boards by user", zap.Int("count", len(retBoards)))
 	return retBoards, nil
-
 }
 
 // CountOwnBoardsByUser is the resolver for the countOwnBoardsByUser field.
@@ -296,6 +294,25 @@ func (r *queryResolver) CountGroupBoardsByUser(ctx context.Context, userID uuid.
 	}
 
 	return int(boardsNumber), nil
+}
+
+// Reactions is the resolver for the reactions field.
+func (r *queryResolver) Reactions(ctx context.Context) ([]*model.Reaction, error) {
+	reactions, err := r.ReactionRepo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var retReactions []*model.Reaction
+	for i := range reactions {
+		retReactions = append(retReactions, mapper.ToGraphQLReaction(&reactions[i]))
+	}
+	return retReactions, nil
+}
+
+// CountAllReactionsToPin is the resolver for the countAllReactionsToPin field.
+func (r *queryResolver) CountAllReactionsToPin(ctx context.Context, pinID uuid.UUID) (int, error) {
+	res, err := r.ReactionRepo.CountTotalReactionsInPin(ctx, pinID)
+	return int(res), err // ask no questions about my int conversion :)
 }
 
 // Query returns generated.QueryResolver implementation.
