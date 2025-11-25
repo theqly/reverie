@@ -18,10 +18,10 @@ func NewReactionRepository(db *gorm.DB) *ReactionRepository {
 }
 
 func (r *ReactionRepository) GetAll(ctx context.Context) ([]models.Reaction, error) {
-	var reaction []models.Reaction
+	var reactions []models.Reaction
 
-	err := r.db.WithContext(ctx).Model(&models.Reaction{}).Find(&reaction).Error
-	return reaction, err
+	err := r.db.WithContext(ctx).Model(&models.Reaction{}).Find(&reactions).Error
+	return reactions, err
 }
 
 func (r *ReactionRepository) CountTotalReactionsInPin(ctx context.Context, pinID uuid.UUID) (int64, error) {
