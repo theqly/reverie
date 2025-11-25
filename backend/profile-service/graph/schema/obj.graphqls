@@ -5,7 +5,7 @@ enum UserStatus {
   deleted
 }
 
-type User {
+type User @key(fields: "id") {
   id: UUID!
   nickname: String!
   email: String!
