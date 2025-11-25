@@ -57,7 +57,7 @@ func (r *ReactionRepository) ToggleReaction(ctx context.Context, pinID, reaction
 			OwnerID:    userID,
 		}
 
-		if err := tx.Create(&newLink).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&newLink).Error; err != nil {
 			tx.Rollback()
 			return false, err
 		}
