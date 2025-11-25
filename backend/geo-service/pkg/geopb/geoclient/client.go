@@ -2,8 +2,8 @@ package geoclient
 
 import (
 	"context"
-	"geo-service/pkg/geopb"
 
+	"github.com/theqly/reverie/backend/geo-service/pkg/geopb"
 	"google.golang.org/grpc"
 )
 
