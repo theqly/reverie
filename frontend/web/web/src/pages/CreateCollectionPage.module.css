@@ -1,0 +1,234 @@
+/* CreateCollectionPage.module.css */
+
+body {
+    padding: 0;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.createCollectionPage {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Хедер */
+.collectionHeader {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 70px;
+
+    
+    background-color: #EDEDED;
+    box-sizing: border-box;
+}
+
+.rev_logo {
+    margin: 0 50px 0 0;
+    padding: 8px;
+    height: 22px;
+    
+}
+
+
+.search_input{
+    margin: 0;
+    padding: 5px 0 0 34px;
+    height: 40px;
+    border-radius: 15px;
+    border: none;
+    background-color: #CDCDCD;
+    box-sizing: border-box;
+    font-size: 16px;
+    font-weight: 700px;
+    color: black;
+    width: 600px;
+
+    background-image: url('../assets/search.svg');
+    background-size: 15px 15px;
+    background-position: 10px 14px;
+    background-repeat: no-repeat;
+    
+}
+
+.header_container {
+    height: 70px;
+    display: flex;
+    padding: 15px 0 0 35px;
+}
+
+.h_container{
+    display: flex;
+    margin: 20px 40px 0 40px;
+    align-items: center;
+    border-bottom: 2px solid #000000;
+}
+
+h1 {
+  font-size: 26px;
+}
+
+.back_btn {
+  padding: 8px 16px;
+  background-image: url('../assets/back.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
+  cursor: pointer;
+  height: 40px;
+  width: 40px;
+  background-color: white;
+  margin-right: 20px;
+}
+
+/* --- GRID WRAPPER --- */
+.gridWrapper {
+    height: 350px;
+    display: grid;
+    grid-template-columns: 150px 2fr 1fr;
+    grid-auto-rows: auto;
+    gap: 20px 40px;
+    margin: 40px 40px;
+    align-items: start;
+}
+
+/* --- Колонка 1: LABELS --- */
+.name_label,
+.discr_label,
+.pin_label,
+.collaborator_label {
+    grid-column: 1;
+    justify-self: start;
+    margin: 10px 0 0 40px;
+    font-size: 20px;
+}
+
+/* --- Колонка 2: INPUTS / BUTTONS --- */
+.name_input_block,
+.discr_input_block,
+.actionButton {
+    grid-column: 2;
+    justify-self: start;
+    width: 100%;
+}
+
+.actionButton{
+  height: 40px;
+  cursor: pointer;
+  background-color: transparent;
+  width: 200px;
+  text-align: left;
+  padding-left: 40px;
+  font-size: 16px;
+
+  background-image: url('../assets/plus.svg');
+  background-size: 30px 30px;
+  background-position: left center ;
+  
+  background-repeat: no-repeat;
+  border: none;
+  
+}
+.name_input{
+    margin: 0;
+    padding: 5px 15px 0 15px;
+    height: 40px;
+    border-radius: 5px;
+    border: none;
+    background-color: #EDEDED;
+    box-sizing: border-box;
+    font-size: 16px;
+    font-weight: 700px;
+    color: black;
+    width: 600px;
+}
+
+.discr_input {
+  margin: 0;
+  padding: 15px 15px 0 15px;
+  height: 140px;
+  border-radius: 5px;
+  border: none;
+  background-color: #EDEDED;
+  box-sizing: border-box;
+  font-size: 16px;
+  font-weight: 700px;
+  color: black;
+  width: 600px;
+}
+
+/* Чтобы инпуты не растягивались чрезмерно */
+
+
+/* --- Колонка 3: COVER --- */
+.coverSection {
+    grid-column: 3;
+    grid-row: 1 / span 10; /* покрывает все строки */
+    display: flex;
+    justify-content: center;
+    align-items: start;
+}
+
+
+.saveButton {
+  padding: 12px 20px;
+  background: #28a745;
+  color: black;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 10px 0 0 80px;
+  font-size: 20px;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #218838;
+}
+
+.coverUpload {
+  width: 100%;
+  max-width: 200px;
+}
+
+.coverLabel {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1/1; /* Соотношение сторон для обложки */
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s;
+  background: #f9f9f9;
+  margin-bottom: 10px;
+}
+
+.coverSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.saveButton:disabled {
+  background: #EDEDED;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.characterCounter {
+  /*
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  */
+}
