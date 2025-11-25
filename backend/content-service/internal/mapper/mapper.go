@@ -19,7 +19,7 @@ func LoadMappings(db *gorm.DB) error {
 	var accessLevels []models.AccessLevel
 	
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 30 * time.Second // максимум ждать 30 секунд
+	b.MaxElapsedTime = 2 * 60 * time.Second // максимум ждать 2 минуты
 	b.MaxInterval = 5 * time.Second     // максимум между попытками — 5 сек
 
 	operation := func() error {
