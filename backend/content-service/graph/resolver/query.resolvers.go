@@ -298,8 +298,12 @@ func (r *queryResolver) CountGroupBoardsByUser(ctx context.Context, userID uuid.
 
 // Reactions is the resolver for the reactions field.
 func (r *queryResolver) Reactions(ctx context.Context) ([]*model.Reaction, error) {
+	logger := zap.L().With(zap.String("resolver", "Reactions"))
+	logger.Info("Fetching reactions")
+
 	reactions, err := r.ReactionRepo.GetAll(ctx)
 	if err != nil {
+		logger.Error("Failed to fetch reactions", zap.Error(err))
 		return nil, err
 	}
 	var retReactions []*model.Reaction
@@ -311,7 +315,15 @@ func (r *queryResolver) Reactions(ctx context.Context) ([]*model.Reaction, error
 
 // CountAllReactionsToPin is the resolver for the countAllReactionsToPin field.
 func (r *queryResolver) CountAllReactionsToPin(ctx context.Context, pinID uuid.UUID) (int, error) {
+	logger := zap.L().With(zap.String("resolver", "CountAllReactionsToPin"), zap.String("pinID", pinID.String()))
+	logger.Info("Counting all reactions to pin")
+
 	res, err := r.ReactionRepo.CountTotalReactionsInPin(ctx, pinID)
+	if err != nil {
+		logger.Error("Failed to count all reactions to pin", zap.Error(err))
+		return 0, err
+	}
+	
 	return int(res), err // ask no questions about my int conversion :)
 }
 
