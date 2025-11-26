@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'pin_view_page.dart';
 
 class PinsPage extends StatefulWidget {
   final VoidCallback? onSearchTap;
@@ -54,19 +55,28 @@ class _PinsPageState extends State<PinsPage> with AutomaticKeepAliveClientMixin 
           ),
           itemCount: 20,
           itemBuilder: (context, index) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${_selectedTab == 0 ? 'Рекомендация' : 'Подписка'} пина ${index + 1}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
+            return GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PinViewPage(),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${_selectedTab == 0 ? 'Рекомендация' : 'Подписка'} пина ${index + 1}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             );
