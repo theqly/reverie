@@ -2,9 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"profile-service/graph/model"
 	"profile-service/internal/models"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -25,9 +28,20 @@ func getUserStatuses(db *gorm.DB) (map[string]struct{}, error) {
 		ORDER BY e.enumsortorder
 	`
 
-	err := db.Raw(query).Scan(&values).Error
-	if err != nil {
-		return nil, err
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 2 * 60 * time.Second // максимум ждать 2 минуты
+	b.MaxInterval = 5 * time.Second         // максимум между попытками — 5 сек
+
+	operation := func() error {
+		err := db.Raw(query).Scan(&values).Error
+		if err != nil {
+			return fmt.Errorf("failed to load user statuses: %w", err)
+		}
+		return nil
+	}
+
+	if err := backoff.Retry(operation, b); err != nil {
+		return nil, fmt.Errorf("failed to load user statuses: %w", err) // log
 	}
 
 	userStatusesDB := make(map[string]struct{}, len(values))
