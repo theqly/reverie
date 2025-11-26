@@ -3,6 +3,12 @@ supergraph:
   path: /
   introspection: true
 
+sandbox:
+  enabled: true
+
+homepage:
+  enabled: false
+
 health_check:
   listen: 0.0.0.0:8088
   enabled: true
