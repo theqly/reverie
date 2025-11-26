@@ -4,9 +4,7 @@ import (
 	"content-service/graph/model"
 	"content-service/internal/models"
 	"fmt"
-	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"gorm.io/gorm"
 )
 
@@ -20,19 +18,7 @@ func LoadMappings(db *gorm.DB) error {
 	// 1. Загрузка Access Levels
 	var accessLevels []models.AccessLevel
 
-	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 2 * 60 * time.Second // максимум ждать 2 минуты
-	b.MaxInterval = 5 * time.Second         // максимум между попытками — 5 сек
-
-	operation := func() error {
-		accessLevels = nil
-		if err := db.Find(&accessLevels).Error; err != nil {
-			return fmt.Errorf("failed to load access levels: %w", err)
-		}
-		return nil
-	}
-
-	if err := backoff.Retry(operation, b); err != nil {
+	if err := db.Find(&accessLevels).Error; err != nil {
 		return fmt.Errorf("failed to load access levels: %w", err) // log
 	}
 
