@@ -17,7 +17,7 @@ bash unificate.sh
 
 билдим rover
 ```
-docker build -t my-rover -f ./apollo/Dockerfile.rover ./apollo
+docker build -t rover -f ./apollo/Dockerfile.rover ./apollo
 ```
 и запускаем его на разочек
 ```
