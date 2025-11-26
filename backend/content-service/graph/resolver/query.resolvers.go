@@ -323,7 +323,21 @@ func (r *queryResolver) CountAllReactionsToPin(ctx context.Context, pinID uuid.U
 		logger.Error("Failed to count all reactions to pin", zap.Error(err))
 		return 0, err
 	}
-	
+
+	return int(res), err // ask no questions about my int conversion :)
+}
+
+// CountAllReactionsToBoard is the resolver for the countAllReactionsToBoard field.
+func (r *queryResolver) CountAllReactionsToBoard(ctx context.Context, boardID uuid.UUID) (int, error) {
+	logger := zap.L().With(zap.String("resolver", "CountAllReactionsToBoard"), zap.String("boardID", boardID.String()))
+	logger.Info("Counting all reactions to board")
+
+	res, err := r.ReactionRepo.CountTotalReactionsInBoard(ctx, boardID)
+	if err != nil {
+		logger.Error("Failed to count all reactions to board", zap.Error(err))
+		return 0, err
+	}
+
 	return int(res), err // ask no questions about my int conversion :)
 }
 
