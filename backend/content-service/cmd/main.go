@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
+	"log"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
 
 	"content-service/graph/generated"
 	"content-service/graph/resolver"
+	"content-service/internal/mapper"
 	"content-service/internal/repository"
 	"content-service/pkg/config"
 	"content-service/pkg/database"
@@ -37,6 +39,10 @@ func main() {
 	}
 
 	database.Connect()
+
+	if err := mapper.LoadMappings(database.DB); err != nil {
+		log.Fatalf("failed to load mappings from database: %v", err)
+	}
 
 	boardRepo := repository.NewBoardRepository(database.DB)
 	pinRepo := repository.NewPinRepository(database.DB)

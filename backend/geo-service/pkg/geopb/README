@@ -1,0 +1,49 @@
+КАК ДЕЛАТЬ go get
+
+go env -w GOPRIVATE=github.com/theqly
+
+git config --global url."https://api:ПОПРОСИТЕ_ТОКЕН_У_АРТЕМА@github.com/theqly".insteadOf "https://github.com/theqly"
+
+go get github.com/theqly/reverie/backend/geo-service/pkg/geopb
+
+ПРИМЕР ИСПОЛЬЗОВАНИЯ МОДУЛЯ GEO CLIENT
+
+package main
+
+import (
+	"context"
+	"log"
+
+	geoclient "github.com/theqly/reverie/backend/geo-service/pkg/geopb/geoclient"
+)
+
+func main() {
+	client, err := geoclient.New("localhost:50051")
+	if err != nil {
+		log.Fatal("Failed to create geo client:", err)
+	}
+	defer client.Close()
+
+	ctx := context.Background()
+
+	geoResult, err := client.Geocode(ctx, "Москва, Красная площадь")
+	if err != nil {
+		log.Fatal("Geocode error:", err)
+	}
+	log.Printf("Geocode result: %+v", geoResult)
+
+	reverseResult, err := client.ReverseGeocode(ctx, 55.7558, 37.6173)
+	if err != nil {
+		log.Fatal("ReverseGeocode error:", err)
+	}
+	log.Printf("ReverseGeocode result: %+v", reverseResult)
+
+	// bulkResult, err := client.BulkGeocode(ctx, []string{
+	// 	"Москва, Ленинградский проспект",
+	// 	"Санкт-Петербург, Невский проспект",
+	// })
+	// if err != nil {
+	// 	log.Fatal("BulkGeocode error:", err)
+	// }
+	// log.Printf("BulkGeocode result count: %d", len(bulkResult))
+}

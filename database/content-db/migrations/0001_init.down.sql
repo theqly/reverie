@@ -1,0 +1,23 @@
+DROP TABLE IF EXISTS join_group_requests;
+DROP TABLE IF EXISTS members;
+DROP TABLE IF EXISTS groups;
+DROP TABLE IF EXISTS bookmarks_boards;
+DROP TABLE IF EXISTS bookmarks_pins;
+DROP TABLE IF EXISTS reaction_boards;
+DROP TABLE IF EXISTS reaction_pins;
+DROP TABLE IF EXISTS reaction;
+DROP TABLE IF EXISTS complaints;
+DROP TABLE IF EXISTS complaint_statuses;
+DROP TABLE IF EXISTS complaint_types;
+DROP TABLE IF EXISTS board_comments;
+DROP TABLE IF EXISTS pin_comments;
+DROP TABLE IF EXISTS pin_images;
+DROP TABLE IF EXISTS board_pins;
+DROP TABLE IF EXISTS pins;
+DROP TABLE IF EXISTS places;
+DROP TABLE IF EXISTS boards;
+DROP TABLE IF EXISTS owner_types;
+DROP TABLE IF EXISTS access_levels;
+
+DROP TYPE IF EXISTS request_status;
+DROP TYPE IF EXISTS complaint_object_type;

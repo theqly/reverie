@@ -1,21 +1,22 @@
 input CreateBoardInput {
   name: String!
-  accessLevelId: UUID!
-  groupId: UUID!
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  ownerType: OwnerType!
 }
 
 input UpdateBoardInput {
   name: String
-  accessLevelId: UUID
+  accessLevel: AccessLevelType
   userId: UUID!
 }
 
 input CreatePinInput {
   name: String!
+  ownerId: UUID!
   latitude: Float!
   longitude: Float!
   description: String
-  ownerId: UUID!
 }
 
 input UpdatePinInput {
@@ -27,10 +28,16 @@ input UpdatePinInput {
   userId: UUID!
 }
 
-input AddCommentInput {
+input AddCommentToPinInput {
   pinId: UUID!
   userId: UUID!
-  content: String!
+  message: String!
+}
+
+input AddCommentToBoardInput {
+  boardId: UUID!
+  userId: UUID!
+  message: String!
 }
 
 input AddImageInput {
@@ -39,14 +46,13 @@ input AddImageInput {
   orderNumber: Int!
 }
 
-directive @policy(
-  service: String!
-  query: String!
-) on FIELD_DEFINITION
+input CreateGroupInput {
+  members: [UUID!]!
+}
 
 type Mutation {
   createBoard(input: CreateBoardInput!): Board!
-  updateBoard(id: UUID!, input: UpdateBoardInput!): Board! @policy(service: "coprocessor", query: "checkBoardApproval")
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
 
   createPin(input: CreatePinInput!): Pin!
   updatePin(id: UUID!, input: UpdatePinInput!): Pin!
@@ -54,11 +60,26 @@ type Mutation {
   addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
   removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!
 
-  addCommentToPin(input: AddCommentInput!): Comment!
-  updateComment(id: UUID!, content: String!): Comment!
-  deleteComment(id: UUID!): Boolean!
-
   addImageToPin(input: AddImageInput!): PinImage!
   removeImageFromPin(imageId: UUID!): Boolean!
   updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
+
+  addCommentToPin(input: AddCommentToPinInput!): CommentToPin!
+  updateCommentToPin(id: UUID!, message: String!): CommentToPin!
+  deleteCommentToPin(id: UUID!): Boolean!
+
+  addCommentToBoard(input: AddCommentToBoardInput!): CommentToBoard!
+  updateCommentToBoard(id: UUID!, message: String!): CommentToBoard!
+  deleteCommentToBoard(id: UUID!): Boolean!
+
+  createGroup(input: CreateGroupInput!): Group!
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+  deleteGroup(groupId: UUID!): Boolean!
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+  acceptJoinToGroup(requestId: UUID!): Boolean!
+
+  reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+  reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 }
+

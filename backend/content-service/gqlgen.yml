@@ -1,8 +1,10 @@
 schema:
   - graph/schema/scalars.graphqls
+  - graph/schema/reaction.graphqls
   - graph/schema/user.graphqls
   - graph/schema/board.graphqls
   - graph/schema/pin.graphqls
+  - graph/schema/group.graphqls
   - graph/schema/query.graphqls
   - graph/schema/mutation.graphqls
 

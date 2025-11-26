@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package geopb;
+
+option go_package = "/geopb";
+
+service GeoService {
+  rpc Geocode(GeocodeRequest) returns (GeocodeResponse);
+  rpc ReverseGeocode(ReverseGeocodeRequest) returns (ReverseGeocodeResponse);
+  rpc BulkGeocode(BulkGeocodeRequest) returns (BulkGeocodeResponse);
+}
+
+message GeocodeRequest {
+  string address = 1;
+}
+
+message GeocodeResponse {
+  string place_id = 1;
+  double lat = 2;
+  double lon = 3;
+  string display_name = 4;
+  Address address = 5;
+}
+
+message Address {
+  string country = 1;
+  string city = 2;
+  string street = 3;
+  string house_number = 4;
+  string postcode = 5;
+}
+
+message ReverseGeocodeRequest {
+  double lat = 1;
+  double lon = 2;
+}
+
+message ReverseGeocodeResponse {
+  string place_id = 1;
+  double lat = 2;
+  double lon = 3;
+  string display_name = 4;
+  Address address = 5;
+}
+
+message BulkGeocodeRequest {
+  repeated string addresses = 1;
+}
+
+message BulkGeocodeResponse {
+  repeated GeocodeResponse results = 1;
+}

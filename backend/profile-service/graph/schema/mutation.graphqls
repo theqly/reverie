@@ -1,0 +1,26 @@
+input CreateUserInput {
+  nickname: String!
+  email: String!
+  nick_tag: String!
+  profilePicture: String
+  description: String
+}
+
+input UpdateUserInput {
+  nickname: String
+  email: String
+  nick_tag: String!
+  profilePicture: String
+  description: String
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(userId: UUID!, input: UpdateUserInput!): User!
+  deleteUser(userId: UUID!): Boolean!
+
+  followUser(userId: UUID!, followerId: UUID!): Boolean!
+  unfollowUser(userId: UUID!, followerId: UUID!): Boolean!
+
+  changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
+}

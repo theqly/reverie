@@ -8,8 +8,10 @@ import (
 	"content-service/graph/generated"
 	"content-service/graph/model"
 	"content-service/internal/mapper"
+	"content-service/internal/models"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,8 +31,10 @@ func (r *mutationResolver) CreateBoard(ctx context.Context, input model.CreateBo
 		logger.Error("Failed to create board", zap.Error(err))
 		return nil, err
 	}
-
 	logger.Info("Successfully created board", zap.String("boardID", board.ID.String()))
+
+	board.AccessLevel = input.AccessLevel.String()
+	board.OwnerType = input.OwnerType.String()
 	return mapper.ToGraphQLBoard(board), nil
 }
 
@@ -138,51 +142,6 @@ func (r *mutationResolver) RemovePinFromBoard(ctx context.Context, pinID uuid.UU
 	return mapper.ToGraphQLBoard(board), nil
 }
 
-// AddCommentToPin is the resolver for the addCommentToPin field.
-func (r *mutationResolver) AddCommentToPin(ctx context.Context, input model.AddCommentInput) (*model.Comment, error) {
-	logger := zap.L().With(zap.String("resolver", "AddCommentToPin"), zap.String("pinID", input.PinID.String()))
-	logger.Info("Adding comment to pin")
-
-	comment, err := r.PinRepo.AddComment(ctx, input.PinID, input.UserID, input.Content)
-	if err != nil {
-		logger.Error("Failed to add comment", zap.Error(err))
-		return nil, err
-	}
-
-	logger.Info("Successfully added comment")
-	return mapper.ToGraphQLComment(comment), nil
-}
-
-// UpdateComment is the resolver for the updateComment field.
-func (r *mutationResolver) UpdateComment(ctx context.Context, id uuid.UUID, content string) (*model.Comment, error) {
-	logger := zap.L().With(zap.String("resolver", "UpdateComment"), zap.String("commentID", id.String()))
-	logger.Info("Updating comment")
-
-	comment, err := r.PinRepo.UpdateComment(ctx, id, content)
-	if err != nil {
-		logger.Error("Failed to update comment", zap.Error(err))
-		return nil, err
-	}
-
-	logger.Info("Successfully updated comment")
-	return mapper.ToGraphQLComment(comment), nil
-}
-
-// DeleteComment is the resolver for the deleteComment field.
-func (r *mutationResolver) DeleteComment(ctx context.Context, id uuid.UUID) (bool, error) {
-	logger := zap.L().With(zap.String("resolver", "DeleteComment"), zap.String("commentID", id.String()))
-	logger.Info("Deleting comment")
-
-	err := r.PinRepo.DeleteCommentByID(ctx, id)
-	if err != nil {
-		logger.Error("Failed to delete comment", zap.Error(err))
-		return false, err
-	}
-
-	logger.Info("Successfully deleted comment")
-	return true, nil
-}
-
 // AddImageToPin is the resolver for the addImageToPin field.
 func (r *mutationResolver) AddImageToPin(ctx context.Context, input model.AddImageInput) (*model.PinImage, error) {
 	logger := zap.L().With(zap.String("resolver", "AddImageToPin"), zap.String("pinID", input.PinID.String()))
@@ -226,6 +185,218 @@ func (r *mutationResolver) UpdateImageOrder(ctx context.Context, imageID uuid.UU
 
 	logger.Info("Successfully updated image order")
 	return mapper.ToGraphQLPinImage(pinImage), nil
+}
+
+// AddCommentToPin is the resolver for the addCommentToPin field.
+func (r *mutationResolver) AddCommentToPin(ctx context.Context, input model.AddCommentToPinInput) (*model.CommentToPin, error) {
+	logger := zap.L().With(zap.String("resolver", "AddCommentToPin"), zap.String("pinID", input.PinID.String()))
+	logger.Info("Adding comment to pin")
+
+	comment, err := r.PinRepo.AddCommentToPin(ctx, input.PinID, input.UserID, input.Message)
+	if err != nil {
+		logger.Error("Failed to add comment to pin", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Successfully added comment to pin")
+	return mapper.ToGraphQLCommentToPin(comment), nil
+}
+
+// UpdateCommentToPin is the resolver for the updateCommentToPin field.
+func (r *mutationResolver) UpdateCommentToPin(ctx context.Context, id uuid.UUID, message string) (*model.CommentToPin, error) {
+	logger := zap.L().With(zap.String("resolver", "UpdateCommentToPin"), zap.String("commentID", id.String()))
+	logger.Info("Updating comment to pin")
+
+	comment, err := r.PinRepo.UpdateCommentToPin(ctx, id, message)
+	if err != nil {
+		logger.Error("Failed to update comment to pin", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Successfully updated comment to pin")
+	return mapper.ToGraphQLCommentToPin(comment), nil
+}
+
+// DeleteCommentToPin is the resolver for the deleteCommentToPin field.
+func (r *mutationResolver) DeleteCommentToPin(ctx context.Context, id uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: DeleteCommentToPin - deleteCommentToPin"))
+	// logger := zap.L().With(zap.String("resolver", "DeleteComment"), zap.String("commentID", id.String()))
+	// logger.Info("Deleting comment")
+
+	// err := r.PinRepo.DeleteCommentByID(ctx, id)
+	// if err != nil {
+	// 	logger.Error("Failed to delete comment", zap.Error(err))
+	// 	return false, err
+	// }
+
+	// logger.Info("Successfully deleted comment")
+	// return true, nil
+}
+
+// AddCommentToBoard is the resolver for the addCommentToBoard field.
+func (r *mutationResolver) AddCommentToBoard(ctx context.Context, input model.AddCommentToBoardInput) (*model.CommentToBoard, error) {
+	logger := zap.L().With(zap.String("resolver", "AddCommentToBoard"), zap.String("boardID", input.BoardID.String()))
+	logger.Info("Adding comment to board")
+
+	comment, err := r.BoardRepo.AddCommentToBoard(ctx, input.BoardID, input.UserID, input.Message)
+	if err != nil {
+		logger.Error("Failed to add comment to board", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Successfully added comment to board")
+	return mapper.ToGraphQLCommentToBoard(comment), nil
+}
+
+// UpdateCommentToBoard is the resolver for the updateCommentToBoard field.
+func (r *mutationResolver) UpdateCommentToBoard(ctx context.Context, id uuid.UUID, message string) (*model.CommentToBoard, error) {
+	logger := zap.L().With(zap.String("resolver", "UpdateCommentToBoard"), zap.String("commentID", id.String()))
+	logger.Info("Updating comment to board")
+
+	comment, err := r.BoardRepo.UpdateCommentToBoard(ctx, id, message)
+	if err != nil {
+		logger.Error("Failed to update comment to board", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Successfully updated comment to board")
+	return mapper.ToGraphQLCommentToBoard(comment), nil
+}
+
+// DeleteCommentToBoard is the resolver for the deleteCommentToBoard field.
+func (r *mutationResolver) DeleteCommentToBoard(ctx context.Context, id uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: DeleteCommentToBoard - deleteCommentToBoard"))
+}
+
+// CreateGroup is the resolver for the createGroup field.
+func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error) {
+	memberStrings := make([]string, len(input.Members))
+	for i, member := range input.Members {
+		memberStrings[i] = member.String()
+	}
+
+	logger := zap.L().With(zap.String("resolver", "CreateGroup"), zap.Strings("members", memberStrings))
+	logger.Info("Creating group")
+
+	group, err := r.BoardRepo.CreateGroup(ctx, input.Members)
+	if err != nil {
+		logger.Error("Failed to create group", zap.Error(err))
+		return nil, err
+	}
+
+	return mapper.ToGraphQLGroup(group), nil
+}
+
+// AddUserToGroup is the resolver for the addUserToGroup field.
+func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "AddUserToGroup"), zap.String("userID", userID.String()), zap.String("groupID", groupID.String()))
+	logger.Info("Adding user to group")
+
+	isMember, err := r.BoardRepo.GetMember(ctx, userID, groupID)
+	if err != nil {
+		logger.Error("Failed to check if the user is in the group", zap.Error(err))
+		return false, err
+	}
+	if isMember == true {
+		logger.Error("User already in the group")
+		return false, fmt.Errorf("User already in the group")
+	}
+
+	member := &models.Member{
+		UserID:  userID,
+		GroupID: groupID,
+	}
+
+	err = r.BoardRepo.CreateMember(ctx, *member)
+	if err != nil {
+		logger.Error("Failed to add user to group", zap.Error(err))
+		return false, err
+	}
+
+	return true, nil
+}
+
+// RemoveUserFromGroup is the resolver for the removeUserFromGroup field.
+func (r *mutationResolver) RemoveUserFromGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "RemoveUserFromGroup"), zap.String("userID", userID.String()), zap.String("groupID", groupID.String()))
+	logger.Info("Removing user from group")
+
+	isMember, err := r.BoardRepo.GetMember(ctx, userID, groupID)
+	if err != nil {
+		logger.Error("Failed to check if the user is in the group", zap.Error(err))
+		return false, err
+	}
+	if isMember == false {
+		logger.Error("User not in group", zap.String("userID", userID.String()), zap.String("groupID", groupID.String()))
+		return false, fmt.Errorf("User not in group")
+	}
+
+	member := &models.Member{
+		UserID:  userID,
+		GroupID: groupID,
+	}
+
+	if err := r.BoardRepo.RemoveUserFromGroup(ctx, *member); err != nil {
+		logger.Error("Failed to remove user from group", zap.Error(err))
+		return false, err
+	}
+
+	return true, nil
+}
+
+// DeleteGroup is the resolver for the deleteGroup field.
+func (r *mutationResolver) DeleteGroup(ctx context.Context, groupID uuid.UUID) (bool, error) {
+	// Жесткого удаления скорее всего не будет, пока нет требований останется заглушкой
+	return false, nil
+
+	// var group models.Group
+	// if err := r.DB.First(&group, "id = ?", id).Error; err != nil {
+	// 	return false, fmt.Errorf("group not found: %w", err)
+	// }
+
+	// if err := r.DB.Delete(&group).Error; err != nil {
+	// 	return false, fmt.Errorf("failed to delete group: %w", err)
+	// }
+
+	// return true, nil
+}
+
+// RequestJoinGroup is the resolver for the requestJoinGroup field.
+func (r *mutationResolver) RequestJoinGroup(ctx context.Context, groupID uuid.UUID, userID uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: RequestJoinGroup - requestJoinGroup"))
+}
+
+// AcceptJoinToGroup is the resolver for the acceptJoinToGroup field.
+func (r *mutationResolver) AcceptJoinToGroup(ctx context.Context, requestID uuid.UUID) (bool, error) {
+	panic(fmt.Errorf("not implemented: AcceptJoinToGroup - acceptJoinToGroup"))
+}
+
+// ReactionToPin is the resolver for the reactionToPin field.
+func (r *mutationResolver) ReactionToPin(ctx context.Context, pinID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "ReactionToPin"), zap.String("pinID", pinID.String()), zap.String("userID", userID.String()), zap.String("reactionID", reactionID.String()))
+	logger.Info("Making reaction to pin")
+
+	res, err := r.ReactionRepo.ToggleReactionToPin(ctx, pinID, reactionID, userID)
+	if err != nil {
+		logger.Error("Failed to make reaction to pin", zap.Error(err))
+		return false, err
+	}
+
+	return res, nil
+}
+
+// ReactionToBoard is the resolver for the reactionToBoard field.
+func (r *mutationResolver) ReactionToBoard(ctx context.Context, boardID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "ReactionToBoard"), zap.String("boardID", boardID.String()), zap.String("userID", userID.String()), zap.String("reactionID", reactionID.String()))
+	logger.Info("Making reaction to board")
+
+	res, err := r.ReactionRepo.ToggleReactionToBoard(ctx, boardID, reactionID, userID)
+	if err != nil {
+		logger.Error("Failed to make reaction to board", zap.Error(err))
+		return false, err
+	}
+
+	return res, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

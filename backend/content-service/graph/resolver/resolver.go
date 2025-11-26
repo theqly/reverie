@@ -7,6 +7,7 @@ import "content-service/internal/repository"
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	BoardRepo *repository.BoardRepository
-	PinRepo   *repository.PinRepository
+	BoardRepo    *repository.BoardRepository
+	PinRepo      *repository.PinRepository
+	ReactionRepo *repository.ReactionRepository
 }
