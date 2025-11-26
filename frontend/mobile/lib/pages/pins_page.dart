@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'pin_view_page.dart';
+import '../services/pin_service.dart';
+import '../models/pin.dart';
 
 class PinsPage extends StatefulWidget {
   final VoidCallback? onSearchTap;
@@ -20,11 +22,30 @@ class PinsPage extends StatefulWidget {
 
 class _PinsPageState extends State<PinsPage> with AutomaticKeepAliveClientMixin {
   late int _selectedTab;
+  final PinService _pinService = PinService();
+  List<Pin> _pins = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _selectedTab = widget.initialTab;
+    _loadPins();
+  }
+
+  Future<void> _loadPins() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // TODO: Заменить на реальный userId из auth
+    final String mockUserId = '00000000-0000-0000-0000-000000000000';
+    final pins = await _pinService.getPinsByUser(mockUserId);
+
+    setState(() {
+      _pins = pins;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -46,38 +67,123 @@ class _PinsPageState extends State<PinsPage> with AutomaticKeepAliveClientMixin 
     return Stack(
       children: [
         // Контент страницы
-        ListView.builder(
-          padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + 70,
-            left: 16,
-            right: 16,
-            bottom: 100, // Отступ для док-станции
-          ),
-          itemCount: 20,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const PinViewPage(),
+        _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _pins.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.push_pin_outlined, size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Пока нет пинов',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadPins,
+                    child: ListView.builder(
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 70,
+                        left: 16,
+                        right: 16,
+                        bottom: 100, // Отступ для док-станции
+                      ),
+                      itemCount: _pins.length,
+                      itemBuilder: (context, index) {
+                        final pin = _pins[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => PinViewPage(pin: pin),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                // Превью изображения если есть
+                                if (pin.images.isNotEmpty)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      pin.images.first.imageUrl,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          width: 60,
+                                          height: 60,
+                                          color: Colors.grey[300],
+                                          child: const Icon(Icons.image_not_supported),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                if (pin.images.isNotEmpty) const SizedBox(width: 12),
+                                // Информация о пине
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        pin.name,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      if (pin.address != null) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          pin.address!,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.star, size: 16, color: Colors.amber),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            pin.rating.toStringAsFixed(1),
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                );
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_selectedTab == 0 ? 'Рекомендация' : 'Подписка'} пина ${index + 1}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
-                  ),
-                ),
               ),
             );
           },

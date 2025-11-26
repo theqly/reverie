@@ -1,8 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../models/pin.dart';
+import '../services/pin_service.dart';
 
 class PinViewPage extends StatefulWidget {
-  const PinViewPage({super.key});
+  final Pin pin;
+  
+  const PinViewPage({super.key, required this.pin});
 
   @override
   State<PinViewPage> createState() => _PinViewPageState();
@@ -10,15 +14,32 @@ class PinViewPage extends StatefulWidget {
 
 class _PinViewPageState extends State<PinViewPage> {
   final PageController _photoController = PageController();
+  final PinService _pinService = PinService();
   int _currentPhotoIndex = 0;
-  
-  // Временные данные для демонстрации
-  final List<Color> _demoPhotos = [
-    Colors.blue.shade300,
-    Colors.purple.shade300,
-    Colors.pink.shade300,
-    Colors.orange.shade300,
-  ];
+  int _reactionsCount = 0;
+  int _commentsCount = 0;
+  bool _isLoadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    setState(() {
+      _isLoadingStats = true;
+    });
+
+    final reactionsCount = await _pinService.getReactionsCount(widget.pin.id);
+    final comments = await _pinService.getCommentsByPin(widget.pin.id);
+
+    setState(() {
+      _reactionsCount = reactionsCount;
+      _commentsCount = comments.length;
+      _isLoadingStats = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -36,7 +57,7 @@ class _PinViewPageState extends State<PinViewPage> {
   }
 
   void _nextPhoto() {
-    if (_currentPhotoIndex < _demoPhotos.length - 1) {
+    if (_currentPhotoIndex < widget.pin.images.length - 1) {
       _photoController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -103,51 +124,77 @@ class _PinViewPageState extends State<PinViewPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(30),
-                child: Stack(
-                  children: [
-                    // PageView для свайпа
-                    PageView.builder(
-                      controller: _photoController,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentPhotoIndex = index;
-                        });
-                      },
-                      itemCount: _demoPhotos.length,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          color: _demoPhotos[index],
-                          child: Center(
-                            child: Text(
-                              'Фото ${index + 1}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                child: widget.pin.images.isEmpty
+                    ? Container(
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 64,
+                            color: Colors.grey,
                           ),
-                        );
-                      },
-                    ),
-                    
-                    // Стрелка влево
-                    if (_currentPhotoIndex > 0)
-                      Positioned(
-                        left: 16,
-                        top: 0,
-                        bottom: 0,
-                        child: Center(
-                          child: GestureDetector(
-                            onTap: _previousPhoto,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.3),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
+                        ),
+                      )
+                    : Stack(
+                        children: [
+                          // PageView для свайпа
+                          PageView.builder(
+                            controller: _photoController,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentPhotoIndex = index;
+                              });
+                            },
+                            itemCount: widget.pin.images.length,
+                            itemBuilder: (context, index) {
+                              final image = widget.pin.images[index];
+                              return Image.network(
+                                image.imageUrl,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.error_outline,
+                                        size: 64,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          
+                          // Стрелка влево
+                          if (widget.pin.images.length > 1 && _currentPhotoIndex > 0)
+                            Positioned(
+                              left: 16,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: GestureDetector(
+                                  onTap: _previousPhoto,
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.3),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
                                 Icons.chevron_left,
                                 color: Colors.white,
                                 size: 28,
@@ -158,7 +205,7 @@ class _PinViewPageState extends State<PinViewPage> {
                       ),
                     
                     // Стрелка вправо
-                    if (_currentPhotoIndex < _demoPhotos.length - 1)
+                    if (widget.pin.images.length > 1 && _currentPhotoIndex < widget.pin.images.length - 1)
                       Positioned(
                         right: 16,
                         top: 0,
@@ -184,30 +231,31 @@ class _PinViewPageState extends State<PinViewPage> {
                       ),
                     
                     // Индикатор страниц
-                    Positioned(
-                      bottom: 16,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          _demoPhotos.length,
-                          (index) => Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _currentPhotoIndex == index
-                                  ? Colors.white
-                                  : Colors.white.withOpacity(0.4),
+                    if (widget.pin.images.length > 1)
+                      Positioned(
+                        bottom: 16,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            widget.pin.images.length,
+                            (index) => Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _currentPhotoIndex == index
+                                    ? Colors.white
+                                    : Colors.white.withOpacity(0.4),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ),
             ),
           ),
@@ -218,58 +266,109 @@ class _PinViewPageState extends State<PinViewPage> {
             child: Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Кнопки взаимодействия
-                  Row(
-                    children: [
-                      _buildActionButton(
-                        icon: Icons.favorite_border,
-                        label: '245',
-                        onTap: () {},
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Кнопки взаимодействия
+                    _isLoadingStats
+                        ? const Center(child: CircularProgressIndicator())
+                        : Row(
+                            children: [
+                              _buildActionButton(
+                                icon: Icons.favorite_border,
+                                label: '$_reactionsCount',
+                                onTap: () {},
+                              ),
+                              const SizedBox(width: 20),
+                              _buildActionButton(
+                                icon: Icons.chat_bubble_outline,
+                                label: '$_commentsCount',
+                                onTap: () {},
+                              ),
+                              const SizedBox(width: 20),
+                              _buildActionButton(
+                                icon: Icons.bookmark_border,
+                                label: 'Сохранить',
+                                onTap: () {},
+                              ),
+                              const Spacer(),
+                              _buildActionButton(
+                                icon: Icons.share_outlined,
+                                label: '',
+                                onTap: () {},
+                              ),
+                            ],
+                          ),
+                    
+                    const SizedBox(height: 20),
+                    
+                    // Название и рейтинг
+                    Text(
+                      widget.pin.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
                       ),
-                      const SizedBox(width: 20),
-                      _buildActionButton(
-                        icon: Icons.chat_bubble_outline,
-                        label: '32',
-                        onTap: () {},
-                      ),
-                      const SizedBox(width: 20),
-                      _buildActionButton(
-                        icon: Icons.bookmark_border,
-                        label: 'Сохранить',
-                        onTap: () {},
-                      ),
-                      const Spacer(),
-                      _buildActionButton(
-                        icon: Icons.share_outlined,
-                        label: '',
-                        onTap: () {},
+                    ),
+                    
+                    if (widget.pin.address != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              widget.pin.address!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Описание пина
-                  const Text(
-                    'Описание пина',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                    
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, size: 18, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.pin.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Здесь будет описание пина с дополнительной информацией о контенте',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
+                    
+                    if (widget.pin.description != null && widget.pin.description!.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Описание',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.pin.description!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
