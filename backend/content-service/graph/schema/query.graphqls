@@ -22,5 +22,6 @@ type Query {
 
   reactions: [Reaction!]!
   countAllReactionsToPin(pinId: UUID!): Int!
+  countAllReactionsToBoard(boardId: UUID!): Int!
 }
 

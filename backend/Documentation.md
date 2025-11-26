@@ -378,8 +378,10 @@ type Reaction {
 
   reactions: [Reaction!]!
   countAllReactionsToPin(pinId: UUID!): Int!
+  countAllReactionsToBoard(boardId: UUID!): Int!
 
   reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+  reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 
 ##### Необходимо реализовать:
 - boardToBookmarks(boardId: UUID!, userId: UUID!): Boolean!
@@ -388,8 +390,6 @@ type Reaction {
 - removePinFromBookmarks(pinId: UUID!, userId: UUID!): Boolean!
 - copyPin(pinId: UUID!, userId: UUID!, boardId: UUID!): Pin! (возвращаем id нового пина, возможно хватит возвращать UUID!)
 - copyBoard(boardId: UUID!, userId: UUID!): Board! (возвращаем id новой доски, возможно хватит возвращать UUID!)
-- addReactionToBoard(boardId: UUID!, reactionId: UUID!), userId: UUID!: Boolean!
-- removeReactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean! (проверка, что удаляет владелец)
 - complaintStatuses(): [complaintStatuses!]!
 - complaintTypes(): [complaintTypes!]!
 - complainAboutUser(creatorId: UUID!, userId: UUID!, complaint: ComplaintInput): Boolean! (если тип жалобы другое, то комментарий обязателен)

@@ -80,5 +80,6 @@ type Mutation {
   acceptJoinToGroup(requestId: UUID!): Boolean!
 
   reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+  reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 }
 

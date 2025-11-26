@@ -376,12 +376,26 @@ func (r *mutationResolver) ReactionToPin(ctx context.Context, pinID uuid.UUID, r
 	logger := zap.L().With(zap.String("resolver", "ReactionToPin"), zap.String("pinID", pinID.String()), zap.String("userID", userID.String()), zap.String("reactionID", reactionID.String()))
 	logger.Info("Making reaction to pin")
 
-	res, err := r.ReactionRepo.ToggleReaction(ctx, pinID, reactionID, userID)
+	res, err := r.ReactionRepo.ToggleReactionToPin(ctx, pinID, reactionID, userID)
 	if err != nil {
 		logger.Error("Failed to make reaction to pin", zap.Error(err))
 		return false, err
 	}
-	
+
+	return res, nil
+}
+
+// ReactionToBoard is the resolver for the reactionToBoard field.
+func (r *mutationResolver) ReactionToBoard(ctx context.Context, boardID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "ReactionToBoard"), zap.String("boardID", boardID.String()), zap.String("userID", userID.String()), zap.String("reactionID", reactionID.String()))
+	logger.Info("Making reaction to board")
+
+	res, err := r.ReactionRepo.ToggleReactionToBoard(ctx, boardID, reactionID, userID)
+	if err != nil {
+		logger.Error("Failed to make reaction to board", zap.Error(err))
+		return false, err
+	}
+
 	return res, nil
 }
 
