@@ -37,6 +37,11 @@ func getUserStatuses(db *gorm.DB) (map[string]struct{}, error) {
 		if err != nil {
 			return fmt.Errorf("failed to load user statuses: %w", err)
 		}
+
+		if len(values) == 0 {
+			return fmt.Errorf("no loaded user statuses")
+		}
+
 		return nil
 	}
 
