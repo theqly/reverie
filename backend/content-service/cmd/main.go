@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
@@ -31,6 +32,20 @@ func initLogger() {
 	zap.ReplaceGlobals(logger)
 }
 
+func waitMigration(delay int) {
+	for range delay {
+		if database.DB.Migrator().HasTable("schema_migrations") {
+			var count int64
+			if err := database.DB.Table("schema_migrations").Where("dirty = ?", false).Count(&count).Error; err == nil && count > 0 {
+				log.Print("migration completed")
+				return
+			}
+		}
+		time.Sleep(time.Second)
+	}
+	log.Fatal("migration timeout: migration not completed")
+}
+
 func main() {
 	initLogger()
 
@@ -39,6 +54,8 @@ func main() {
 	}
 
 	database.Connect()
+
+	waitMigration(60)
 
 	if err := mapper.LoadMappings(database.DB); err != nil {
 		log.Fatalf("failed to load mappings from database: %v", err)

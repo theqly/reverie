@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"time"
+
 	"profile-service/graph/generated"
 	"profile-service/graph/resolver"
 	"profile-service/internal/repository"
@@ -19,6 +21,20 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
+func waitMigration(delay int) {
+	for range delay {
+		if database.DB.Migrator().HasTable("schema_migrations") {
+			var count int64
+			if err := database.DB.Table("schema_migrations").Where("dirty = ?", false).Count(&count).Error; err == nil && count > 0 {
+				log.Print("migration completed")
+				return
+			}
+		}
+		time.Sleep(time.Second)
+	}
+	log.Fatal("migration timeout: migration not completed")
+}
+
 func main() {
 	err := config.LoadConfig()
 	if err != nil {
@@ -27,13 +43,15 @@ func main() {
 
 	// err = middleware.InitJWKS("https://www.googleapis.com/oauth2/v3/certs") // currently without config
 	// if err != nil {
-		// log.Fatal("error loading config: %w", err)
+	// log.Fatal("error loading config: %w", err)
 	// }
 
 	err = database.Connect()
 	if err != nil {
 		log.Fatal("error loading config: %w", err)
 	}
+
+	waitMigration(60)
 
 	userRepo := repository.NewUserRepository(database.DB)
 
