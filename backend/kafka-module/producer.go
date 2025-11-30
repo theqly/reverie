@@ -2,18 +2,28 @@ package producer
 
 import (
 	"context"
+	"time"
 
 	"github.com/segmentio/kafka-go"
+	"go.uber.org/zap"
 )
 
 type Producer struct {
 	writer *kafka.Writer
+	// logger *zap.Logger
 }
 
-func NewProducer(brokers []string) *Producer {
+func NewProducer(brokers []string, logger *zap.Logger) *Producer {
 	return &Producer{
 		writer: kafka.NewWriter(kafka.WriterConfig{
-			Brokers: brokers,
+			Brokers:       brokers,
+			Async:         true,
+			RequiredAcks:  1,
+			BatchSize:     200,
+			BatchTimeout:  5 * time.Millisecond,
+			MaxAttempts:   5,
+			QueueCapacity: 50000, // буфер на 50к сообщений
+			// ErrorLogger:   kafka.LoggerFunc(logger.Error),
 		}),
 	}
 }

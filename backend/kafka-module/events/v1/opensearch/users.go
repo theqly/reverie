@@ -1,0 +1,41 @@
+package opensearch_events
+
+import (
+	"github.com/theqly/reverie/backend/kafka-module/events/v1/base"
+)
+
+// аватар не отправляем
+
+type UserCreated struct {
+	base.BaseEvent
+	UserID      string  `json:"user_id"`
+	Nickname    string  `json:"nickname"`
+	NickTag     string  `json:"nick_tag"`
+	Email       string  `json:"email,omitempty"` // опционально (приватность)
+	Description string  `json:"description,omitempty"`
+	UserRating  float64 `json:"user_rating"`
+	Status      string  `json:"status"` // "active" или "deleted"
+}
+
+type UserUpdated struct {
+	base.BaseEvent
+	UserID         string  `json:"user_id"`
+	Nickname       string  `json:"nickname,omitempty"`
+	NickTag        string  `json:"nick_tag,omitempty"`
+	ProfilePicture string  `json:"profile_picture,omitempty"`
+	Description    string  `json:"description,omitempty"`
+	UserRating     float64 `json:"user_rating,omitempty"`
+	Status         string  `json:"status,omitempty"`
+}
+
+type FollowCreated struct {
+	base.BaseEvent
+	UserID     string `json:"user_id"`     // на кого подписались
+	FollowerID string `json:"follower_id"` // кто подписался
+}
+
+type FollowDeleted struct {
+	base.BaseEvent
+	UserID     string `json:"user_id"`     // от кого отписались
+	FollowerID string `json:"follower_id"` // кто отписался
+}
