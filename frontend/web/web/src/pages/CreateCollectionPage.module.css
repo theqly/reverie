@@ -81,16 +81,22 @@ h1 {
   width: 40px;
   background-color: white;
   margin-right: 20px;
+  border-radius: 7px;
+}
+
+.back_btn:hover {
+  background-color: rgb(237, 237, 237);
+  transition: 0.2s;
 }
 
 /* --- GRID WRAPPER --- */
 .gridWrapper {
     height: 350px;
     display: grid;
-    grid-template-columns: 150px 2fr 1fr;
+    grid-template-columns: 150px 600px 300px;
     grid-auto-rows: auto;
     gap: 20px 40px;
-    margin: 40px 40px;
+    margin: 40px 60px;
     align-items: start;
 }
 
@@ -105,10 +111,25 @@ h1 {
     font-size: 20px;
 }
 
+.collaboratorsList{
+  display: flex;
+}
+
+.collaboratorItem{
+  display: flex;               /* превращаем блок в flex-контейнер */
+  justify-content: center; 
+  background-color: #c5c5c5;
+  text-align: center;
+  align-items: center;  
+  width: 150px;
+  margin-right: 15px;
+  border-radius: 10px;
+}
 /* --- Колонка 2: INPUTS / BUTTONS --- */
 .name_input_block,
 .discr_input_block,
-.actionButton {
+.actionButton,
+.collaboratorsList {
     grid-column: 2;
     justify-self: start;
     width: 100%;
@@ -129,7 +150,11 @@ h1 {
   
   background-repeat: no-repeat;
   border: none;
-  
+}
+
+.actionButton:hover{
+  background-size: 35px 35px;
+  padding-left: 45px;
 }
 .name_input{
     margin: 0;
@@ -145,7 +170,16 @@ h1 {
     width: 600px;
 }
 
+.name_input:hover,
+.discr_input:hover{
+  background-color: #e3e3e3;
+}
+.search_input:hover{
+  background-color: #c5c5c5;
+}
+
 .discr_input {
+  resize: none;
   margin: 0;
   padding: 15px 15px 0 15px;
   height: 140px;
@@ -174,18 +208,18 @@ h1 {
 
 .saveButton {
   padding: 12px 20px;
-  background: #28a745;
+  background: #85d898;
   color: black;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  margin: 10px 0 0 80px;
+  margin: 30px 0 0 90px;
   font-size: 20px;
 }
 
 .saveButton:hover:not(:disabled) {
-  background: #218838;
+  background: #76c388;
 }
 
 .coverUpload {
@@ -194,18 +228,28 @@ h1 {
 }
 
 .coverLabel {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1/1; /* Соотношение сторон для обложки */
-  border: 2px dashed #ccc;
+  width: auto;      
+  aspect-ratio: 1/1;
+  border: 2px solid #ccc;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.3s;
   background: #f9f9f9;
-  margin-bottom: 10px;
+  overflow: hidden;     
+  position: relative;
+}
+
+.coverPreview {
+  width: auto;
+  height: 100%;
+  object-fit: cover;     /* превращает всё в квадрат */
+  border-radius: inherit;
+}
+
+.coverLabel:hover {
+    background: #ebebeb;
 }
 
 .coverSection {
@@ -214,11 +258,18 @@ h1 {
   align-items: center;
 }
 
+.lbl{
+  margin-top: 15px;
+  font-size: 16px;
+}
+
 .saveButton:disabled {
   background: #EDEDED;
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+
 
 .characterCounter {
   /*
@@ -231,4 +282,66 @@ h1 {
   clip: rect(0 0 0 0);
   overflow: hidden;
   */
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.coverSection {
+  grid-column: 3;
+  grid-row: 1 / span 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.coverLabel {
+  width: 200px;
+  aspect-ratio: 1/1;
+  border: 2px solid #c9c9c9;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  overflow: hidden;
+}
+
+.coverLabel:hover {
+  background: #ebebeb;
+}
+
+.coverPlaceholder {
+  font-size: 60px;
+  color: #777;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plus {
+  font-size: 60px;
+  line-height: 1;
+}
+
+.coverPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadButton {
+  margin-top: 15px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #5e5e5e;
+  text-decoration: underline;
+}
+
+.uploadButton:hover {
+  opacity: 0.7;
 }

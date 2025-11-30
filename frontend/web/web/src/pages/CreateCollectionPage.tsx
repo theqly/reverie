@@ -1,17 +1,30 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreateCollectionPage.module.css'; // ← ИМПОРТ СТИЛЕЙ
-import logo from '../assets/Reverie.svg';
 import AddPinModal from "./AddPinModal";
+import InviteCollaboratorModal from './InviteCollaboratorModal';
+import Header from './Header'; 
+import { createCollection } from "../services/collectionsService";
+
 
 
 const CreateCollectionPage = () => {
   const navigate = useNavigate();
+
+  //запросы: создание новой подборки, получение пользователя по никнейму, 
+  // получение пинов-своих/пинов-лайкнутых/закладок/, создание пина, получение подписок пользователя, получение пина по ссылке(???)
+  
+  //что должно происходить при приглашении в ревери?
+
   
   // Состояния для полей формы
   const [collectionName, setCollectionName] = useState('');
   const [collectionInfo, setCollectionInfo] = useState('');
   const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [collaborators, setCollaborators] = useState<string[]>([]); // ← заглушка: имена соавторов
+
+
 
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [pinCount, setPinCount] = useState(0);
@@ -31,45 +44,47 @@ const CreateCollectionPage = () => {
   const handleAddPin = () => {
     setIsAddPinModalOpen(true);
     setPinCount(prev => prev + 1);
-
   };
-
-
 
   const handleInviteCollaborator = () => {
-    // Заглушка для приглашения коллаборатора
-    console.log('Open invite collaborator modal');
+    setIsInviteModalOpen(true);
   };
 
-  const handleSaveCollection = () => {
-    // Заглушка для сохранения
-    console.log('Save collection:', {
+  const handleAddCollaborator = () => {
+    // Заглушка: добавляем фиктивного коллаборатора
+    const newCollaborator = `Collaborator ${collaborators.length + 1}`;
+    setCollaborators(prev => [...prev, newCollaborator]);
+  };
+
+
+
+
+  const handleSaveCollection = async () => {
+    const payload = {
       name: collectionName,
       info: collectionInfo,
-      cover: coverImage,
-      pinCount
-    });
+      coverImage,
+      collaborators
+    };
+
+    await createCollection(payload);
+
+    console.log("createCollection вызвана с payload:", payload);
   };
+
+
+
+
 
   // Валидация для кнопки сохранения
   const isSaveEnabled = collectionName.trim().length > 0 && 
                        collectionName.length <= 50 && 
                        collectionInfo.length <= 1000;
 
-
-
-
-
-
   return (
 
     <div className={styles.createCollectionPage}>
-      <header className={styles.collectionHeader}>
-        <div className={styles.header_container}>
-            <img src={logo} alt="Logo" className={styles.rev_logo} />
-            <input className={styles.search_input}placeholder='Поиск...'></input>
-        </div>
-      </header>
+      <Header/>
 
       <main className={styles.collectionContent}>
         <div className={styles.h_container}>
@@ -140,40 +155,57 @@ const CreateCollectionPage = () => {
 
             <label className={styles.collaborator_label}>Соавторы: </label>
 
-            <button 
-            type="button" 
-            onClick={handleAddPin}
-            className={styles.actionButton}
-            >
+            
+
+            <div className={styles.collaboratorsList}>
+              {collaborators.map((name, idx) => (
+                <div key={idx} className={styles.collaboratorItem}>
+                  {name}
+                </div>
+              ))}
+
+              <button 
+                type="button" 
+                onClick={handleInviteCollaborator}
+                className={styles.actionButton}
+              >
                 Добавить соавтора
-            </button>
+              </button>
+            </div>
 
 
             <section className={styles.coverSection}>
-                <div className={styles.coverUpload}>
-                    <label htmlFor="cover-input" className={styles.coverLabel}>
-                    {coverImage ? (
-                        <img 
-                        src={URL.createObjectURL(coverImage)} 
-                        alt="Collection cover" 
-                        className={styles.coverPreview}
-                        />
-                    ) : (
-                        <div className={styles.coverPlaceholder}>
-                        <span>+</span>
-                        </div>
-                    )}
-                    </label>
-                    <input
-                    id="cover-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCoverUpload}
-                    style={{ display: 'none' }}
-                    />
-                </div>
-                <label>Выбрать обложку...</label>
-            </section>
+
+              {/* Кликабельная область с картинкой */}
+              <label htmlFor="cover-input" className={styles.coverLabel}>
+                {coverImage ? (
+                  <img
+                    src={URL.createObjectURL(coverImage)}
+                    alt="Collection cover"
+                    className={styles.coverPreview}
+                  />
+                ) : (
+                  <div className={styles.coverPlaceholder}>
+                    <span className={styles.plus}>+</span>
+                  </div>
+                )}
+              </label>
+
+              {/* Скрытый input */}
+              <input
+                id="cover-input"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverUpload}
+                className={styles.hiddenInput}
+              />
+
+              {/* Кнопка «Загрузить фото» */}
+              <label htmlFor="cover-input" className={styles.uploadButton}>
+                Загрузить фото
+              </label>
+          </section>
+
             
         </div>
         
@@ -191,6 +223,14 @@ const CreateCollectionPage = () => {
           <AddPinModal onClose={() => setIsAddPinModalOpen(false)} />
         )}
 
+        {isInviteModalOpen && (
+          <InviteCollaboratorModal 
+              onClose={() => setIsInviteModalOpen(false)}
+              onAddCollaborator={(name) => {
+                setCollaborators(prev => [...prev, name]);
+              }}
+          />
+        )}
       </main>
     </div>
   );
