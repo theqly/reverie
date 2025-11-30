@@ -1,0 +1,6 @@
+apiVersion: v2
+name: apollo-router
+description: wrapper chart for Apollo Router.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,77 @@
+# Default values for profile-db.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+postgres:
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "15.3"
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: false
+  name: ""
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnly
+  size: 10Gi
+  storageClass: ""
+
+service:
+  type: ClusterIP
+  port: 5432
+
+ingress:
+  enabled: false
+
+httpRoute:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+livenessProbe:
+  exec:
+    command: ["sh", "-c", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost"]
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 6
+
+readinessProbe:
+  exec:
+    command: [ "sh", "-c", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost" ]
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 3
+
+credentials:
+  secretName: profile-db-credentials #TODO
+  userKey: POSTGRES_USER
+  passwordKey: POSTGRES_PASSWORD
+  dbKey: POSTGRES_DB
+
+backup:
+  enabled: false #TODO maybe need
+
+migrator:
+  enabled: true
+  image:
+    repository: ghcr.io/theqly/profile-db-migrator
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  command: []
+  envFromSecret:
+    secretName: profile-db-credentials #TODO
+  runAsHelmHook: true
+
+terminationGracePeriodSeconds: 30

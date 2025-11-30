@@ -1,9 +1,10 @@
 module content-service
 
-go 1.24.1
+go 1.23.9
 
 require (
 	github.com/99designs/gqlgen v0.17.73
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/vektah/gqlparser/v2 v2.5.26

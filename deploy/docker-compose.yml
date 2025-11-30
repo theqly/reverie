@@ -1,277 +1,289 @@
+
 services:
-  content-db:
+  # Databases
+
+  profile-db:
     image: postgres:15
-    container_name: content_db
+    container_name: profile_db
     environment:
-      POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content-db}
+      POSTGRES_USER: ${PROFILE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PROFILE_POSTGRES_DB}
     ports:
-      - "5435:5432"
+      - "${PROFILE_DB_PORT}:${INNER_DB_PORT}"
     volumes:
-      - content_data:/var/lib/postgresql/data
+      - profile_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - reverie-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d content-db"]
+      test: ["CMD-SHELL", "pg_isready -U ${PROFILE_POSTGRES_USER} -d ${PROFILE_POSTGRES_DB} -h localhost || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 15
       start_period: 5s
 
-  content-migrator:
-    build:
-      context: ../database/content-service
-      dockerfile: Dockerfile.migrator
-    depends_on:
-      content-db:
-        condition: service_healthy
+  content-db:
+    image: postgres:15
+    container_name: content_db
+    environment:
+      POSTGRES_USER: ${CONTENT_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${CONTENT_POSTGRES_DB}
+    ports:
+      - "${CONTENT_DB_PORT}:${INNER_DB_PORT}"
+    volumes:
+      - content_data:/var/lib/postgresql/data
     networks:
-      - app-network
-    entrypoint:
-      [
-        "migrate",
-        "-path=/app/migrations",
-        "-database=postgres://user:pass@content-db:5432/content-db?sslmode=disable",
-        "up"
-      ]
+      - reverie-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CONTENT_POSTGRES_USER} -d ${CONTENT_POSTGRES_DB} -h localhost || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
 
   feed-db:
     image: postgres:15
     container_name: feed_db
     environment:
-      POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-feed-db}
+      POSTGRES_USER: ${FEED_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${FEED_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${FEED_POSTGRES_DB}
     ports:
-      - "5436:5432"
+      - "${FEED_DB_PORT}:${INNER_DB_PORT}"
     volumes:
       - feed_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - reverie-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d feed-db" ]
+      test: ["CMD-SHELL", "pg_isready -U ${FEED_POSTGRES_USER} -d ${FEED_POSTGRES_DB} -h localhost || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 15
       start_period: 5s
 
-  feed-migrator:
-    build:
-      context: ../database/feed-service
-      dockerfile: Dockerfile.migrator
-    depends_on:
-      feed-db:
-        condition: service_healthy
-    networks:
-      - app-network
-    entrypoint:
-      [
-        "migrate",
-        "-path=/app/migrations",
-        "-database=postgres://user:pass@feed-db:5432/feed-db?sslmode=disable",
-        "up"
-      ]
-  
-  profile-db:
-    image: postgres:15
-    container_name: profile_db
-    environment:
-      POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile-db}
-    ports:
-      - "5437:5432"
-    volumes:
-      - profile_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d profile-db"]
-      interval: 5s
-      timeout: 5s
-      retries: 15
-      start_period: 5s
+  # DB migrators runners
 
-  profile-migrator:
+  profile-db-migrator:
     build:
-      context: ../database/profile-service
+      context: ../database/profile-db
       dockerfile: Dockerfile.migrator
+    container_name: profile_db_migrator
     depends_on:
       profile-db:
         condition: service_healthy
     networks:
-      - app-network
-    entrypoint:
-      [
-        "migrate",
-        "-path=/app/migrations",
-        "-database=postgres://user:pass@profile-db:5432/profile-db?sslmode=disable",
-        "up"
-      ]
+      - reverie-network
+    entrypoint: ["migrate", "-path=/app/migrations", "-database=postgres://${PROFILE_POSTGRES_USER}:${PROFILE_POSTGRES_PASSWORD}@profile-db:${INNER_DB_PORT}/${PROFILE_POSTGRES_DB}?sslmode=disable", "up"]
+
+  content-db-migrator:
+    build:
+      context: ../database/content-db
+      dockerfile: Dockerfile.migrator
+    container_name: content_db_migrator
+    depends_on:
+      content-db:
+        condition: service_healthy
+    networks:
+      - reverie-network
+    entrypoint: ["migrate", "-path=/app/migrations", "-database=postgres://${CONTENT_POSTGRES_USER}:${CONTENT_POSTGRES_PASSWORD}@content-db:${INNER_DB_PORT}/${CONTENT_POSTGRES_DB}?sslmode=disable", "up"]
+
+  feed-db-migrator:
+    build:
+      context: ../database/feed-db
+      dockerfile: Dockerfile.migrator
+    container_name: feed_db_migrator
+    depends_on:
+      feed-db:
+        condition: service_healthy
+    networks:
+      - reverie-network
+    entrypoint: ["migrate", "-path=/app/migrations", "-database=postgres://${FEED_POSTGRES_USER}:${FEED_POSTGRES_PASSWORD}@feed-db:${INNER_DB_PORT}/${FEED_POSTGRES_DB}?sslmode=disable", "up"]
+
+  # Backend
 
   profile-service:
     build:
       context: ../backend/profile-service
       dockerfile: Dockerfile
-    container_name: profile-service
+    container_name: profile_service
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-profile-db}
-      POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-profile-db}
-      PORT: ${CONTENT_PORT:-8080}
+      POSTGRES_USER: ${PROFILE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PROFILE_POSTGRES_DB}
+      POSTGRES_HOST: profile-db
+      PORT: ${INNER_SERVICE_PORT}
     depends_on:
       profile-db:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${PROFILE_PORT}:${INNER_SERVICE_PORT}"
     networks:
-      - app-network
+      - reverie-network
+    #healthcheck:
+    #  test: ["CMD-SHELL", "wget --spider --quiet http://localhost:${INNER_SERVICE_PORT}/healthz || exit 1"]
+    #  interval: 5s
+    #  timeout: 5s
+    #  retries: 10
+    #  start_period: 5s
 
   content-service:
     build:
       context: ../backend/content-service
       dockerfile: Dockerfile
-    container_name: content-service
+    container_name: content_service
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${CONTENT_POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${CONTENT_POSTGRES_DB:-content-db}
-      POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-content-db}
-      DB_PORT: ${CONTENT_DB_PORT:-5432}
-      PORT: ${CONTENT_PORT:-8080}
+      POSTGRES_USER: ${CONTENT_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${CONTENT_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${CONTENT_POSTGRES_DB}
+      POSTGRES_HOST: content-db
+      DB_PORT: ${CONTENT_DB_PORT}
+      PORT: ${INNER_SERVICE_PORT}
     depends_on:
       content-db:
         condition: service_healthy
     ports:
-      - "8081:8080"
+      - "${CONTENT_PORT}:${INNER_SERVICE_PORT}"
     networks:
-      - app-network
+      - reverie-network
+    #healthcheck:
+    #  test: ["CMD-SHELL", "wget --spider --quiet http://localhost:${INNER_SERVICE_PORT}/healthz || exit 1"]
+    #  interval: 5s
+    #  timeout: 5s
+    #  retries: 10
+    #  start_period: 5s
 
   feed-service:
     build:
       context: ../backend/feed-service
       dockerfile: Dockerfile
-    container_name: feed-service
+    container_name: feed_service
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${PROFILE_POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${PROFILE_POSTGRES_PASSWORD:-pass}
-      POSTGRES_DB: ${PROFILE_POSTGRES_DB:-feed-db}
-      POSTGRES_HOST: ${CONTENT_POSTGRES_HOST:-feed-db}
-      PORT: ${CONTENT_PORT:-8080}
+      POSTGRES_USER: ${FEED_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${FEED_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${FEED_POSTGRES_DB}
+      POSTGRES_HOST: feed-db
+      PORT: ${INNER_SERVICE_PORT}
     depends_on:
-      profile-db:
+      feed-db:
         condition: service_healthy
     ports:
-      - "8082:8080"
+      - "${FEED_PORT}:${INNER_SERVICE_PORT}"
     networks:
-      - app-network
-  
+      - reverie-network
+    #healthcheck:
+    #  test: ["CMD-SHELL", "wget --spider --quiet http://localhost:${INNER_SERVICE_PORT}/healthz || exit 1"]
+    #  interval: 5s
+    #  timeout: 5s
+    #  retries: 10
+    #  start_period: 5s
+
+  # Infra
+
+  # keycloak
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:20.0.0
     container_name: keycloak
-    command:
-      - start-dev
-      - --import-realm
+    command: ["start-dev", "--import-realm"]
     environment:
-      KC_HEALTH_ENABLED: true
-      KC_METRICS_ENABLED: true
-#      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
-#      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_DB: postgres
-      KC_DB_URL: ${KEYCLOAK_POSTGRES_URL}
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_DB: "postgres"
+      KC_DB_URL: "jdbc:postgresql://keycloak-db:${INNER_DB_PORT}/${KEYCLOAK_POSTGRES_DB}"
       KC_DB_USERNAME: ${KEYCLOAK_POSTGRES_USER}
       KC_DB_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
-      - "9090:8080"
-    volumes:
-      - ./keycloak/data:/opt/keycloak/data/import
-    # - ./keycloak/data:/opt/keycloak/data/export
-    networks:
-      - app-network
+      - "${KEYCLOAK_PORT}:${INNER_SERVICE_PORT}"
     depends_on:
       - keycloak-db
+    volumes:
+      - ./keycloak/data:/opt/keycloak/data/import
+    networks:
+      - reverie-network
 
   keycloak-db:
     image: postgres:16
-    container_name: keycloak-db
+    container_name: keycloak_db
     environment:
-      - POSTGRES_DB=keycloak
-      - POSTGRES_USER=${KEYCLOAK_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${KEYCLOAK_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${KEYCLOAK_POSTGRES_DB}
+      POSTGRES_USER: ${KEYCLOAK_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD}
     volumes:
       - keycloak_postgres_db_data:/var/lib/postgresql/data
     ports:
-      - "5438:5432"
+      - "${KEYCLOAK_DB_PORT}:${INNER_DB_PORT}"
     networks:
-      - app-network
+      - reverie-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "${DB_USER}", "-d", "keycloak" ]
+      test: ["CMD", "pg_isready", "-U", "${KEYCLOAK_POSTGRES_USER}", "-d", "${KEYCLOAK_POSTGRES_DB}"]
       interval: 30s
-      retries: 3
-      start_period: 30s
       timeout: 10s
-  geo-api:
-    build:
-      context: ../backend/geo-api
-      dockerfile: Dockerfile
-    container_name: geo-api
-    environment:
-      GEO_API_URL: ${GEO_API_URL:-https://geocode-maps.yandex.ru/v1}
-      GEO_API_KEY: ${GEO_API_KEY:-}
-    working_dir: /app
-    ports:
-      - "15000:8000"
-    healthcheck:
-      test: [ "CMD-SHELL", "wget --spider --quiet http://localhost:8000/actuator/health || exit 1" ]
-      interval: 5s
-      timeout: 5s
       retries: 5
-    networks:
-      - app-network
+      start_period: 30s
 
-  rover:
-    build:
-      context: ./apollo
-      dockerfile: Dockerfile
-    container_name: rover-cli
+  # opensearch
+
+  opensearch:
+    image: opensearchproject/opensearch:3
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
-      - ./apollo:/etc/apollo/router:ro
-      - rover_data:/etc/apollo/rover
-    working_dir: /app
-    command: supergraph compose --config /etc/apollo/router/supergraph-config.yaml --output /etc/apollo/rover/supergraph-schema.graphql --log=debug
-    depends_on:
-      geo-api:
-        condition: service_healthy
-    networks:
-      - app-network
-
-  router:
-    image: ghcr.io/apollographql/router:v2.2.1
-    container_name: apollo-router
+      - opensearch_data:/usr/share/opensearch/data
     ports:
-      - "14000:4000"
-    volumes:
-      - rover_data:/etc/apollo/rover
-      - ./apollo/router.yaml:/ect/config/router.yaml:ro
-    command: --supergraph /etc/apollo/rover/supergraph-schema.graphql --config /ect/config/router.yaml
-    depends_on:
-      - geo-api
+      - "9200:9200"
+      - "9600:9600"
     networks:
-      - app-network
+      - reverie-network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3
+    container_name: opensearch-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+    ports:
+      - "5601:5601"
+    depends_on:
+      - opensearch
+    networks:
+      - reverie-network
+
+  # graphql stuff
+  router:
+    container_name: router
+    image: ghcr.io/apollographql/apollo-runtime:latest
+    ports:
+      - "${ROUTER_PORT}:${ROUTER_INNER_PORT}"
+    volumes:
+      - rover_data:/config
+    environment:
+      APOLLO_ROUTER_CONFIG_PATH: /config/router_config.yaml
+      APOLLO_ROUTER_SUPERGRAPH_PATH: /config/schema.graphql
+    networks:
+      - reverie-network
 
 volumes:
+  profile_data:
   content_data:
   feed_data:
-  profile_data:
   keycloak_postgres_db_data:
   rover_data:
+    external: true
+  opensearch_data:
 
 networks:
-  app-network:
+  reverie-network:
     driver: bridge

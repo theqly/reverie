@@ -2,6 +2,16 @@ package main
 
 import (
 	"context"
+	"log"
+	"time"
+
+	"profile-service/graph/generated"
+	"profile-service/graph/resolver"
+	"profile-service/internal/repository"
+	"profile-service/pkg/config"
+	"profile-service/pkg/database"
+	"profile-service/pkg/middleware"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -9,13 +19,21 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
-	"profile-service/internal/graph"
-	"profile-service/internal/graph/generated"
-	"profile-service/pkg/config"
-	"profile-service/pkg/db"
-	"profile-service/pkg/middleware"
 )
+
+func waitMigration(delay int) {
+	for range delay {
+		if database.DB.Migrator().HasTable("schema_migrations") {
+			var count int64
+			if err := database.DB.Table("schema_migrations").Where("dirty = ?", false).Count(&count).Error; err == nil && count > 0 {
+				log.Print("migration completed")
+				return
+			}
+		}
+		time.Sleep(time.Second)
+	}
+	log.Fatal("migration timeout: migration not completed")
+}
 
 func main() {
 	err := config.LoadConfig()
@@ -23,18 +41,31 @@ func main() {
 		log.Fatal("error loading config: %w", err)
 	}
 
-	err = db.Connect()
+	// err = middleware.InitJWKS("https://www.googleapis.com/oauth2/v3/certs") // currently without config
+	// if err != nil {
+	// log.Fatal("error loading config: %w", err)
+	// }
+
+	err = database.Connect()
 	if err != nil {
 		log.Fatal("error loading config: %w", err)
 	}
 
-	schema := generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db.DB}})
+	waitMigration(60)
+
+	userRepo := repository.NewUserRepository(database.DB)
+
+	resolver := &resolver.Resolver{
+		UserRepo: userRepo,
+	}
+
+	schema := generated.NewExecutableSchema(generated.Config{Resolvers: resolver})
 
 	srv := setupServer(schema)
 
 	r := gin.Default()
 
-	//r.Use(middleware.AuthMiddleware())
+	// r.Use(middleware.AuthMiddleware())
 	r.Use(middleware.CorsMiddleware())
 
 	r.POST("/query", gin.WrapH(srv))
