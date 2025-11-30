@@ -5,6 +5,7 @@ go 1.24.0
 toolchain go1.24.1
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/segmentio/kafka-go v0.4.49
 	go.uber.org/zap v1.27.1
 )

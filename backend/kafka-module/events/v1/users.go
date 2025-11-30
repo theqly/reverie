@@ -1,13 +1,9 @@
-package opensearch_events
-
-import (
-	"github.com/theqly/reverie/backend/kafka-module/events/v1/base"
-)
+package events
 
 // аватар не отправляем
 
 type UserCreated struct {
-	base.BaseEvent
+	BaseEvent
 	UserID      string  `json:"user_id"`
 	Nickname    string  `json:"nickname"`
 	NickTag     string  `json:"nick_tag"`
@@ -18,7 +14,7 @@ type UserCreated struct {
 }
 
 type UserUpdated struct {
-	base.BaseEvent
+	BaseEvent
 	UserID         string  `json:"user_id"`
 	Nickname       string  `json:"nickname,omitempty"`
 	NickTag        string  `json:"nick_tag,omitempty"`
@@ -29,13 +25,13 @@ type UserUpdated struct {
 }
 
 type FollowCreated struct {
-	base.BaseEvent
+	BaseEvent
 	UserID     string `json:"user_id"`     // на кого подписались
 	FollowerID string `json:"follower_id"` // кто подписался
 }
 
 type FollowDeleted struct {
-	base.BaseEvent
+	BaseEvent
 	UserID     string `json:"user_id"`     // от кого отписались
 	FollowerID string `json:"follower_id"` // кто отписался
 }

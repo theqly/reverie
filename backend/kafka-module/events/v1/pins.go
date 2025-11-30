@@ -1,15 +1,13 @@
-package opensearch_events
+package events
 
 import (
 	"time"
-
-	"github.com/theqly/reverie/backend/kafka-module/events/v1/base"
 )
 
 // картинки пока не отправляем
 
-type PinCreatedEvent struct {
-	base.BaseEvent
+type PinCreated struct {
+	BaseEvent
 	PinID            string    `json:"pin_id"`
 	Name             string    `json:"name"`
 	OwnerID          string    `json:"owner_id"`
@@ -31,7 +29,7 @@ type PinCreatedEvent struct {
 }
 
 type PinUpdated struct {
-	base.BaseEvent
+	BaseEvent
 	PinID            string  `json:"pin_id"`
 	Name             string  `json:"name,omitempty"`
 	Description      string  `json:"description,omitempty"`
@@ -51,20 +49,20 @@ type PinUpdated struct {
 }
 
 type PinCommentCountChanged struct {
-	base.BaseEvent
+	BaseEvent
 	PinID string `json:"pin_id"`
 	Delta int    `json:"delta"` // +1 или -1 (добавили или удалили комментарий)
 }
 
 type PinReactionCountChanged struct {
-	base.BaseEvent
+	BaseEvent
 	PinID string `json:"pin_id"`
 	// TODO: ReactionType string `json:"reaction_type"` в дальнейшем хотелось бы различать позитивные и отрицательные реакции
 	Delta int `json:"delta"` // +1 или -1 (добавили или удалили реакцию)
 }
 
 type PinBookmarkCountChanged struct {
-	base.BaseEvent
+	BaseEvent
 	PinID string `json:"pin_id"`
 	Delta int    `json:"delta"` // +1 или -1 (добавили или удалили сохранение в закладки)
 }
