@@ -24,6 +24,11 @@ type UserUpdated struct {
 	Status         string  `json:"status,omitempty"`
 }
 
+type UserDeleted struct {
+	BaseEvent
+	UserID string `json:"user_id"`
+}
+
 type FollowCreated struct {
 	BaseEvent
 	UserID     string `json:"user_id"`     // на кого подписались

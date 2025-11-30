@@ -12,7 +12,7 @@ type BoardCreated struct {
 	OwnerID     string    `json:"owner_id"`
 	OwnerType   string    `json:"owner_type"`
 	CreatedAt   time.Time `json:"created_at"`
-	PinIDs      []string  `json:"pin_ids,omitempty"`
+	BoardIDs    []string  `json:"board_ids,omitempty"`
 }
 
 type BoardUpdated struct {
@@ -20,6 +20,11 @@ type BoardUpdated struct {
 	BoardID     string `json:"board_id"`
 	Name        string `json:"name,omitempty"`
 	AccessLevel string `json:"access_level,omitempty"`
+}
+
+type BoardDeleted struct {
+	BaseEvent
+	BoardID string `json:"board_id"`
 }
 
 type BoardPinsAdded struct {
@@ -34,21 +39,55 @@ type BoardPinsRemoved struct {
 	PinIDs  []string `json:"pin_ids"`
 }
 
-type BoardCommentCountChanged struct {
+// опенсерч должен только количество менять
+type BoardCommented struct {
 	BaseEvent
-	BoardID string `json:"board_id"`
-	Delta   int    `json:"delta"` // +1 или -1 (добавили или удалили комментарий)
+	BoardID   string    `json:"board_id"`
+	CommentID string    `json:"comment_id"`
+	OwnerID   string    `json:"owner_id"`
+	Message   string    `json:"message"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-type BoardReactionCountChanged struct {
+// опенсерч должен только количество менять
+type BoardCommentUpdated struct {
 	BaseEvent
-	BoardID string `json:"board_id"`
-	// TODO: ReactionType string `json:"reaction_type"` в дальнейшем хотелось бы различать позитивные и отрицательные реакции
-	Delta int `json:"delta"` // +1 или -1 (добавили или удалили реакцию)
+	CommentID string `json:"comment_id"`
+	Message   string `json:"message"`
 }
 
-type BoardBookmarkCountChanged struct {
+// опенсерч должен только количество менять
+type BoardCommentDeleted struct {
+	BaseEvent
+	CommentID string `json:"comment_id"`
+}
+
+// опенсерч должен только количество менять
+type BoardReactionAdded struct {
+	BaseEvent
+	BoardID    string `json:"board_id"`
+	ReactionID string `json:"reaction_id"`
+	OwnerID    string `json:"owner_id"`
+}
+
+// опенсерч должен только количество менять
+type BoardReactionDeleted struct {
+	BaseEvent
+	BoardID    string `json:"board_id"`
+	ReactionID string `json:"reaction_id"`
+	OwnerID    string `json:"owner_id"`
+}
+
+// опенсерч должен только количество менять
+type BoardBookmarkAdded struct {
 	BaseEvent
 	BoardID string `json:"board_id"`
-	Delta   int    `json:"delta"` // +1 или -1 (добавили или удалили сохранение в закладки)
+	OwnerID string `json:"owner_id"`
+}
+
+// опенсерч должен только количество менять
+type BoardBookmarkDeleted struct {
+	BaseEvent
+	BoardID string `json:"board_id"`
+	OwnerID string `json:"owner_id"`
 }

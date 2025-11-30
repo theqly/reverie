@@ -66,6 +66,18 @@ func (p *Producer) PublishUserUpdated(ctx context.Context, event events.UserUpda
 	})
 }
 
+func (p *Producer) PublishUserDeleted(ctx context.Context, event events.UserDeleted) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "user.deleted",
+		Key:   []byte(event.UserID),
+		Value: data,
+	})
+}
+
 func (p *Producer) PublishFollowCreated(ctx context.Context, event events.FollowCreated) error {
 	data, err := json.Marshal(event)
 	if err != nil {
@@ -140,37 +152,86 @@ func (p *Producer) PublishBoardPinsRemoved(ctx context.Context, event events.Boa
 	})
 }
 
-func (p *Producer) PublishBoardCommentCountChanged(ctx context.Context, event events.BoardCommentCountChanged) error {
+func (p *Producer) PublishBoardCommented(ctx context.Context, event events.BoardCommented) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "board.comment_count.changed",
+		Topic: "board.commented",
 		Key:   []byte(event.BoardID),
 		Value: data,
 	})
 }
 
-func (p *Producer) PublishBoardReactionCountChanged(ctx context.Context, event events.BoardReactionCountChanged) error {
+func (p *Producer) PublishBoardCommentUpdated(ctx context.Context, event events.BoardCommentUpdated) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "board.comment.updated",
+		Key:   []byte(event.CommentID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishBoardCommentDeleted(ctx context.Context, event events.BoardCommentDeleted) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "board.reaction_count.changed",
+		Topic: "board.comment.deleted",
+		Key:   []byte(event.CommentID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishBoardReactionAdded(ctx context.Context, event events.BoardReactionAdded) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "board.reaction.added",
 		Key:   []byte(event.BoardID),
 		Value: data,
 	})
 }
 
-func (p *Producer) PublishBoardBookmarkCountChanged(ctx context.Context, event events.BoardBookmarkCountChanged) error {
+func (p *Producer) PublishBoardReactionDeleted(ctx context.Context, event events.BoardReactionDeleted) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "board.bookmark_count.changed",
+		Topic: "board.reaction.deleted",
+		Key:   []byte(event.BoardID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishBoardBookmarkAdded(ctx context.Context, event events.BoardBookmarkAdded) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "board.bookmark.added",
+		Key:   []byte(event.BoardID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishBoardBookmarkDeleted(ctx context.Context, event events.BoardBookmarkDeleted) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "board.bookmark.deleted",
 		Key:   []byte(event.BoardID),
 		Value: data,
 	})
@@ -200,37 +261,97 @@ func (p *Producer) PublishPinUpdated(ctx context.Context, event events.PinUpdate
 	})
 }
 
-func (p *Producer) PublishPinCommentCountChanged(ctx context.Context, event events.PinCommentCountChanged) error {
+func (p *Producer) PublishPinDeleted(ctx context.Context, event events.PinDeleted) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "pin.comment_count.changed",
+		Topic: "pin.deleted",
 		Key:   []byte(event.PinID),
 		Value: data,
 	})
 }
 
-func (p *Producer) PublishPinReactionCountChanged(ctx context.Context, event events.PinReactionCountChanged) error {
+func (p *Producer) PublishPinCommented(ctx context.Context, event events.PinCommented) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "pin.reaction_count.changed",
+		Topic: "pin.commented",
 		Key:   []byte(event.PinID),
 		Value: data,
 	})
 }
 
-func (p *Producer) PublishPinBookmarkCountChanged(ctx context.Context, event events.PinBookmarkCountChanged) error {
+func (p *Producer) PublishPinCommentUpdated(ctx context.Context, event events.PinCommentUpdated) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "pin.bookmark_count.changed",
+		Topic: "pin.comment.updated",
+		Key:   []byte(event.CommentID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishPinCommentDeleted(ctx context.Context, event events.PinCommentDeleted) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "pin.comment.deleted",
+		Key:   []byte(event.CommentID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishPinReactionAdded(ctx context.Context, event events.PinReactionAdded) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "pin.reaction.added",
+		Key:   []byte(event.PinID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishPinReactionDeleted(ctx context.Context, event events.PinReactionDeleted) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "pin.reaction.deleted",
+		Key:   []byte(event.PinID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishPinBookmarkAdded(ctx context.Context, event events.PinBookmarkAdded) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "pin.bookmark.added",
+		Key:   []byte(event.PinID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishPinBookmarkDeleted(ctx context.Context, event events.PinBookmarkDeleted) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "pin.bookmark.deleted",
 		Key:   []byte(event.PinID),
 		Value: data,
 	})

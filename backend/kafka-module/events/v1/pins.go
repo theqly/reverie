@@ -48,21 +48,60 @@ type PinUpdated struct {
 	PlaceType        string  `json:"place_type,omitempty"`
 }
 
-type PinCommentCountChanged struct {
+type PinDeleted struct {
 	BaseEvent
 	PinID string `json:"pin_id"`
-	Delta int    `json:"delta"` // +1 или -1 (добавили или удалили комментарий)
 }
 
-type PinReactionCountChanged struct {
+// опенсерч должен только количество менять
+type PinCommented struct {
 	BaseEvent
-	PinID string `json:"pin_id"`
-	// TODO: ReactionType string `json:"reaction_type"` в дальнейшем хотелось бы различать позитивные и отрицательные реакции
-	Delta int `json:"delta"` // +1 или -1 (добавили или удалили реакцию)
+	PinID     string    `json:"pin_id"`
+	CommentID string    `json:"comment_id"`
+	OwnerID   string    `json:"owner_id"`
+	Message   string    `json:"message"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-type PinBookmarkCountChanged struct {
+// опенсерч должен только количество менять
+type PinCommentUpdated struct {
 	BaseEvent
-	PinID string `json:"pin_id"`
-	Delta int    `json:"delta"` // +1 или -1 (добавили или удалили сохранение в закладки)
+	CommentID string `json:"comment_id"`
+	Message   string `json:"message"`
+}
+
+// опенсерч должен только количество менять
+type PinCommentDeleted struct {
+	BaseEvent
+	CommentID string `json:"comment_id"`
+}
+
+// опенсерч должен только количество менять
+type PinReactionAdded struct {
+	BaseEvent
+	PinID      string `json:"pin_id"`
+	ReactionID string `json:"reaction_id"`
+	OwnerID    string `json:"owner_id"`
+}
+
+// опенсерч должен только количество менять
+type PinReactionDeleted struct {
+	BaseEvent
+	PinID      string `json:"pin_id"`
+	ReactionID string `json:"reaction_id"`
+	OwnerID    string `json:"owner_id"`
+}
+
+// опенсерч должен только количество менять
+type PinBookmarkAdded struct {
+	BaseEvent
+	PinID   string `json:"pin_id"`
+	OwnerID string `json:"owner_id"`
+}
+
+// опенсерч должен только количество менять
+type PinBookmarkDeleted struct {
+	BaseEvent
+	PinID   string `json:"pin_id"`
+	OwnerID string `json:"owner_id"`
 }
