@@ -34,16 +34,6 @@ query GetPinFullById($id: UUID!) {
       orderNumber
       imageUrl
     }
-    comments {
-      id
-      content
-      createdAt
-      author {
-        id
-        nickname
-        profilePicture
-      }
-    }
   }
 }
 
@@ -73,16 +63,6 @@ mutation UpdatePin($id: UUID!, $input: UpdatePinInput!) {
     description
     rating
     createdAt
-    comments {
-      id
-      content
-      createdAt
-      author {
-        id
-        nickname
-        profilePicture
-      }
-    }
   }
 }
 
@@ -108,27 +88,37 @@ mutation RemovePinFromBoard($pinId: UUID!, $boardId: UUID!) {
   }
 }
 
-mutation AddCommentToPin($input: AddCommentInput!) {
+mutation AddCommentToPin($input: AddCommentToPinInput!) {
   addCommentToPin(input: $input) {
     id
-    content
+    message
     createdAt
-    author {
+    owner {
       id
+      nickname
+      nickTag
     }
   }
 }
 
-mutation UpdateComment($id: UUID!, $content: String!) {
-  updateComment(id: $id, content: $content) {
-    id
-    content
-    createdAt
+mutation updateCommentToPin($id: UUID!, $message: String!) {
+  updateCommentToPin(id: UUID, message: $message) {
+      message
   }
 }
 
-mutation DeleteComment($id: UUID!) {
-  deleteComment(id: $id)
+mutation updateCommentToBoard($id: UUID!, $message: String!) {
+  updateCommentToBoard(id: UUID, message: $message) {
+    message
+  }
+}
+
+mutation deleteCommentToPin($id: UUID!) {
+  deleteCommentToPin(id: $id)
+}
+
+mutation deleteCommentToBoard($id: UUID!) {
+  deleteCommentToBoard(id: $id)
 }
 
 mutation AddImageToPin($input: AddImageInput!) {

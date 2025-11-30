@@ -17,19 +17,23 @@ export type Scalars = {
   Float: { input: number; output: number; }
   Time: { input: any; output: any; }
   UUID: { input: any; output: any; }
-  join__DirectiveArguments: { input: any; output: any; }
-  join__FieldSet: { input: any; output: any; }
-  link__Import: { input: any; output: any; }
 };
 
-export type AccessLevel = {
-  __typename?: 'AccessLevel';
-  id: Scalars['UUID']['output'];
-  type: Scalars['String']['output'];
+export enum AccessLevelType {
+  Group = 'group',
+  GroupPublic = 'group_public',
+  Private = 'private',
+  Public = 'public'
+}
+
+export type AddCommentToBoardInput = {
+  boardId: Scalars['UUID']['input'];
+  message: Scalars['String']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
-export type AddCommentInput = {
-  content: Scalars['String']['input'];
+export type AddCommentToPinInput = {
+  message: Scalars['String']['input'];
   pinId: Scalars['UUID']['input'];
   userId: Scalars['UUID']['input'];
 };
@@ -42,36 +46,42 @@ export type AddImageInput = {
 
 export type Board = {
   __typename?: 'Board';
-  accessLevel: AccessLevel;
+  accessLevel: AccessLevelType;
   createdAt: Scalars['Time']['output'];
-  groupId: Group;
   id: Scalars['UUID']['output'];
   name: Scalars['String']['output'];
+  ownerId: Scalars['UUID']['output'];
+  ownerType: OwnerType;
   pins?: Maybe<Array<Pin>>;
 };
 
-export type Comment = {
-  __typename?: 'Comment';
-  author: User;
-  content: Scalars['String']['output'];
+export type CommentToBoard = {
+  __typename?: 'CommentToBoard';
+  boardId: Scalars['UUID']['output'];
   createdAt: Scalars['Time']['output'];
   id: Scalars['UUID']['output'];
+  message: Scalars['String']['output'];
+  owner: User;
 };
 
-export type CommonParams = {
-  kind?: InputMaybe<Scalars['String']['input']>;
-  locale?: InputMaybe<Scalars['String']['input']>;
-  resultsQ?: InputMaybe<Scalars['Int']['input']>;
+export type CommentToPin = {
+  __typename?: 'CommentToPin';
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['UUID']['output'];
+  message: Scalars['String']['output'];
+  owner: User;
+  pinId: Scalars['UUID']['output'];
 };
 
 export type CreateBoardInput = {
-  accessLevelId: Scalars['UUID']['input'];
-  groupId: Scalars['UUID']['input'];
+  accessLevel: AccessLevelType;
   name: Scalars['String']['input'];
+  ownerId: Scalars['UUID']['input'];
+  ownerType: OwnerType;
 };
 
 export type CreateGroupInput = {
-  memberIds: Array<Scalars['ID']['input']>;
+  members: Array<Scalars['UUID']['input']>;
 };
 
 export type CreatePinInput = {
@@ -85,45 +95,63 @@ export type CreatePinInput = {
 export type CreateUserInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
+  nick_tag: Scalars['String']['input'];
   nickname: Scalars['String']['input'];
-  password: Scalars['String']['input'];
   profilePicture?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Group = {
   __typename?: 'Group';
-  id: Scalars['ID']['output'];
+  id: Scalars['UUID']['output'];
   members: Array<User>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addCommentToPin: Comment;
+  acceptJoinToGroup: Scalars['Boolean']['output'];
+  addCommentToBoard: CommentToBoard;
+  addCommentToPin: CommentToPin;
   addImageToPin: PinImage;
   addPinToBoard: Board;
   addUserToGroup: Scalars['Boolean']['output'];
+  changeAccessBookmarks: Scalars['Boolean']['output'];
   createBoard: Board;
   createGroup: Group;
   createPin: Pin;
   createUser: User;
-  deleteComment: Scalars['Boolean']['output'];
+  deleteCommentToBoard: Scalars['Boolean']['output'];
+  deleteCommentToPin: Scalars['Boolean']['output'];
   deleteGroup: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
   followUser: Scalars['Boolean']['output'];
+  reactionToBoard: Scalars['Boolean']['output'];
+  reactionToPin: Scalars['Boolean']['output'];
   removeImageFromPin: Scalars['Boolean']['output'];
   removePinFromBoard: Board;
   removeUserFromGroup: Scalars['Boolean']['output'];
+  requestJoinGroup: Scalars['Boolean']['output'];
   unfollowUser: Scalars['Boolean']['output'];
   updateBoard: Board;
-  updateComment: Comment;
+  updateCommentToBoard: CommentToBoard;
+  updateCommentToPin: CommentToPin;
   updateImageOrder: PinImage;
   updatePin: Pin;
   updateUser: User;
 };
 
 
+export type MutationAcceptJoinToGroupArgs = {
+  requestId: Scalars['UUID']['input'];
+};
+
+
+export type MutationAddCommentToBoardArgs = {
+  input: AddCommentToBoardInput;
+};
+
+
 export type MutationAddCommentToPinArgs = {
-  input: AddCommentInput;
+  input: AddCommentToPinInput;
 };
 
 
@@ -139,8 +167,14 @@ export type MutationAddPinToBoardArgs = {
 
 
 export type MutationAddUserToGroupArgs = {
-  groupId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
+  groupId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type MutationChangeAccessBookmarksArgs = {
+  newStatus: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
 
@@ -164,24 +198,43 @@ export type MutationCreateUserArgs = {
 };
 
 
-export type MutationDeleteCommentArgs = {
+export type MutationDeleteCommentToBoardArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+
+export type MutationDeleteCommentToPinArgs = {
   id: Scalars['UUID']['input'];
 };
 
 
 export type MutationDeleteGroupArgs = {
-  id: Scalars['ID']['input'];
+  groupId: Scalars['UUID']['input'];
 };
 
 
 export type MutationDeleteUserArgs = {
-  id: Scalars['ID']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
 
 export type MutationFollowUserArgs = {
-  followerId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
+  followerId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type MutationReactionToBoardArgs = {
+  boardId: Scalars['UUID']['input'];
+  reactionId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type MutationReactionToPinArgs = {
+  pinId: Scalars['UUID']['input'];
+  reactionId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
 
@@ -197,14 +250,20 @@ export type MutationRemovePinFromBoardArgs = {
 
 
 export type MutationRemoveUserFromGroupArgs = {
-  groupId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
+  groupId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type MutationRequestJoinGroupArgs = {
+  groupId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
 
 export type MutationUnfollowUserArgs = {
-  followerId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
+  followerId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
 
@@ -214,9 +273,15 @@ export type MutationUpdateBoardArgs = {
 };
 
 
-export type MutationUpdateCommentArgs = {
-  content: Scalars['String']['input'];
+export type MutationUpdateCommentToBoardArgs = {
   id: Scalars['UUID']['input'];
+  message: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateCommentToPinArgs = {
+  id: Scalars['UUID']['input'];
+  message: Scalars['String']['input'];
 };
 
 
@@ -233,13 +298,18 @@ export type MutationUpdatePinArgs = {
 
 
 export type MutationUpdateUserArgs = {
-  id: Scalars['ID']['input'];
   input: UpdateUserInput;
+  userId: Scalars['UUID']['input'];
 };
+
+export enum OwnerType {
+  Group = 'group',
+  User = 'user'
+}
 
 export type Pin = {
   __typename?: 'Pin';
-  comments?: Maybe<Array<Comment>>;
+  address?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
@@ -248,6 +318,7 @@ export type Pin = {
   longitude: Scalars['Float']['output'];
   name: Scalars['String']['output'];
   owner: User;
+  place?: Maybe<Place>;
   rating: Scalars['Float']['output'];
 };
 
@@ -258,25 +329,16 @@ export type PinImage = {
   orderNumber: Scalars['Int']['output'];
 };
 
-export type PlaceData = {
-  __typename?: 'PlaceData';
-  addr: Scalars['String']['output'];
-  descr: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  kind: Scalars['String']['output'];
-  lat: Scalars['Float']['output'];
-  lon: Scalars['Float']['output'];
-};
-
-export type Point = {
-  __typename?: 'Point';
-  lat: Scalars['Float']['output'];
-  lon: Scalars['Float']['output'];
-};
-
-export type PointInput = {
-  lat: Scalars['Float']['input'];
-  lon: Scalars['Float']['input'];
+export type Place = {
+  __typename?: 'Place';
+  address?: Maybe<Scalars['String']['output']>;
+  gis_id?: Maybe<Scalars['UUID']['output']>;
+  id: Scalars['UUID']['output'];
+  latitude: Scalars['Float']['output'];
+  longitude: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  purpose_name?: Maybe<Scalars['String']['output']>;
+  type?: Maybe<Scalars['String']['output']>;
 };
 
 export type Query = {
@@ -284,17 +346,28 @@ export type Query = {
   board?: Maybe<Board>;
   boardByName?: Maybe<Array<Board>>;
   boardsByGroup?: Maybe<Array<Board>>;
+  commentsByBoard: Array<Maybe<CommentToBoard>>;
+  commentsByPin: Array<Maybe<CommentToPin>>;
+  countAllReactionsToBoard: Scalars['Int']['output'];
+  countAllReactionsToPin: Scalars['Int']['output'];
+  countGroupBoardsByUser: Scalars['Int']['output'];
+  countOwnBoardsByUser: Scalars['Int']['output'];
   feed: Array<Pin>;
+  followersCount: Scalars['Int']['output'];
   followersOf: Array<User>;
+  followingCount: Scalars['Int']['output'];
   followingOf: Array<User>;
-  groupById?: Maybe<Array<User>>;
+  getSettingsStatuses: Array<SettingsStatuses>;
+  groupBoardsByUser: Array<Board>;
+  groupById?: Maybe<Group>;
   groupsOfUser: Array<Group>;
   isUserInGroup: Scalars['Boolean']['output'];
+  ownBoardsByUser: Array<Board>;
   pin?: Maybe<Pin>;
   pinsByLocation?: Maybe<Array<Pin>>;
   pinsByName?: Maybe<Array<Pin>>;
   pinsByUser?: Maybe<Array<Pin>>;
-  placeInfo: Array<PlaceData>;
+  reactions: Array<Reaction>;
   userByEmail?: Maybe<User>;
   userById?: Maybe<User>;
   userByNickname?: Maybe<User>;
@@ -316,29 +389,79 @@ export type QueryBoardsByGroupArgs = {
 };
 
 
+export type QueryCommentsByBoardArgs = {
+  boardId: Scalars['UUID']['input'];
+};
+
+
+export type QueryCommentsByPinArgs = {
+  pinId: Scalars['UUID']['input'];
+};
+
+
+export type QueryCountAllReactionsToBoardArgs = {
+  boardId: Scalars['UUID']['input'];
+};
+
+
+export type QueryCountAllReactionsToPinArgs = {
+  pinId: Scalars['UUID']['input'];
+};
+
+
+export type QueryCountGroupBoardsByUserArgs = {
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type QueryCountOwnBoardsByUserArgs = {
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type QueryFollowersCountArgs = {
+  userId: Scalars['UUID']['input'];
+};
+
+
 export type QueryFollowersOfArgs = {
-  userId: Scalars['ID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type QueryFollowingCountArgs = {
+  userId: Scalars['UUID']['input'];
 };
 
 
 export type QueryFollowingOfArgs = {
-  userId: Scalars['ID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type QueryGroupBoardsByUserArgs = {
+  userId: Scalars['UUID']['input'];
 };
 
 
 export type QueryGroupByIdArgs = {
-  id: Scalars['ID']['input'];
+  groupId: Scalars['UUID']['input'];
 };
 
 
 export type QueryGroupsOfUserArgs = {
-  userId: Scalars['ID']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
 
 export type QueryIsUserInGroupArgs = {
-  group_id: Scalars['ID']['input'];
-  user_id: Scalars['ID']['input'];
+  groupId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type QueryOwnBoardsByUserArgs = {
+  userId: Scalars['UUID']['input'];
 };
 
 
@@ -362,19 +485,13 @@ export type QueryPinsByUserArgs = {
 };
 
 
-export type QueryPlaceInfoArgs = {
-  params?: InputMaybe<CommonParams>;
-  point: PointInput;
-};
-
-
 export type QueryUserByEmailArgs = {
   email: Scalars['String']['input'];
 };
 
 
 export type QueryUserByIdArgs = {
-  id: Scalars['ID']['input'];
+  userId: Scalars['UUID']['input'];
 };
 
 
@@ -382,8 +499,22 @@ export type QueryUserByNicknameArgs = {
   nickname: Scalars['String']['input'];
 };
 
+export type Reaction = {
+  __typename?: 'Reaction';
+  description: Scalars['String']['output'];
+  id: Scalars['UUID']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type SettingsStatuses = {
+  __typename?: 'SettingsStatuses';
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['UUID']['output'];
+  type: Scalars['String']['output'];
+};
+
 export type UpdateBoardInput = {
-  accessLevelId?: InputMaybe<Scalars['UUID']['input']>;
+  accessLevel?: InputMaybe<AccessLevelType>;
   name?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['UUID']['input'];
 };
@@ -400,8 +531,8 @@ export type UpdatePinInput = {
 export type UpdateUserInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  nick_tag: Scalars['String']['input'];
   nickname?: InputMaybe<Scalars['String']['input']>;
-  password?: InputMaybe<Scalars['String']['input']>;
   profilePicture?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -411,21 +542,17 @@ export type User = {
   email: Scalars['String']['output'];
   followers: Array<User>;
   following: Array<User>;
-  id: Scalars['ID']['output'];
+  id: Scalars['UUID']['output'];
+  nickTag: Scalars['String']['output'];
   nickname: Scalars['String']['output'];
   profilePicture?: Maybe<Scalars['String']['output']>;
+  status: UserStatus;
   userRating: Scalars['Float']['output'];
 };
 
-export enum Join__Graph {
-  Geoapi = 'GEOAPI'
-}
-
-export enum Link__Purpose {
-  /** `EXECUTION` features provide metadata necessary for operation execution. */
-  Execution = 'EXECUTION',
-  /** `SECURITY` features provide metadata necessary to securely resolve fields. */
-  Security = 'SECURITY'
+export enum UserStatus {
+  Active = 'active',
+  Deleted = 'deleted'
 }
 
 export type GetPinBasicByIdQueryVariables = Exact<{
@@ -433,14 +560,14 @@ export type GetPinBasicByIdQueryVariables = Exact<{
 }>;
 
 
-export type GetPinBasicByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: string, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
+export type GetPinBasicByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
 
 export type GetPinFullByIdQueryVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
 
 
-export type GetPinFullByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: string, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null, comments?: Array<{ __typename?: 'Comment', id: any, content: string, createdAt: any, author: { __typename?: 'User', id: string, nickname: string, profilePicture?: string | null } }> | null } | null };
+export type GetPinFullByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
 
 export type CreatePinMutationVariables = Exact<{
   input: CreatePinInput;
@@ -455,7 +582,7 @@ export type UpdatePinMutationVariables = Exact<{
 }>;
 
 
-export type UpdatePinMutation = { __typename?: 'Mutation', updatePin: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, comments?: Array<{ __typename?: 'Comment', id: any, content: string, createdAt: any, author: { __typename?: 'User', id: string, nickname: string, profilePicture?: string | null } }> | null } };
+export type UpdatePinMutation = { __typename?: 'Mutation', updatePin: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any } };
 
 export type AddPinToBoardMutationVariables = Exact<{
   pinId: Scalars['UUID']['input'];
@@ -474,26 +601,41 @@ export type RemovePinFromBoardMutationVariables = Exact<{
 export type RemovePinFromBoardMutation = { __typename?: 'Mutation', removePinFromBoard: { __typename?: 'Board', id: any, name: string, pins?: Array<{ __typename?: 'Pin', id: any, name: string }> | null } };
 
 export type AddCommentToPinMutationVariables = Exact<{
-  input: AddCommentInput;
+  input: AddCommentToPinInput;
 }>;
 
 
-export type AddCommentToPinMutation = { __typename?: 'Mutation', addCommentToPin: { __typename?: 'Comment', id: any, content: string, createdAt: any, author: { __typename?: 'User', id: string } } };
+export type AddCommentToPinMutation = { __typename?: 'Mutation', addCommentToPin: { __typename?: 'CommentToPin', id: any, message: string, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, nickTag: string } } };
 
-export type UpdateCommentMutationVariables = Exact<{
+export type UpdateCommentToPinMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
-  content: Scalars['String']['input'];
+  message: Scalars['String']['input'];
 }>;
 
 
-export type UpdateCommentMutation = { __typename?: 'Mutation', updateComment: { __typename?: 'Comment', id: any, content: string, createdAt: any } };
+export type UpdateCommentToPinMutation = { __typename?: 'Mutation', updateCommentToPin: { __typename?: 'CommentToPin', message: string } };
 
-export type DeleteCommentMutationVariables = Exact<{
+export type UpdateCommentToBoardMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  message: Scalars['String']['input'];
+}>;
+
+
+export type UpdateCommentToBoardMutation = { __typename?: 'Mutation', updateCommentToBoard: { __typename?: 'CommentToBoard', message: string } };
+
+export type DeleteCommentToPinMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
 
 
-export type DeleteCommentMutation = { __typename?: 'Mutation', deleteComment: boolean };
+export type DeleteCommentToPinMutation = { __typename?: 'Mutation', deleteCommentToPin: boolean };
+
+export type DeleteCommentToBoardMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteCommentToBoardMutation = { __typename?: 'Mutation', deleteCommentToBoard: boolean };
 
 export type AddImageToPinMutationVariables = Exact<{
   input: AddImageInput;
@@ -580,16 +722,6 @@ export const GetPinFullByIdDocument = gql`
       id
       orderNumber
       imageUrl
-    }
-    comments {
-      id
-      content
-      createdAt
-      author {
-        id
-        nickname
-        profilePicture
-      }
     }
   }
 }
@@ -681,16 +813,6 @@ export const UpdatePinDocument = gql`
     description
     rating
     createdAt
-    comments {
-      id
-      content
-      createdAt
-      author {
-        id
-        nickname
-        profilePicture
-      }
-    }
   }
 }
     `;
@@ -800,13 +922,15 @@ export type RemovePinFromBoardMutationHookResult = ReturnType<typeof useRemovePi
 export type RemovePinFromBoardMutationResult = Apollo.MutationResult<RemovePinFromBoardMutation>;
 export type RemovePinFromBoardMutationOptions = Apollo.BaseMutationOptions<RemovePinFromBoardMutation, RemovePinFromBoardMutationVariables>;
 export const AddCommentToPinDocument = gql`
-    mutation AddCommentToPin($input: AddCommentInput!) {
+    mutation AddCommentToPin($input: AddCommentToPinInput!) {
   addCommentToPin(input: $input) {
     id
-    content
+    message
     createdAt
-    author {
+    owner {
       id
+      nickname
+      nickTag
     }
   }
 }
@@ -837,73 +961,136 @@ export function useAddCommentToPinMutation(baseOptions?: Apollo.MutationHookOpti
 export type AddCommentToPinMutationHookResult = ReturnType<typeof useAddCommentToPinMutation>;
 export type AddCommentToPinMutationResult = Apollo.MutationResult<AddCommentToPinMutation>;
 export type AddCommentToPinMutationOptions = Apollo.BaseMutationOptions<AddCommentToPinMutation, AddCommentToPinMutationVariables>;
-export const UpdateCommentDocument = gql`
-    mutation UpdateComment($id: UUID!, $content: String!) {
-  updateComment(id: $id, content: $content) {
-    id
-    content
-    createdAt
+export const UpdateCommentToPinDocument = gql`
+    mutation updateCommentToPin($id: UUID!, $message: String!) {
+  updateCommentToPin(id: UUID, message: $message) {
+    message
   }
 }
     `;
-export type UpdateCommentMutationFn = Apollo.MutationFunction<UpdateCommentMutation, UpdateCommentMutationVariables>;
+export type UpdateCommentToPinMutationFn = Apollo.MutationFunction<UpdateCommentToPinMutation, UpdateCommentToPinMutationVariables>;
 
 /**
- * __useUpdateCommentMutation__
+ * __useUpdateCommentToPinMutation__
  *
- * To run a mutation, you first call `useUpdateCommentMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdateCommentMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateCommentToPinMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCommentToPinMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [updateCommentMutation, { data, loading, error }] = useUpdateCommentMutation({
+ * const [updateCommentToPinMutation, { data, loading, error }] = useUpdateCommentToPinMutation({
  *   variables: {
  *      id: // value for 'id'
- *      content: // value for 'content'
+ *      message: // value for 'message'
  *   },
  * });
  */
-export function useUpdateCommentMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCommentMutation, UpdateCommentMutationVariables>) {
+export function useUpdateCommentToPinMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCommentToPinMutation, UpdateCommentToPinMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateCommentMutation, UpdateCommentMutationVariables>(UpdateCommentDocument, options);
+        return Apollo.useMutation<UpdateCommentToPinMutation, UpdateCommentToPinMutationVariables>(UpdateCommentToPinDocument, options);
       }
-export type UpdateCommentMutationHookResult = ReturnType<typeof useUpdateCommentMutation>;
-export type UpdateCommentMutationResult = Apollo.MutationResult<UpdateCommentMutation>;
-export type UpdateCommentMutationOptions = Apollo.BaseMutationOptions<UpdateCommentMutation, UpdateCommentMutationVariables>;
-export const DeleteCommentDocument = gql`
-    mutation DeleteComment($id: UUID!) {
-  deleteComment(id: $id)
+export type UpdateCommentToPinMutationHookResult = ReturnType<typeof useUpdateCommentToPinMutation>;
+export type UpdateCommentToPinMutationResult = Apollo.MutationResult<UpdateCommentToPinMutation>;
+export type UpdateCommentToPinMutationOptions = Apollo.BaseMutationOptions<UpdateCommentToPinMutation, UpdateCommentToPinMutationVariables>;
+export const UpdateCommentToBoardDocument = gql`
+    mutation updateCommentToBoard($id: UUID!, $message: String!) {
+  updateCommentToBoard(id: UUID, message: $message) {
+    message
+  }
 }
     `;
-export type DeleteCommentMutationFn = Apollo.MutationFunction<DeleteCommentMutation, DeleteCommentMutationVariables>;
+export type UpdateCommentToBoardMutationFn = Apollo.MutationFunction<UpdateCommentToBoardMutation, UpdateCommentToBoardMutationVariables>;
 
 /**
- * __useDeleteCommentMutation__
+ * __useUpdateCommentToBoardMutation__
  *
- * To run a mutation, you first call `useDeleteCommentMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useDeleteCommentMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateCommentToBoardMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCommentToBoardMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [deleteCommentMutation, { data, loading, error }] = useDeleteCommentMutation({
+ * const [updateCommentToBoardMutation, { data, loading, error }] = useUpdateCommentToBoardMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useUpdateCommentToBoardMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCommentToBoardMutation, UpdateCommentToBoardMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateCommentToBoardMutation, UpdateCommentToBoardMutationVariables>(UpdateCommentToBoardDocument, options);
+      }
+export type UpdateCommentToBoardMutationHookResult = ReturnType<typeof useUpdateCommentToBoardMutation>;
+export type UpdateCommentToBoardMutationResult = Apollo.MutationResult<UpdateCommentToBoardMutation>;
+export type UpdateCommentToBoardMutationOptions = Apollo.BaseMutationOptions<UpdateCommentToBoardMutation, UpdateCommentToBoardMutationVariables>;
+export const DeleteCommentToPinDocument = gql`
+    mutation deleteCommentToPin($id: UUID!) {
+  deleteCommentToPin(id: $id)
+}
+    `;
+export type DeleteCommentToPinMutationFn = Apollo.MutationFunction<DeleteCommentToPinMutation, DeleteCommentToPinMutationVariables>;
+
+/**
+ * __useDeleteCommentToPinMutation__
+ *
+ * To run a mutation, you first call `useDeleteCommentToPinMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCommentToPinMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCommentToPinMutation, { data, loading, error }] = useDeleteCommentToPinMutation({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useDeleteCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCommentMutation, DeleteCommentMutationVariables>) {
+export function useDeleteCommentToPinMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCommentToPinMutation, DeleteCommentToPinMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteCommentMutation, DeleteCommentMutationVariables>(DeleteCommentDocument, options);
+        return Apollo.useMutation<DeleteCommentToPinMutation, DeleteCommentToPinMutationVariables>(DeleteCommentToPinDocument, options);
       }
-export type DeleteCommentMutationHookResult = ReturnType<typeof useDeleteCommentMutation>;
-export type DeleteCommentMutationResult = Apollo.MutationResult<DeleteCommentMutation>;
-export type DeleteCommentMutationOptions = Apollo.BaseMutationOptions<DeleteCommentMutation, DeleteCommentMutationVariables>;
+export type DeleteCommentToPinMutationHookResult = ReturnType<typeof useDeleteCommentToPinMutation>;
+export type DeleteCommentToPinMutationResult = Apollo.MutationResult<DeleteCommentToPinMutation>;
+export type DeleteCommentToPinMutationOptions = Apollo.BaseMutationOptions<DeleteCommentToPinMutation, DeleteCommentToPinMutationVariables>;
+export const DeleteCommentToBoardDocument = gql`
+    mutation deleteCommentToBoard($id: UUID!) {
+  deleteCommentToBoard(id: $id)
+}
+    `;
+export type DeleteCommentToBoardMutationFn = Apollo.MutationFunction<DeleteCommentToBoardMutation, DeleteCommentToBoardMutationVariables>;
+
+/**
+ * __useDeleteCommentToBoardMutation__
+ *
+ * To run a mutation, you first call `useDeleteCommentToBoardMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCommentToBoardMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCommentToBoardMutation, { data, loading, error }] = useDeleteCommentToBoardMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteCommentToBoardMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCommentToBoardMutation, DeleteCommentToBoardMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteCommentToBoardMutation, DeleteCommentToBoardMutationVariables>(DeleteCommentToBoardDocument, options);
+      }
+export type DeleteCommentToBoardMutationHookResult = ReturnType<typeof useDeleteCommentToBoardMutation>;
+export type DeleteCommentToBoardMutationResult = Apollo.MutationResult<DeleteCommentToBoardMutation>;
+export type DeleteCommentToBoardMutationOptions = Apollo.BaseMutationOptions<DeleteCommentToBoardMutation, DeleteCommentToBoardMutationVariables>;
 export const AddImageToPinDocument = gql`
     mutation AddImageToPin($input: AddImageInput!) {
   addImageToPin(input: $input) {
