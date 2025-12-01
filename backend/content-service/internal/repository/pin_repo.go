@@ -46,9 +46,9 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, limit, 
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "owner_id = ?", userID).
-		Limit(limit).
+	err := tx.Limit(limit).
 		Offset(offset).
+		Find(&pins, "owner_id = ?", userID).
 		Error
 	return pins, err
 }
@@ -63,9 +63,9 @@ func (r *PinRepository) GetByName(ctx context.Context, name string, limit, offse
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "name = ?", name).
-		Limit(limit).
+	err := tx.Limit(limit).
 		Offset(offset).
+		Find(&pins, "name = ?", name).
 		Error
 	return pins, err
 }
@@ -85,11 +85,10 @@ func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models
 func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID, limit, offset int) ([]models.PinComment, error) {
 	var comments []models.PinComment
 
-	err := r.db.
-		WithContext(ctx).
-		Find(&comments, "pin_id = ?", pinID).
+	err := r.db.WithContext(ctx).
 		Limit(limit).
 		Offset(offset).
+		Find(&comments, "pin_id = ?", pinID).
 		Error
 
 	return comments, err

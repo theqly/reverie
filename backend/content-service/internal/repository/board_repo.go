@@ -189,9 +189,9 @@ func (r *BoardRepository) GetGroups(ctx context.Context, userID uuid.UUID, limit
 	var members []models.Member
 	err := r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
-		Find(&members).
 		Limit(limit).
 		Offset(offset).
+		Find(&members).
 		Error
 	return members, err
 }
@@ -201,9 +201,9 @@ func (r *BoardRepository) GetCommentsByBoard(ctx context.Context, boardID uuid.U
 
 	err := r.db.
 		WithContext(ctx).
-		Find(&comments, "board_id = ?", boardID).
 		Limit(limit).
 		Offset(offset).
+		Find(&comments, "board_id = ?", boardID).
 		Error
 
 	return comments, err
@@ -262,9 +262,9 @@ func (r *BoardRepository) GetOwnBoardsByUser(ctx context.Context, userID uuid.UU
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("ot.type = ?", "user").
 		Where("boards.owner_id = ?", userID).
-		Find(&boards).
 		Limit(limit).
 		Offset(offset).
+		Find(&boards).
 		Error
 
 	return boards, err
@@ -288,9 +288,9 @@ func (r *BoardRepository) GetGroupBoardsByUser(ctx context.Context, userID uuid.
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("boards.owner_type_id = (?)", ownerTypeGroupSubQuery).
 		Where("boards.owner_id IN (?)", userGroupsSubQuery).
-		Find(&boards).
 		Limit(limit).
 		Offset(offset).
+		Find(&boards).
 		Error
 
 	return boards, err
