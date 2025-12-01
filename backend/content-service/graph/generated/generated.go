@@ -1318,7 +1318,7 @@ type Place {
   commentsByPin(pinId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToPin]!
 
   ownBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
-  groupBoardsByUser(userId: UUID! limit: Int = 10, offset: Int = 0): [Board!]!
+  groupBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
 
