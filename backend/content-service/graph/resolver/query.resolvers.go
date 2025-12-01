@@ -298,7 +298,7 @@ func (r *queryResolver) CountGroupBoardsByUser(ctx context.Context, userID uuid.
 
 // CountPinsByUser is the resolver for the countPinsByUser field.
 func (r *queryResolver) CountPinsByUser(ctx context.Context, userID uuid.UUID) (int, error) {
-	logger := zap.L().With(zap.String("resolver", "CountOwnPinsByUser"), zap.String("userID", userID.String()))
+	logger := zap.L().With(zap.String("resolver", "CountPinsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Counting own pins by user")
 
 	pinsNumber, err := r.PinRepo.CountPinsByUser(ctx, userID)
