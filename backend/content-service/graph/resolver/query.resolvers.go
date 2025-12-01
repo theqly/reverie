@@ -296,6 +296,20 @@ func (r *queryResolver) CountGroupBoardsByUser(ctx context.Context, userID uuid.
 	return int(boardsNumber), nil
 }
 
+// CountPinsByUser is the resolver for the countPinsByUser field.
+func (r *queryResolver) CountPinsByUser(ctx context.Context, userID uuid.UUID) (int, error) {
+	logger := zap.L().With(zap.String("resolver", "CountOwnPinsByUser"), zap.String("userID", userID.String()))
+	logger.Info("Counting own pins by user")
+
+	pinsNumber, err := r.PinRepo.CountPinsByUser(ctx, userID)
+	if err != nil {
+		logger.Error("Failed to count own pins by user", zap.Error(err))
+		return 0, err
+	}
+
+	return int(pinsNumber), nil
+}
+
 // Reactions is the resolver for the reactions field.
 func (r *queryResolver) Reactions(ctx context.Context) ([]*model.Reaction, error) {
 	logger := zap.L().With(zap.String("resolver", "Reactions"))
