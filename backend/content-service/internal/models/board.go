@@ -17,8 +17,10 @@ type OwnerType struct {
 }
 
 type Board struct {
-	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name          string    `gorm:"size:255;not null"`
+	ID   uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Name string    `gorm:"size:255;not null"`
+	// Поле может быть null => указатель на строку
+	BoardImageURL *string   `gorm:""`
 	AccessLevelID int       `gorm:"not null"`
 	OwnerID       uuid.UUID `gorm:"type:uuid;not null"`
 	OwnerTypeID   int       `gorm:"not null"`

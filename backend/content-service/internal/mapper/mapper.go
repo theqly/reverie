@@ -62,13 +62,14 @@ func toGraphQlSlicePin(pins []*models.Pin) []*model.Pin {
 
 func ToGraphQLBoard(b *models.Board) *model.Board {
 	return &model.Board{
-		ID:          b.ID,
-		Name:        b.Name,
-		AccessLevel: model.AccessLevelType(b.AccessLevel),
-		OwnerID:     b.OwnerID,
-		OwnerType:   model.OwnerType(b.OwnerType),
-		CreatedAt:   b.CreatedAt,
-		Pins:        toGraphQlSlicePin(b.Pins),
+		ID:            b.ID,
+		Name:          b.Name,
+		AccessLevel:   model.AccessLevelType(b.AccessLevel),
+		BoardImageURL: b.BoardImageURL,
+		OwnerID:       b.OwnerID,
+		OwnerType:     model.OwnerType(b.OwnerType),
+		CreatedAt:     b.CreatedAt,
+		Pins:          toGraphQlSlicePin(b.Pins),
 	}
 }
 

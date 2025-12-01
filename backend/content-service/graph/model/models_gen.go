@@ -31,13 +31,14 @@ type AddImageInput struct {
 }
 
 type Board struct {
-	ID          uuid.UUID       `json:"id"`
-	Name        string          `json:"name"`
-	AccessLevel AccessLevelType `json:"accessLevel"`
-	OwnerID     uuid.UUID       `json:"ownerId"`
-	OwnerType   OwnerType       `json:"ownerType"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	Pins        []*Pin          `json:"pins,omitempty"`
+	ID            uuid.UUID       `json:"id"`
+	Name          string          `json:"name"`
+	BoardImageURL *string         `json:"boardImageUrl "`
+	AccessLevel   AccessLevelType `json:"accessLevel"`
+	OwnerID       uuid.UUID       `json:"ownerId"`
+	OwnerType     OwnerType       `json:"ownerType"`
+	CreatedAt     time.Time       `json:"createdAt"`
+	Pins          []*Pin          `json:"pins,omitempty"`
 }
 
 type CommentToBoard struct {
