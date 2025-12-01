@@ -101,6 +101,11 @@ func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID, limit 
 	logger := zap.L().With(zap.String("resolver", "PinsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching pins by user")
 
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
 	pins, err := r.PinRepo.GetByUser(ctx, userID)
 	if err != nil {
 		logger.Error("Failed to fetch pins", zap.Error(err))
@@ -121,7 +126,12 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string, limit *int,
 	logger := zap.L().With(zap.String("resolver", "PinsByName"), zap.String("name", name))
 	logger.Info("Fetching pins by name")
 
-	pins, err := r.PinRepo.GetByName(ctx, name)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
+	pins, err := r.PinRepo.GetByName(ctx, name, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch pins", zap.Error(err))
 		return nil, err
@@ -138,7 +148,7 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string, limit *int,
 
 // PinsByLocation is the resolver for the pinsByLocation field.
 func (r *queryResolver) PinsByLocation(ctx context.Context, query string, limit *int, offset *int) ([]*model.Pin, error) {
-	panic(fmt.Errorf("not implemented: PinsByLocation - pinsByLocation"))
+	panic(fmt.Errorf("not implemented: PinsByLocation - pinsByLocation")) // why does not implemented ?
 }
 
 // GroupByID is the resolver for the groupById field.

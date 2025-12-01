@@ -36,7 +36,7 @@ func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Pin, 
 	return pin, err
 }
 
-func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]models.Pin, error) {
+func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, limit int, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
@@ -46,11 +46,14 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]mode
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "owner_id = ?", userID).Error
+	err := tx.Find(&pins, "owner_id = ?", userID).
+		Limit(limit).
+		Offset(offset).
+		Error
 	return pins, err
 }
 
-func (r *PinRepository) GetByName(ctx context.Context, name string) ([]models.Pin, error) {
+func (r *PinRepository) GetByName(ctx context.Context, name string, limit int, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
@@ -60,7 +63,10 @@ func (r *PinRepository) GetByName(ctx context.Context, name string) ([]models.Pi
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "name = ?", name).Error
+	err := tx.Find(&pins, "name = ?", name).
+		Limit(limit).
+		Offset(offset).
+		Error
 	return pins, err
 }
 
