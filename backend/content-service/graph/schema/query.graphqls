@@ -10,7 +10,7 @@ type Query {
 
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
-  groupsOfUser(userId: UUID!): [Group!]!
+  groupsOfUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Group!]!
 
   commentsByBoard(boardId: UUID!): [CommentToBoard]!
   commentsByPin(pinId: UUID!): [CommentToPin]!

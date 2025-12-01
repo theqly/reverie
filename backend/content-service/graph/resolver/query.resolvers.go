@@ -106,7 +106,7 @@ func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID, limit 
 		return nil, fmt.Errorf("Null value in args for limit / offset\n")
 	}
 
-	pins, err := r.PinRepo.GetByUser(ctx, userID)
+	pins, err := r.PinRepo.GetByUser(ctx, userID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch pins", zap.Error(err))
 		return nil, err
@@ -125,6 +125,11 @@ func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID, limit 
 func (r *queryResolver) PinsByName(ctx context.Context, name string, limit *int, offset *int) ([]*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "PinsByName"), zap.String("name", name))
 	logger.Info("Fetching pins by name")
+
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
@@ -181,12 +186,17 @@ func (r *queryResolver) IsUserInGroup(ctx context.Context, userID uuid.UUID, gro
 }
 
 // GroupsOfUser is the resolver for the groupsOfUser field.
-func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error) {
+func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Group, error) {
 	logger := zap.L().With(zap.String("resolver", "GroupsOfUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching groups of user")
 
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
 	var members []models.Member
-	members, err := r.BoardRepo.GetGroups(ctx, userID)
+	members, err := r.BoardRepo.GetGroups(ctx, userID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to find groups for user", zap.Error(err))
 		return nil, err

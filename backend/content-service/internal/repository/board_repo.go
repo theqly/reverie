@@ -185,9 +185,14 @@ func (r *BoardRepository) GetGroupByID(ctx context.Context, id uuid.UUID) (model
 	return group, err
 }
 
-func (r *BoardRepository) GetGroups(ctx context.Context, userID uuid.UUID) ([]models.Member, error) {
+func (r *BoardRepository) GetGroups(ctx context.Context, userID uuid.UUID, limit int, offset int) ([]models.Member, error) {
 	var members []models.Member
-	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&members).Error
+	err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Find(&members).
+		Limit(limit).
+		Offset(offset).
+		Error
 	return members, err
 }
 
