@@ -146,8 +146,8 @@ type ComplexityRoot struct {
 		Board                    func(childComplexity int, id uuid.UUID) int
 		BoardByName              func(childComplexity int, name string, limit *int, offset *int) int
 		BoardsByGroup            func(childComplexity int, groupID uuid.UUID, limit *int, offset *int) int
-		CommentsByBoard          func(childComplexity int, boardID uuid.UUID) int
-		CommentsByPin            func(childComplexity int, pinID uuid.UUID) int
+		CommentsByBoard          func(childComplexity int, boardID uuid.UUID, limit *int, offset *int) int
+		CommentsByPin            func(childComplexity int, pinID uuid.UUID, limit *int, offset *int) int
 		CountAllReactionsToBoard func(childComplexity int, boardID uuid.UUID) int
 		CountAllReactionsToPin   func(childComplexity int, pinID uuid.UUID) int
 		CountGroupBoardsByUser   func(childComplexity int, userID uuid.UUID) int
@@ -220,8 +220,8 @@ type QueryResolver interface {
 	GroupByID(ctx context.Context, groupID uuid.UUID) (*model.Group, error)
 	IsUserInGroup(ctx context.Context, userID uuid.UUID, groupID uuid.UUID) (bool, error)
 	GroupsOfUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Group, error)
-	CommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]*model.CommentToBoard, error)
-	CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*model.CommentToPin, error)
+	CommentsByBoard(ctx context.Context, boardID uuid.UUID, limit *int, offset *int) ([]*model.CommentToBoard, error)
+	CommentsByPin(ctx context.Context, pinID uuid.UUID, limit *int, offset *int) ([]*model.CommentToPin, error)
 	OwnBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error)
 	GroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error)
 	CountOwnBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error)
@@ -871,7 +871,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.CommentsByBoard(childComplexity, args["boardId"].(uuid.UUID)), true
+		return e.complexity.Query.CommentsByBoard(childComplexity, args["boardId"].(uuid.UUID), args["limit"].(*int), args["offset"].(*int)), true
 
 	case "Query.commentsByPin":
 		if e.complexity.Query.CommentsByPin == nil {
@@ -883,7 +883,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.CommentsByPin(childComplexity, args["pinId"].(uuid.UUID)), true
+		return e.complexity.Query.CommentsByPin(childComplexity, args["pinId"].(uuid.UUID), args["limit"].(*int), args["offset"].(*int)), true
 
 	case "Query.countAllReactionsToBoard":
 		if e.complexity.Query.CountAllReactionsToBoard == nil {
@@ -1314,8 +1314,8 @@ type Place {
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
   groupsOfUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Group!]!
 
-  commentsByBoard(boardId: UUID!): [CommentToBoard]!
-  commentsByPin(pinId: UUID!): [CommentToPin]!
+  commentsByBoard(boardId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToBoard]!
+  commentsByPin(pinId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToPin]!
 
   ownBoardsByUser(userId: UUID!): [Board!]!
   groupBoardsByUser(userId: UUID!): [Board!]!
@@ -2682,6 +2682,16 @@ func (ec *executionContext) field_Query_commentsByBoard_args(ctx context.Context
 		return nil, err
 	}
 	args["boardId"] = arg0
+	arg1, err := ec.field_Query_commentsByBoard_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	arg2, err := ec.field_Query_commentsByBoard_argsOffset(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Query_commentsByBoard_argsBoardID(
@@ -2702,6 +2712,42 @@ func (ec *executionContext) field_Query_commentsByBoard_argsBoardID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_commentsByBoard_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["limit"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_commentsByBoard_argsOffset(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["offset"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+	if tmp, ok := rawArgs["offset"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_commentsByPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2710,6 +2756,16 @@ func (ec *executionContext) field_Query_commentsByPin_args(ctx context.Context, 
 		return nil, err
 	}
 	args["pinId"] = arg0
+	arg1, err := ec.field_Query_commentsByPin_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	arg2, err := ec.field_Query_commentsByPin_argsOffset(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Query_commentsByPin_argsPinID(
@@ -2727,6 +2783,42 @@ func (ec *executionContext) field_Query_commentsByPin_argsPinID(
 	}
 
 	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_commentsByPin_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["limit"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_commentsByPin_argsOffset(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["offset"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+	if tmp, ok := rawArgs["offset"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
 	return zeroVal, nil
 }
 
@@ -7486,7 +7578,7 @@ func (ec *executionContext) _Query_commentsByBoard(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CommentsByBoard(rctx, fc.Args["boardId"].(uuid.UUID))
+		return ec.resolvers.Query().CommentsByBoard(rctx, fc.Args["boardId"].(uuid.UUID), fc.Args["limit"].(*int), fc.Args["offset"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7553,7 +7645,7 @@ func (ec *executionContext) _Query_commentsByPin(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CommentsByPin(rctx, fc.Args["pinId"].(uuid.UUID))
+		return ec.resolvers.Query().CommentsByPin(rctx, fc.Args["pinId"].(uuid.UUID), fc.Args["limit"].(*int), fc.Args["offset"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

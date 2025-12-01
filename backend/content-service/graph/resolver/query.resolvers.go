@@ -217,11 +217,16 @@ func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID, limi
 }
 
 // CommentsByBoard is the resolver for the commentsByBoard field.
-func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]*model.CommentToBoard, error) {
+func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID, limit *int, offset *int) ([]*model.CommentToBoard, error) {
 	logger := zap.L().With(zap.String("resolver", "CommentsByBoard"), zap.String("boardID", boardID.String()))
 	logger.Info("Fetching comments by board")
 
-	comments_row, err := r.BoardRepo.GetCommentsByBoard(ctx, boardID)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
+	comments_row, err := r.BoardRepo.GetCommentsByBoard(ctx, boardID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch comments by board", zap.Error(err))
 		return nil, err
@@ -237,11 +242,16 @@ func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID) 
 }
 
 // CommentsByPin is the resolver for the commentsByPin field.
-func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*model.CommentToPin, error) {
+func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID, limit *int, offset *int) ([]*model.CommentToPin, error) {
 	logger := zap.L().With(zap.String("resolver", "CommentsByPin"), zap.String("pinID", pinID.String()))
 	logger.Info("Fetching comments by pin")
 
-	comments_row, err := r.PinRepo.GetCommentsByPin(ctx, pinID)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
+	comments_row, err := r.PinRepo.GetCommentsByPin(ctx, pinID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch comments by pin", zap.Error(err))
 		return nil, err

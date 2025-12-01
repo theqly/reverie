@@ -36,7 +36,7 @@ func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Pin, 
 	return pin, err
 }
 
-func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, limit int, offset int) ([]models.Pin, error) {
+func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
@@ -53,7 +53,7 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, limit i
 	return pins, err
 }
 
-func (r *PinRepository) GetByName(ctx context.Context, name string, limit int, offset int) ([]models.Pin, error) {
+func (r *PinRepository) GetByName(ctx context.Context, name string, limit, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
@@ -82,10 +82,15 @@ func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models
 		}).Error
 }
 
-func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID) ([]models.PinComment, error) {
+func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID, limit, offset int) ([]models.PinComment, error) {
 	var comments []models.PinComment
 
-	err := r.db.WithContext(ctx).Find(&comments, "pin_id = ?", pinID).Error
+	err := r.db.
+		WithContext(ctx).
+		Find(&comments, "pin_id = ?", pinID).
+		Limit(limit).
+		Offset(offset).
+		Error
 
 	return comments, err
 }

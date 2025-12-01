@@ -196,10 +196,15 @@ func (r *BoardRepository) GetGroups(ctx context.Context, userID uuid.UUID, limit
 	return members, err
 }
 
-func (r *BoardRepository) GetCommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]models.BoardComment, error) {
+func (r *BoardRepository) GetCommentsByBoard(ctx context.Context, boardID uuid.UUID, limit int, offset int) ([]models.BoardComment, error) {
 	var comments []models.BoardComment
 
-	err := r.db.WithContext(ctx).Find(&comments, "board_id = ?", boardID).Error
+	err := r.db.
+		WithContext(ctx).
+		Find(&comments, "board_id = ?", boardID).
+		Limit(limit).
+		Offset(offset).
+		Error
 
 	return comments, err
 }
