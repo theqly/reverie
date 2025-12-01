@@ -267,12 +267,17 @@ func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID, limi
 }
 
 // OwnBoardsByUser is the resolver for the ownBoardsByUser field.
-func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error) {
+func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "OwnBoardsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching own boards by user")
 
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
 	var boards []models.Board
-	boards, err := r.BoardRepo.GetOwnBoardsByUser(ctx, userID)
+	boards, err := r.BoardRepo.GetOwnBoardsByUser(ctx, userID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch own boards by user", zap.Error(err))
 		return nil, err
@@ -288,12 +293,17 @@ func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID) (
 }
 
 // GroupBoardsByUser is the resolver for the groupBoardsByUser field.
-func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error) {
+func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "GroupBoardsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching group boards by user")
 
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
 	var boards []models.Board
-	boards, err := r.BoardRepo.GetGroupBoardsByUser(ctx, userID)
+	boards, err := r.BoardRepo.GetGroupBoardsByUser(ctx, userID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch group boards by user", zap.Error(err))
 		return nil, err

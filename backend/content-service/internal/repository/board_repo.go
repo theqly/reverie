@@ -252,7 +252,7 @@ func (r *BoardRepository) UpdateCommentToBoard(ctx context.Context, commentID uu
 	return &updatedComment, nil
 }
 
-func (r *BoardRepository) GetOwnBoardsByUser(ctx context.Context, userID uuid.UUID) ([]models.Board, error) {
+func (r *BoardRepository) GetOwnBoardsByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Board, error) {
 	var boards []models.Board
 
 	err := r.db.WithContext(ctx).
@@ -262,12 +262,15 @@ func (r *BoardRepository) GetOwnBoardsByUser(ctx context.Context, userID uuid.UU
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("ot.type = ?", "user").
 		Where("boards.owner_id = ?", userID).
-		Find(&boards).Error
+		Find(&boards).
+		Limit(limit).
+		Offset(offset).
+		Error
 
 	return boards, err
 }
 
-func (r *BoardRepository) GetGroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]models.Board, error) {
+func (r *BoardRepository) GetGroupBoardsByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Board, error) {
 	var boards []models.Board
 
 	userGroupsSubQuery := r.db.Model(&models.Member{}).
@@ -285,7 +288,10 @@ func (r *BoardRepository) GetGroupBoardsByUser(ctx context.Context, userID uuid.
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("boards.owner_type_id = (?)", ownerTypeGroupSubQuery).
 		Where("boards.owner_id IN (?)", userGroupsSubQuery).
-		Find(&boards).Error
+		Find(&boards).
+		Limit(limit).
+		Offset(offset).
+		Error
 
 	return boards, err
 }

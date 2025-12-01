@@ -15,8 +15,8 @@ type Query {
   commentsByBoard(boardId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToBoard]!
   commentsByPin(pinId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToPin]!
 
-  ownBoardsByUser(userId: UUID!): [Board!]!
-  groupBoardsByUser(userId: UUID!): [Board!]!
+  ownBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  groupBoardsByUser(userId: UUID! limit: Int = 10, offset: Int = 0): [Board!]!
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
 
