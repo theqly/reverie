@@ -32,11 +32,16 @@ func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, 
 }
 
 // BoardByName is the resolver for the boardByName field.
-func (r *queryResolver) BoardByName(ctx context.Context, name string) ([]*model.Board, error) {
+func (r *queryResolver) BoardByName(ctx context.Context, name string, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "BoardByName"), zap.String("name", name))
 	logger.Info("Fetching boards by name")
 
-	boards, err := r.BoardRepo.GetByName(ctx, name)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
+	boards, err := r.BoardRepo.GetByName(ctx, name, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch boards", zap.Error(err))
 		return nil, err
@@ -52,11 +57,16 @@ func (r *queryResolver) BoardByName(ctx context.Context, name string) ([]*model.
 }
 
 // BoardsByGroup is the resolver for the boardsByGroup field.
-func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID) ([]*model.Board, error) {
+func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "BoardsByGroup"), zap.String("groupID", groupID.String()))
 	logger.Info("Fetching boards by group")
 
-	boards, err := r.BoardRepo.GetByGroup(ctx, groupID)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+	}
+
+	boards, err := r.BoardRepo.GetByGroup(ctx, groupID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch boards", zap.Error(err))
 		return nil, err
@@ -87,7 +97,7 @@ func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID) (*model.Pin, erro
 }
 
 // PinsByUser is the resolver for the pinsByUser field.
-func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "PinsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching pins by user")
 
@@ -107,7 +117,7 @@ func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID) ([]*mo
 }
 
 // PinsByName is the resolver for the pinsByName field.
-func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByName(ctx context.Context, name string, limit *int, offset *int) ([]*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "PinsByName"), zap.String("name", name))
 	logger.Info("Fetching pins by name")
 
@@ -127,7 +137,7 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.P
 }
 
 // PinsByLocation is the resolver for the pinsByLocation field.
-func (r *queryResolver) PinsByLocation(ctx context.Context, query string) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByLocation(ctx context.Context, query string, limit *int, offset *int) ([]*model.Pin, error) {
 	panic(fmt.Errorf("not implemented: PinsByLocation - pinsByLocation"))
 }
 

@@ -40,27 +40,31 @@ func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Boa
 	return board, err
 }
 
-func (r *BoardRepository) GetByName(ctx context.Context, name string) ([]models.Board, error) {
+func (r *BoardRepository) GetByName(ctx context.Context, name string, limit int, offset int) ([]models.Board, error) {
 	var boards []models.Board
 
 	tx := r.db.WithContext(ctx).
 		Model(&models.Board{}).
 		Select("boards.*, al.type as access_level, ot.type as owner_type").
 		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
-		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id")
+		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
+		Limit(limit).
+		Offset(offset)
 
 	err := tx.Where("boards.name = ?", name).Find(&boards).Error
 	return boards, err
 }
 
-func (r *BoardRepository) GetByGroup(ctx context.Context, groupID uuid.UUID) ([]models.Board, error) {
+func (r *BoardRepository) GetByGroup(ctx context.Context, groupID uuid.UUID, limit int, offset int) ([]models.Board, error) {
 	var boards []models.Board
 
 	tx := r.db.WithContext(ctx).
 		Model(&models.Board{}).
 		Select("boards.*, al.type as access_level, ot.type as owner_type").
 		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
-		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id")
+		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
+		Limit(limit).
+		Offset(offset)
 
 	subQuery := r.db.Model(&models.OwnerType{}).Select("id").Where("type = ?", "group") // ??? пока что подзапросом
 
@@ -317,5 +321,3 @@ func (r *BoardRepository) CountGroupBoardsByUser(ctx context.Context, userID uui
 	return boardsNumber, nil
 
 }
-
-
