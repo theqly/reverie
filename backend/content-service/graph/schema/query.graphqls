@@ -20,6 +20,8 @@ type Query {
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
 
+  countPinsByUser(userId: UUID!): Int!
+
   reactions: [Reaction!]!
   countAllReactionsToPin(pinId: UUID!): Int!
   countAllReactionsToBoard(boardId: UUID!): Int!

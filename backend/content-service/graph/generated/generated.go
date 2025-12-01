@@ -152,6 +152,7 @@ type ComplexityRoot struct {
 		CountAllReactionsToPin   func(childComplexity int, pinID uuid.UUID) int
 		CountGroupBoardsByUser   func(childComplexity int, userID uuid.UUID) int
 		CountOwnBoardsByUser     func(childComplexity int, userID uuid.UUID) int
+		CountPinsByUser          func(childComplexity int, userID uuid.UUID) int
 		GroupBoardsByUser        func(childComplexity int, userID uuid.UUID) int
 		GroupByID                func(childComplexity int, groupID uuid.UUID) int
 		GroupsOfUser             func(childComplexity int, userID uuid.UUID) int
@@ -226,6 +227,7 @@ type QueryResolver interface {
 	GroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error)
 	CountOwnBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error)
 	CountGroupBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error)
+	CountPinsByUser(ctx context.Context, userID uuid.UUID) (int, error)
 	Reactions(ctx context.Context) ([]*model.Reaction, error)
 	CountAllReactionsToPin(ctx context.Context, pinID uuid.UUID) (int, error)
 	CountAllReactionsToBoard(ctx context.Context, boardID uuid.UUID) (int, error)
@@ -933,6 +935,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.CountOwnBoardsByUser(childComplexity, args["userId"].(uuid.UUID)), true
 
+	case "Query.countPinsByUser":
+		if e.complexity.Query.CountPinsByUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_countPinsByUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CountPinsByUser(childComplexity, args["userId"].(uuid.UUID)), true
+
 	case "Query.groupBoardsByUser":
 		if e.complexity.Query.GroupBoardsByUser == nil {
 			break
@@ -1321,6 +1335,8 @@ type Place {
   groupBoardsByUser(userId: UUID!): [Board!]!
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
+
+  countPinsByUser(userId: UUID!): Int!
 
   reactions: [Reaction!]!
   countAllReactionsToPin(pinId: UUID!): Int!
@@ -2733,6 +2749,34 @@ func (ec *executionContext) field_Query_countOwnBoardsByUser_args(ctx context.Co
 	return args, nil
 }
 func (ec *executionContext) field_Query_countOwnBoardsByUser_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["userId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_countPinsByUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_countPinsByUser_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_countPinsByUser_argsUserID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (uuid.UUID, error) {
@@ -7582,6 +7626,61 @@ func (ec *executionContext) fieldContext_Query_countGroupBoardsByUser(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_countPinsByUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_countPinsByUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CountPinsByUser(rctx, fc.Args["userId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_countPinsByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_countPinsByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_reactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_reactions(ctx, field)
 	if err != nil {
@@ -11551,6 +11650,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_countGroupBoardsByUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "countPinsByUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_countPinsByUser(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
