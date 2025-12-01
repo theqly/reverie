@@ -1,7 +1,31 @@
+class User {
+  final String id;
+  final String username;
+  final String? avatarUrl;
+  final String? displayName;
+
+  User({
+    required this.id,
+    required this.username,
+    this.avatarUrl,
+    this.displayName,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as String,
+      username: json['username'] as String,
+      avatarUrl: json['avatarUrl'] as String?,
+      displayName: json['displayName'] as String?,
+    );
+  }
+}
+
 class Pin {
   final String id;
   final String name;
   final String ownerId;
+  final User? owner;
   final String? address;
   final double latitude;
   final double longitude;
@@ -14,6 +38,7 @@ class Pin {
     required this.id,
     required this.name,
     required this.ownerId,
+    this.owner,
     this.address,
     required this.latitude,
     required this.longitude,
@@ -24,10 +49,12 @@ class Pin {
   });
 
   factory Pin.fromJson(Map<String, dynamic> json) {
+    final ownerData = json['owner'] as Map<String, dynamic>?;
     return Pin(
       id: json['id'] as String,
       name: json['name'] as String,
-      ownerId: json['owner']['id'] as String,
+      ownerId: ownerData?['id'] as String? ?? '',
+      owner: ownerData != null ? User.fromJson(ownerData) : null,
       address: json['address'] as String?,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),

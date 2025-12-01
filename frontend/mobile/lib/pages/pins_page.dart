@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'pin_view_page.dart';
 import '../services/pin_service.dart';
 import '../models/pin.dart';
+import '../data/mock_data.dart';
+
+// TODO: Установите false когда бэкенд готов
+const bool USE_MOCK_DATA = true;
 
 class PinsPage extends StatefulWidget {
   final VoidCallback? onSearchTap;
@@ -38,9 +42,18 @@ class _PinsPageState extends State<PinsPage> with AutomaticKeepAliveClientMixin 
       _isLoading = true;
     });
 
-    // TODO: Заменить на реальный userId из auth
-    final String mockUserId = '00000000-0000-0000-0000-000000000000';
-    final pins = await _pinService.getPinsByUser(mockUserId);
+    List<Pin> pins;
+    
+    if (USE_MOCK_DATA) {
+      // Используем mock-данные для тестирования UI
+      await Future.delayed(const Duration(milliseconds: 500)); // Имитация сетевого запроса
+      pins = MockData.mockPins;
+    } else {
+      // Реальный запрос к API
+      // TODO: Заменить на реальный userId из auth
+      final String mockUserId = '00000000-0000-0000-0000-000000000000';
+      pins = await _pinService.getPinsByUser(mockUserId);
+    }
 
     setState(() {
       _pins = pins;
@@ -184,10 +197,6 @@ class _PinsPageState extends State<PinsPage> with AutomaticKeepAliveClientMixin 
                       },
                     ),
                   ),
-              ),
-            );
-          },
-        ),
         // Плавающая верхняя панель
         Positioned(
           top: 0,
