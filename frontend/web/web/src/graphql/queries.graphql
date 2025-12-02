@@ -15,6 +15,21 @@ query GetPinBasicById($id: UUID!) {
   }
 }
 
+mutation CreateGroup($input: CreateGroupInput!){
+  createGroup(input: $input) {
+    id
+    members {
+      id
+    }
+  }
+}
+
+mutation CreateBoard($input: CreateBoardInput!){
+  createBoard(input: $input) {
+    id
+  }
+}
+
 query GetPinFullById($id: UUID!) {
   pin(id: $id) {
     id
