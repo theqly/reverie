@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import MapPicker from './MapPicker';
 import styles from './MapPage.module.css'; // ← ИМПОРТ СТИЛЕЙ
-import logo from '../assets/Reverie.svg';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header'; 
 
@@ -14,10 +13,7 @@ const MapPage = () => {
         navigate('/pin/create');
     };
 
-    
-
-  //выделить header в отдельный компонент
-
+  
   return (
     <div>
       <Header />

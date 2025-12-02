@@ -126,7 +126,7 @@ h1 {
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  margin: 30px auto 0 auto; /* Изменено */
+  margin: 1px auto 0 auto; /* Изменено */
   display: block; /* Добавлено */  font-size: 20px;
 }
 

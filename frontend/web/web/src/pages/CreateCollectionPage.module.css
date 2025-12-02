@@ -31,7 +31,6 @@ body {
     
 }
 
-
 .search_input{
     margin: 0;
     padding: 5px 0 0 34px;
@@ -49,7 +48,6 @@ body {
     background-size: 15px 15px;
     background-position: 10px 14px;
     background-repeat: no-repeat;
-    
 }
 
 .header_container {
@@ -62,10 +60,10 @@ body {
     display: flex;
     margin: 20px 40px 0 40px;
     align-items: center;
-    border-bottom: 2px solid #000000;
+    border-bottom: 1px solid #a6a6a6;
 }
 
-h1 {
+.h_container h1 {
   font-size: 26px;
 }
 
@@ -91,10 +89,9 @@ h1 {
 
 /* --- GRID WRAPPER --- */
 .gridWrapper {
-    height: 350px;
     display: grid;
     grid-template-columns: 150px 600px 300px;
-    grid-auto-rows: auto;
+    grid-auto-rows: auto auto auto;
     gap: 20px 40px;
     margin: 40px 60px;
     align-items: start;
@@ -103,7 +100,6 @@ h1 {
 /* --- Колонка 1: LABELS --- */
 .name_label,
 .discr_label,
-.pin_label,
 .collaborator_label {
     grid-column: 1;
     justify-self: start;
@@ -111,9 +107,7 @@ h1 {
     font-size: 20px;
 }
 
-.collaboratorsList{
-  display: flex;
-}
+
 
 .collaboratorItem{
   display: flex;               /* превращаем блок в flex-контейнер */
@@ -156,6 +150,7 @@ h1 {
   background-size: 35px 35px;
   padding-left: 45px;
 }
+
 .name_input{
     margin: 0;
     padding: 5px 15px 0 15px;
@@ -174,9 +169,7 @@ h1 {
 .discr_input:hover{
   background-color: #e3e3e3;
 }
-.search_input:hover{
-  background-color: #c5c5c5;
-}
+
 
 .discr_input {
   resize: none;
@@ -199,10 +192,12 @@ h1 {
 /* --- Колонка 3: COVER --- */
 .coverSection {
     grid-column: 3;
-    grid-row: 1 / span 10; /* покрывает все строки */
+    grid-row: 1 / span 3; /* покрывает все строки */
     display: flex;
     justify-content: center;
     align-items: start;
+    width: 100%;
+
 }
 
 
@@ -214,7 +209,7 @@ h1 {
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  margin: 30px 0 0 90px;
+  margin: 19px 0 0 90px;
   font-size: 20px;
 }
 
@@ -288,15 +283,6 @@ h1 {
   display: none;
 }
 
-.coverSection {
-  grid-column: 3;
-  grid-row: 1 / span 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
 .coverLabel {
   width: 200px;
   aspect-ratio: 1/1;
@@ -344,4 +330,42 @@ h1 {
 
 .uploadButton:hover {
   opacity: 0.7;
+}
+
+.collaboratorItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #cbcbcb;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  width: fit-content;
+  margin-top: 3px;
+}
+
+.collaboratorItem span{
+  padding-top: 1px;
+}
+
+
+.removeCollaboratorBtn {
+  background: none;
+  border: none;
+  color: #616161;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  transition: color 0.2s;
+}
+
+.removeCollaboratorBtn:hover {
+  color: #000000;
+}
+
+.collaboratorsList{
+  display: flex;
+  max-width: 700px;
+  flex-wrap: wrap;
 }

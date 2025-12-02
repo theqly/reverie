@@ -65,3 +65,100 @@
 .closeBtn:hover {
   background-color: rgb(185, 185, 185);
 }
+
+.followersList {
+  max-height: 300px; /* фиксированная высота */
+  overflow-y: auto;  /* вертикальный скролл */
+  margin-top: 10px;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: 5px 0;
+}
+
+.foundUser {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding: 0;
+}
+
+.foundUser span{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-right: auto;
+  padding: 20px 0;
+}
+
+.foundUser:last-child {
+  border-bottom: none;
+}
+
+.followersContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.searchInput {
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.followersList {
+  max-height: 300px; /* фиксированная высота для скролла */
+  overflow-y: auto;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
+.noResults {
+  padding: 10px;
+  text-align: center;
+  color: #888;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.searchResults, .followersList {
+  max-height: 300px;
+  overflow-y: auto;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
+.searchInput {
+  padding: 5px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.searchButton, .inviteButton {
+  padding: 3px 8px;
+  background-color: #d2d2d2;
+  color: black;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+.searchButton:hover, .inviteButton:hover {
+  background-color: #c7c7c7;
+}
+
+.inviteButton:disabled {
+  background-color: #d2d2d2;
+}
+.noResults {
+  padding: 10px;
+  text-align: center;
+  color: #888;
+}

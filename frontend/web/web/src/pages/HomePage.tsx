@@ -27,6 +27,18 @@ const HomePage = () => {
     // }
   };
 
+     const handleProfile = () => {
+    // Пока заглушка - всегда авторизован
+    navigate('/profile');
+    
+    // Позже добавишь проверку:
+    // if (isAuthenticated) {
+    //   navigate('/collection/create');
+    // } else {
+    //   showAuthModal();
+    // }
+  };
+
   return (
     <div className="home-page">
       <button onClick={handleCreateCollection}>
@@ -34,6 +46,9 @@ const HomePage = () => {
       </button>
       <button onClick={handleCreatePin}>
         Создать пин
+      </button>
+      <button onClick={handleProfile}>
+        Профиль
       </button>
     </div>
   );
