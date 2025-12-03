@@ -33,6 +33,7 @@ CREATE TABLE owner_types (
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
+    description TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
     owner_type_id INTEGER NOT NULL,
@@ -244,6 +245,7 @@ enum OwnerType {
 type Board {
   id: UUID!
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
@@ -266,6 +268,7 @@ type Group {
 
 input CreateBoardInput {
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
@@ -273,6 +276,7 @@ input CreateBoardInput {
 
 input UpdateBoardInput {
   name: String
+  description: String
   accessLevel: AccessLevelType
   userId: UUID!
 }

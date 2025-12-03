@@ -53,6 +53,7 @@ type ComplexityRoot struct {
 	Board struct {
 		AccessLevel func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		OwnerID     func(childComplexity int) int
@@ -152,7 +153,8 @@ type ComplexityRoot struct {
 		CountAllReactionsToPin   func(childComplexity int, pinID uuid.UUID) int
 		CountGroupBoardsByUser   func(childComplexity int, userID uuid.UUID) int
 		CountOwnBoardsByUser     func(childComplexity int, userID uuid.UUID) int
-		GroupBoardsByUser        func(childComplexity int, userID uuid.UUID, limit *int, offset *int) int
+		CountPinsByUser          func(childComplexity int, userID uuid.UUID) int
+		GroupBoardsByUser        func(childComplexity int, userID uuid.UUID) int
 		GroupByID                func(childComplexity int, groupID uuid.UUID) int
 		GroupsOfUser             func(childComplexity int, userID uuid.UUID, limit *int, offset *int) int
 		IsUserInGroup            func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
@@ -226,6 +228,7 @@ type QueryResolver interface {
 	GroupBoardsByUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Board, error)
 	CountOwnBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error)
 	CountGroupBoardsByUser(ctx context.Context, userID uuid.UUID) (int, error)
+	CountPinsByUser(ctx context.Context, userID uuid.UUID) (int, error)
 	Reactions(ctx context.Context) ([]*model.Reaction, error)
 	CountAllReactionsToPin(ctx context.Context, pinID uuid.UUID) (int, error)
 	CountAllReactionsToBoard(ctx context.Context, boardID uuid.UUID) (int, error)
@@ -263,6 +266,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Board.CreatedAt(childComplexity), true
+
+	case "Board.description":
+		if e.complexity.Board.Description == nil {
+			break
+		}
+
+		return e.complexity.Board.Description(childComplexity), true
 
 	case "Board.id":
 		if e.complexity.Board.ID == nil {
@@ -933,6 +943,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.CountOwnBoardsByUser(childComplexity, args["userId"].(uuid.UUID)), true
 
+	case "Query.countPinsByUser":
+		if e.complexity.Query.CountPinsByUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_countPinsByUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CountPinsByUser(childComplexity, args["userId"].(uuid.UUID)), true
+
 	case "Query.groupBoardsByUser":
 		if e.complexity.Query.GroupBoardsByUser == nil {
 			break
@@ -1242,6 +1264,7 @@ enum OwnerType {
 type Board {
   id: UUID!
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
@@ -1322,6 +1345,8 @@ type Place {
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
 
+  countPinsByUser(userId: UUID!): Int!
+
   reactions: [Reaction!]!
   countAllReactionsToPin(pinId: UUID!): Int!
   countAllReactionsToBoard(boardId: UUID!): Int!
@@ -1330,6 +1355,7 @@ type Place {
 `, BuiltIn: false},
 	{Name: "../schema/mutation.graphqls", Input: `input CreateBoardInput {
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
@@ -1337,6 +1363,7 @@ type Place {
 
 input UpdateBoardInput {
   name: String
+  description: String
   accessLevel: AccessLevelType
   userId: UUID!
 }
@@ -2934,6 +2961,34 @@ func (ec *executionContext) field_Query_countOwnBoardsByUser_argsUserID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_countPinsByUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_countPinsByUser_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_countPinsByUser_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["userId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_groupBoardsByUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3681,6 +3736,47 @@ func (ec *executionContext) _Board_name(ctx context.Context, field graphql.Colle
 }
 
 func (ec *executionContext) fieldContext_Board_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Board",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Board_description(ctx context.Context, field graphql.CollectedField, obj *model.Board) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Board_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Board_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Board",
 		Field:      field,
@@ -4596,6 +4692,8 @@ func (ec *executionContext) fieldContext_Mutation_createBoard(ctx context.Contex
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -4667,6 +4765,8 @@ func (ec *executionContext) fieldContext_Mutation_updateBoard(ctx context.Contex
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -4896,6 +4996,8 @@ func (ec *executionContext) fieldContext_Mutation_addPinToBoard(ctx context.Cont
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -4967,6 +5069,8 @@ func (ec *executionContext) fieldContext_Mutation_removePinFromBoard(ctx context
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -7014,6 +7118,8 @@ func (ec *executionContext) fieldContext_Query_board(ctx context.Context, field 
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -7082,6 +7188,8 @@ func (ec *executionContext) fieldContext_Query_boardByName(ctx context.Context, 
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -7150,6 +7258,8 @@ func (ec *executionContext) fieldContext_Query_boardsByGroup(ctx context.Context
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -7833,6 +7943,8 @@ func (ec *executionContext) fieldContext_Query_ownBoardsByUser(ctx context.Conte
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -7904,6 +8016,8 @@ func (ec *executionContext) fieldContext_Query_groupBoardsByUser(ctx context.Con
 				return ec.fieldContext_Board_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Board_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Board_description(ctx, field)
 			case "accessLevel":
 				return ec.fieldContext_Board_accessLevel(ctx, field)
 			case "ownerId":
@@ -8036,6 +8150,61 @@ func (ec *executionContext) fieldContext_Query_countGroupBoardsByUser(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_countGroupBoardsByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_countPinsByUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_countPinsByUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CountPinsByUser(rctx, fc.Args["userId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_countPinsByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_countPinsByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -10736,7 +10905,7 @@ func (ec *executionContext) unmarshalInputCreateBoardInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "accessLevel", "ownerId", "ownerType"}
+	fieldsInOrder := [...]string{"name", "description", "accessLevel", "ownerId", "ownerType"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10750,6 +10919,13 @@ func (ec *executionContext) unmarshalInputCreateBoardInput(ctx context.Context, 
 				return it, err
 			}
 			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
 		case "accessLevel":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessLevel"))
 			data, err := ec.unmarshalNAccessLevelType2contentᚑserviceᚋgraphᚋmodelᚐAccessLevelType(ctx, v)
@@ -10866,7 +11042,7 @@ func (ec *executionContext) unmarshalInputUpdateBoardInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "accessLevel", "userId"}
+	fieldsInOrder := [...]string{"name", "description", "accessLevel", "userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10880,6 +11056,13 @@ func (ec *executionContext) unmarshalInputUpdateBoardInput(ctx context.Context, 
 				return it, err
 			}
 			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
 		case "accessLevel":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessLevel"))
 			data, err := ec.unmarshalOAccessLevelType2ᚖcontentᚑserviceᚋgraphᚋmodelᚐAccessLevelType(ctx, v)
@@ -11014,6 +11197,8 @@ func (ec *executionContext) _Board(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "description":
+			out.Values[i] = ec._Board_description(ctx, field, obj)
 		case "accessLevel":
 			out.Values[i] = ec._Board_accessLevel(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -12011,6 +12196,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_countGroupBoardsByUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "countPinsByUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_countPinsByUser(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

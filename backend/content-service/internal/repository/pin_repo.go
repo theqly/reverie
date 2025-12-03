@@ -258,3 +258,18 @@ func (r *PinRepository) UpdatePinImageOrder(ctx context.Context, pinImageID uuid
 
 	return updatedImage, nil
 }
+
+func (r *PinRepository) CountPinsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	var pinsNumber int64
+
+	err := r.db.WithContext(ctx).
+		Model(&models.Pin{}).
+		Where("owner_id = ?", userID).
+		Count(&pinsNumber).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return pinsNumber, nil
+}

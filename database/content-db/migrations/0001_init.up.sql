@@ -11,6 +11,7 @@ CREATE TABLE owner_types (
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
+    description TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
     owner_type_id INTEGER NOT NULL,
