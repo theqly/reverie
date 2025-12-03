@@ -43,6 +43,7 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
       setFoundUser({ name: nickname, avatar: placeholder });
     }
   };
+  
 
   const handleInviteFoundUser = () => {
     if (foundUser) {
