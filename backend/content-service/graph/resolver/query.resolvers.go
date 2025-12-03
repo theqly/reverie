@@ -38,7 +38,7 @@ func (r *queryResolver) BoardByName(ctx context.Context, name string, limit *int
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	boards, err := r.BoardRepo.GetByName(ctx, name, *limit, *offset)
@@ -63,7 +63,7 @@ func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID, li
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	boards, err := r.BoardRepo.GetByGroup(ctx, groupID, *limit, *offset)
@@ -103,7 +103,7 @@ func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID, limit 
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	pins, err := r.PinRepo.GetByUser(ctx, userID, *limit, *offset)
@@ -128,12 +128,7 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string, limit *int,
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
-	}
-
-	if limit == nil || offset == nil {
-		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	pins, err := r.PinRepo.GetByName(ctx, name, *limit, *offset)
@@ -192,7 +187,7 @@ func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID, limi
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	var members []models.Member
@@ -223,7 +218,7 @@ func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID, 
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	comments_row, err := r.BoardRepo.GetCommentsByBoard(ctx, boardID, *limit, *offset)
@@ -248,7 +243,7 @@ func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID, limi
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	comments_row, err := r.PinRepo.GetCommentsByPin(ctx, pinID, *limit, *offset)
@@ -273,7 +268,7 @@ func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID, l
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	var boards []models.Board
@@ -299,7 +294,7 @@ func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID,
 
 	if limit == nil || offset == nil {
 		logger.Error("No default behavior for NULL value")
-		return nil, fmt.Errorf("Null value in args for limit / offset\n")
+		return nil, fmt.Errorf("null value in args for limit / offset")
 	}
 
 	var boards []models.Board
