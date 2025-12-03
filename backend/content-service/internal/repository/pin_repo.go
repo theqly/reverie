@@ -36,7 +36,7 @@ func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Pin, 
 	return pin, err
 }
 
-func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]models.Pin, error) {
+func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
@@ -46,11 +46,15 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]mode
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "owner_id = ?", userID).Error
+	err := tx.Order("id DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&pins, "owner_id = ?", userID).
+		Error
 	return pins, err
 }
 
-func (r *PinRepository) GetByName(ctx context.Context, name string) ([]models.Pin, error) {
+func (r *PinRepository) GetByName(ctx context.Context, name string, limit, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
@@ -60,7 +64,11 @@ func (r *PinRepository) GetByName(ctx context.Context, name string) ([]models.Pi
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "name = ?", name).Error
+	err := tx.Order("id DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&pins, "name = ?", name).
+		Error
 	return pins, err
 }
 
@@ -76,10 +84,15 @@ func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models
 		}).Error
 }
 
-func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID) ([]models.PinComment, error) {
+func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID, limit, offset int) ([]models.PinComment, error) {
 	var comments []models.PinComment
 
-	err := r.db.WithContext(ctx).Find(&comments, "pin_id = ?", pinID).Error
+	err := r.db.WithContext(ctx).
+		Order("id DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&comments, "pin_id = ?", pinID).
+		Error
 
 	return comments, err
 }

@@ -332,20 +332,29 @@ type Reaction {
 
 ##### Реализованные методы
   board(id: UUID!): Board
-  boardByName(name: String!): [Board!]
-  boardsByGroup(groupId: UUID!): [Board!]
+  boardByName(name: String!, limit: Int = 10, offset: Int = 0): [Board!]
+  boardsByGroup(groupId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]
 
   pin(id: UUID!): Pin
-  pinsByUser(userId: UUID!): [Pin!]
-  pinsByName(name: String!): [Pin!]
-  pinsByLocation(query: String!): [Pin!]
+  pinsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByName(name: String!, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByLocation(query: String!, limit: Int = 10, offset: Int = 0): [Pin!]
 
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
-  groupsOfUser(userId: UUID!): [Group!]!
+  groupsOfUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Group!]!
 
-  commentsByBoard(boardId: UUID!): [CommentToBoard]!
-  commentsByPin(pinId: UUID!): [CommentToPin]!
+  commentsByBoard(boardId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToBoard]!
+  commentsByPin(pinId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToPin]!
+
+  ownBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  groupBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  countOwnBoardsByUser(userId: UUID!): Int!
+  countGroupBoardsByUser(userId: UUID!): Int!
+
+  reactions: [Reaction!]!
+  countAllReactionsToPin(pinId: UUID!): Int!
+  countAllReactionsToBoard(boardId: UUID!): Int!
 
   createBoard(input: CreateBoardInput!): Board!
   updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
@@ -374,15 +383,6 @@ type Reaction {
   deleteGroup(groupId: UUID!): Boolean!
   requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
   acceptJoinToGroup(requestId: UUID!): Boolean!
-
-  ownBoardsByUser(userId: UUID!): [Board!]!
-  groupBoardsByUser(userId: UUID!): [Board!]!
-  countOwnBoardsByUser(userId: UUID!): Int!
-  countGroupBoardsByUser(userId: UUID!): Int!
-
-  reactions: [Reaction!]!
-  countAllReactionsToPin(pinId: UUID!): Int!
-  countAllReactionsToBoard(boardId: UUID!): Int!
 
   reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
   reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
