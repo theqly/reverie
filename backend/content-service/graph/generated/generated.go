@@ -154,7 +154,7 @@ type ComplexityRoot struct {
 		CountGroupBoardsByUser   func(childComplexity int, userID uuid.UUID) int
 		CountOwnBoardsByUser     func(childComplexity int, userID uuid.UUID) int
 		CountPinsByUser          func(childComplexity int, userID uuid.UUID) int
-		GroupBoardsByUser        func(childComplexity int, userID uuid.UUID) int
+		GroupBoardsByUser        func(childComplexity int, userID uuid.UUID, limit *int, offset *int) int
 		GroupByID                func(childComplexity int, groupID uuid.UUID) int
 		GroupsOfUser             func(childComplexity int, userID uuid.UUID, limit *int, offset *int) int
 		IsUserInGroup            func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
