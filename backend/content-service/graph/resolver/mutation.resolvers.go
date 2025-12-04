@@ -399,6 +399,34 @@ func (r *mutationResolver) ReactionToBoard(ctx context.Context, boardID uuid.UUI
 	return res, nil
 }
 
+// BookmarkToPin is the resolver for the bookmarkToPin field.
+func (r *mutationResolver) BookmarkToPin(ctx context.Context, pinID uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "BookmarkToPin"), zap.String("pinID", pinID.String()), zap.String("userID", userID.String()))
+	logger.Info("Making bookmark to pin")
+
+	res, err := r.BookmarkRepo.ToggleBookmarkToPin(ctx, pinID, userID)
+	if err != nil {
+		logger.Error("Failed to make bookmark to pin", zap.Error(err))
+		return false, err
+	}
+
+	return res, nil
+}
+
+// BookmarkToBoard is the resolver for the bookmarkToBoard field.
+func (r *mutationResolver) BookmarkToBoard(ctx context.Context, boardID uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "BookmarkToBoard"), zap.String("boardID", boardID.String()), zap.String("userID", userID.String()))
+	logger.Info("Making bookmark to board")
+
+	res, err := r.BookmarkRepo.ToggleBookmarkToBoard(ctx, boardID, userID)
+	if err != nil {
+		logger.Error("Failed to make bookmark to board", zap.Error(err))
+		return false, err
+	}
+
+	return res, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

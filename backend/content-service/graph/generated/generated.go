@@ -92,6 +92,8 @@ type ComplexityRoot struct {
 		AddImageToPin        func(childComplexity int, input model.AddImageInput) int
 		AddPinToBoard        func(childComplexity int, pinID uuid.UUID, boardID uuid.UUID) int
 		AddUserToGroup       func(childComplexity int, userID uuid.UUID, groupID uuid.UUID) int
+		BookmarkToBoard      func(childComplexity int, boardID uuid.UUID, userID uuid.UUID) int
+		BookmarkToPin        func(childComplexity int, pinID uuid.UUID, userID uuid.UUID) int
 		CreateBoard          func(childComplexity int, input model.CreateBoardInput) int
 		CreateGroup          func(childComplexity int, input model.CreateGroupInput) int
 		CreatePin            func(childComplexity int, input model.CreatePinInput) int
@@ -208,6 +210,8 @@ type MutationResolver interface {
 	AcceptJoinToGroup(ctx context.Context, requestID uuid.UUID) (bool, error)
 	ReactionToPin(ctx context.Context, pinID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) (bool, error)
 	ReactionToBoard(ctx context.Context, boardID uuid.UUID, reactionID uuid.UUID, userID uuid.UUID) (bool, error)
+	BookmarkToPin(ctx context.Context, pinID uuid.UUID, userID uuid.UUID) (bool, error)
+	BookmarkToBoard(ctx context.Context, boardID uuid.UUID, userID uuid.UUID) (bool, error)
 }
 type QueryResolver interface {
 	Board(ctx context.Context, id uuid.UUID) (*model.Board, error)
@@ -466,6 +470,30 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.AddUserToGroup(childComplexity, args["userId"].(uuid.UUID), args["groupId"].(uuid.UUID)), true
+
+	case "Mutation.bookmarkToBoard":
+		if e.complexity.Mutation.BookmarkToBoard == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_bookmarkToBoard_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BookmarkToBoard(childComplexity, args["boardId"].(uuid.UUID), args["userId"].(uuid.UUID)), true
+
+	case "Mutation.bookmarkToPin":
+		if e.complexity.Mutation.BookmarkToPin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_bookmarkToPin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BookmarkToPin(childComplexity, args["pinId"].(uuid.UUID), args["userId"].(uuid.UUID)), true
 
 	case "Mutation.createBoard":
 		if e.complexity.Mutation.CreateBoard == nil {
@@ -1411,6 +1439,9 @@ type Mutation {
 
   reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
   reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+
+  bookmarkToPin(pinId: UUID!, userId: UUID!): Boolean!
+  bookmarkToBoard(boardId: UUID!, userId: UUID!): Boolean!
 }
 
 `, BuiltIn: false},
@@ -1683,6 +1714,108 @@ func (ec *executionContext) field_Mutation_addUserToGroup_argsGroupID(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
 	if tmp, ok := rawArgs["groupId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_bookmarkToBoard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_bookmarkToBoard_argsBoardID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["boardId"] = arg0
+	arg1, err := ec.field_Mutation_bookmarkToBoard_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_bookmarkToBoard_argsBoardID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["boardId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("boardId"))
+	if tmp, ok := rawArgs["boardId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_bookmarkToBoard_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["userId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_bookmarkToPin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_bookmarkToPin_argsPinID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["pinId"] = arg0
+	arg1, err := ec.field_Mutation_bookmarkToPin_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_bookmarkToPin_argsPinID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["pinId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pinId"))
+	if tmp, ok := rawArgs["pinId"]; ok {
+		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+	}
+
+	var zeroVal uuid.UUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_bookmarkToPin_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uuid.UUID, error) {
+	if _, ok := rawArgs["userId"]; !ok {
+		var zeroVal uuid.UUID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
 		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
 	}
 
@@ -5534,6 +5667,116 @@ func (ec *executionContext) fieldContext_Mutation_reactionToBoard(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_reactionToBoard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_bookmarkToPin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_bookmarkToPin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().BookmarkToPin(rctx, fc.Args["pinId"].(uuid.UUID), fc.Args["userId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_bookmarkToPin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_bookmarkToPin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_bookmarkToBoard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_bookmarkToBoard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().BookmarkToBoard(rctx, fc.Args["boardId"].(uuid.UUID), fc.Args["userId"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_bookmarkToBoard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_bookmarkToBoard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11001,6 +11244,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "reactionToBoard":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_reactionToBoard(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "bookmarkToPin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_bookmarkToPin(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "bookmarkToBoard":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_bookmarkToBoard(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
