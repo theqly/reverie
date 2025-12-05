@@ -251,6 +251,8 @@ type Board {
   ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
+  reactionId: UUID
+  bookmarked: Boolean
 }
 
 type CommentToBoard {
@@ -279,6 +281,49 @@ input UpdateBoardInput {
   description: String
   accessLevel: AccessLevelType
   userId: UUID!
+}
+
+type Pin @key(fields: "id") {
+  id: UUID!
+  name: String!
+  owner: User!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  description: String
+  rating: Float!
+  createdAt: Time!
+
+  place: Place
+  images: [PinImage!]
+
+  reactionId: UUID
+  bookmarked: Boolean
+}
+
+type PinImage {
+  id: UUID!
+  orderNumber: Int!
+  imageUrl: String!
+}
+
+type CommentToPin {
+  id: UUID!
+  pinId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+
+type Place {
+  id: UUID!
+  gis_id: UUID
+  name: String!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  purpose_name: String
+  type: String
 }
 
 input CreatePinInput {
@@ -331,14 +376,14 @@ type Reaction {
 }
 
 ##### Реализованные методы
-  board(id: UUID!): Board
-  boardByName(name: String!, limit: Int = 10, offset: Int = 0): [Board!]
-  boardsByGroup(groupId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]
+  board(id: UUID!, viewerId: UUID): Board
+  boardByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
+  boardsByGroup(groupId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
 
-  pin(id: UUID!): Pin
-  pinsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]
-  pinsByName(name: String!, limit: Int = 10, offset: Int = 0): [Pin!]
-  pinsByLocation(query: String!, limit: Int = 10, offset: Int = 0): [Pin!]
+  pin(id: UUID!, viewerId: UUID): Pin
+  pinsByUser(userId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByLocation(query: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
 
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
@@ -387,11 +432,10 @@ type Reaction {
   reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
   reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 
+  bookmarkToPin(pinId: UUID!, userId: UUID!): Boolean!
+  bookmarkToBoard(boardId: UUID!, userId: UUID!): Boolean!
+
 ##### Необходимо реализовать:
-- boardToBookmarks(boardId: UUID!, userId: UUID!): Boolean!
-- pinToBookmarks(pinId: UUID!, userId: UUID!): Boolean!
-- removeBoardFromBookmarks(boardId: UUID!, userId: UUID!): Boolean!
-- removePinFromBookmarks(pinId: UUID!, userId: UUID!): Boolean!
 - copyPin(pinId: UUID!, userId: UUID!, boardId: UUID!): Pin! (возвращаем id нового пина, возможно хватит возвращать UUID!)
 - copyBoard(boardId: UUID!, userId: UUID!): Board! (возвращаем id новой доски, возможно хватит возвращать UUID!)
 - complaintStatuses(): [complaintStatuses!]!
