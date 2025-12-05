@@ -53,74 +53,56 @@ func (r *ReactionRepository) ToggleReactionToPin(ctx context.Context, pinID, rea
 	if tx.Error != nil {
 		return false, tx.Error
 	}
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existingLink models.ReactionPin
 
-	var existingLink models.ReactionPin
-	err := tx.Where("pin_id = ? AND reaction_id = ? AND owner_id = ?", pinID, reactionID, userID).
-		First(&existingLink).Error
+		err := tx.Where("pin_id = ? AND reaction_id = ? AND owner_id = ?", pinID, reactionID, userID).
+			First(&existingLink).Error
 
-	if err != nil { // no records, create new one -> true on success
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			tx.Rollback()
-			return false, err
+		if err != nil { // no records, create new one -> true on success
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				newLink := models.ReactionPin{
+					PinID:      pinID,
+					ReactionID: reactionID,
+					OwnerID:    userID,
+				}
+				return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&newLink).Error
+			}
+			return err
 		}
 
-		newLink := models.ReactionPin{
-			PinID:      pinID,
-			ReactionID: reactionID,
-			OwnerID:    userID,
-		}
+		return tx.Delete(&existingLink).Error
+	})
 
-		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&newLink).Error; err != nil {
-			tx.Rollback()
-			return false, err
-		}
-	} else {
-		if err := tx.Delete(&existingLink).Error; err != nil {
-			tx.Rollback()
-			return false, err
-		}
-	}
-
-	if err := tx.Commit().Error; err != nil {
+	if err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
 func (r *ReactionRepository) ToggleReactionToBoard(ctx context.Context, boardID, reactionID, userID uuid.UUID) (bool, error) {
-	tx := r.db.WithContext(ctx).Begin()
-	if tx.Error != nil {
-		return false, tx.Error
-	}
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existingLink models.ReactionBoard
 
-	var existingLink models.ReactionBoard
-	err := tx.Where("board_id = ? AND reaction_id = ? AND owner_id = ?", boardID, reactionID, userID).
-		First(&existingLink).Error
+		err := tx.Where("board_id = ? AND reaction_id = ? AND owner_id = ?", boardID, reactionID, userID).
+			First(&existingLink).Error
 
-	if err != nil { // no records, create new one -> true on success
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			tx.Rollback()
-			return false, err
+		if err != nil { // no records, create new one -> true on success
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				newLink := models.ReactionBoard{
+					BoardID:    boardID,
+					ReactionID: reactionID,
+					OwnerID:    userID,
+				}
+				return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&newLink).Error
+			}
+			return err
 		}
 
-		newLink := models.ReactionBoard{
-			BoardID:    boardID,
-			ReactionID: reactionID,
-			OwnerID:    userID,
-		}
+		return tx.Delete(&existingLink).Error
+	})
 
-		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&newLink).Error; err != nil {
-			tx.Rollback()
-			return false, err
-		}
-	} else {
-		if err := tx.Delete(&existingLink).Error; err != nil {
-			tx.Rollback()
-			return false, err
-		}
-	}
-
-	if err := tx.Commit().Error; err != nil {
+	if err != nil {
 		return false, err
 	}
 	return true, nil
