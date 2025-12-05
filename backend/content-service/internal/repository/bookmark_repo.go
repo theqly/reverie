@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type BookmarkRepository struct {
@@ -29,7 +30,7 @@ func (r *BookmarkRepository) ToggleBookmarkToPin(ctx context.Context, pinID uuid
 					PinID:  pinID,
 					UserID: userID,
 				}
-				return tx.Create(&newBookmark).Error
+				return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&newBookmark).Error
 			}
 			return err
 		}
@@ -56,7 +57,7 @@ func (r *BookmarkRepository) ToggleBookmarkToBoard(ctx context.Context, boardID 
 					BoardID: boardID,
 					UserID:  userID,
 				}
-				return tx.Create(&newBookmark).Error
+				return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&newBookmark).Error
 			}
 			return err
 		}
