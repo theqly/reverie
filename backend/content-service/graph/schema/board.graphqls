@@ -19,6 +19,9 @@ type Board {
   ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
+
+  reactionId: UUID
+  bookmarked: Boolean
 }
 
 type CommentToBoard {

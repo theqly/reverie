@@ -70,6 +70,8 @@ func ToGraphQLBoard(b *models.Board) *model.Board {
 		OwnerType:   model.OwnerType(b.OwnerType),
 		CreatedAt:   b.CreatedAt,
 		Pins:        toGraphQlSlicePin(b.Pins),
+		ReactionID:  b.ReactionID,
+		Bookmarked:  b.Bookmarked,
 	}
 }
 
@@ -115,6 +117,8 @@ func ToGraphQLPin(p *models.Pin) *model.Pin {
 		CreatedAt:   p.CreatedAt,
 		Images:      toGraphQLImages(p.Images),
 		// TODO: Comments, Place
+		ReactionID: p.ReactionID,
+		Bookmarked: p.Bookmarked,
 	}
 }
 

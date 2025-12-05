@@ -14,7 +14,7 @@ import (
 
 // FindPinByID is the resolver for the findPinByID field.
 func (r *entityResolver) FindPinByID(ctx context.Context, id uuid.UUID) (*model.Pin, error) {
-	return r.Query().Pin(ctx, id)
+	return r.Query().Pin(ctx, id, nil)
 }
 
 // Entity returns generated.EntityResolver implementation.
