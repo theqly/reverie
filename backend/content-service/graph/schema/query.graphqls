@@ -1,12 +1,12 @@
 type Query {
-  board(id: UUID!): Board
-  boardByName(name: String!): [Board!]
-  boardsByGroup(groupId: UUID!): [Board!]
+  board(id: UUID!, viewerId: UUID): Board
+  boardByName(name: String!, viewerId: UUID): [Board!]
+  boardsByGroup(groupId: UUID!, viewerId: UUID): [Board!]
 
-  pin(id: UUID!): Pin
-  pinsByUser(userId: UUID!): [Pin!]
-  pinsByName(name: String!): [Pin!]
-  pinsByLocation(query: String!): [Pin!]
+  pin(id: UUID!, viewerId: UUID): Pin
+  pinsByUser(userId: UUID!, viewerId: UUID): [Pin!]
+  pinsByName(name: String!, viewerId: UUID): [Pin!]
+  pinsByLocation(query: String!, viewerId: UUID): [Pin!]
 
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
@@ -24,4 +24,3 @@ type Query {
   countAllReactionsToPin(pinId: UUID!): Int!
   countAllReactionsToBoard(boardId: UUID!): Int!
 }
-

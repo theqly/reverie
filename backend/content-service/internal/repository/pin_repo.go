@@ -22,45 +22,63 @@ func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 	return r.db.WithContext(ctx).Create(&pin).Error
 }
 
-func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Pin, error) {
+func (r *PinRepository) withViewerData(tx *gorm.DB, viewerID *uuid.UUID) *gorm.DB {
+	if viewerID == nil {
+		return tx
+	}
+
+	tx = tx.Select("pins.*, rp.reaction_id, (bp.pin_id IS NOT NULL) as bookmarked")
+	tx = tx.Joins("LEFT JOIN reaction_pins rp ON rp.pin_id = pins.id AND rp.owner_id = ?", viewerID)
+	tx = tx.Joins("LEFT JOIN bookmarks_pins bp ON bp.pin_id = pins.id AND bp.user_id = ?", viewerID)
+
+	return tx
+}
+
+func (r *PinRepository) GetByID(ctx context.Context, id uuid.UUID, viewerID *uuid.UUID) (models.Pin, error) {
 	var pin models.Pin
 
 	tx := r.db.WithContext(ctx)
 
+	tx = r.withViewerData(tx, viewerID)
+
 	requestedFields := utils.DoesItNeedFields(ctx, "images")
 	if requestedFields != nil && requestedFields["images"] {
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.First(&pin, "id = ?", id).Error
+	err := tx.First(&pin, "pins.id = ?", id).Error
 	return pin, err
 }
 
-func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID) ([]models.Pin, error) {
+func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, viewerID *uuid.UUID) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
+
+	tx = r.withViewerData(tx, viewerID)
 
 	requestedFields := utils.DoesItNeedFields(ctx, "images")
 	if requestedFields != nil && requestedFields["images"] {
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "owner_id = ?", userID).Error
+	err := tx.Find(&pins, "pins.owner_id = ?", userID).Error
 	return pins, err
 }
 
-func (r *PinRepository) GetByName(ctx context.Context, name string) ([]models.Pin, error) {
+func (r *PinRepository) GetByName(ctx context.Context, name string, viewerID *uuid.UUID) ([]models.Pin, error) {
 	var pins []models.Pin
 
 	tx := r.db.WithContext(ctx)
+
+	tx = r.withViewerData(tx, viewerID)
 
 	requestedFields := utils.DoesItNeedFields(ctx, "images")
 	if requestedFields != nil && requestedFields["images"] {
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Find(&pins, "name = ?", name).Error
+	err := tx.Find(&pins, "pins.name = ?", name).Error
 	return pins, err
 }
 

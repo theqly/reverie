@@ -24,12 +24,12 @@ type Board struct {
 	OwnerTypeID   int       `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 
-	// Опциональные поля, которые будут инициализировать только в том случае, если при graphQL запросе были указаны явно
 	Pins []*Pin `gorm:"many2many:board_pins;"`
 
-	// `gorm:"->"` означает, что эти поля для чтения
-	AccessLevel string `gorm:"->"`
-	OwnerType   string `gorm:"->"`
+	AccessLevel string     `gorm:"->"`
+	OwnerType   string     `gorm:"->"`
+	ReactionID  *uuid.UUID `gorm:"->"`
+	Bookmarked  *bool      `gorm:"->"`
 }
 
 func (Board) TableName() string {

@@ -17,11 +17,11 @@ import (
 )
 
 // Board is the resolver for the board field.
-func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, error) {
+func (r *queryResolver) Board(ctx context.Context, id uuid.UUID, viewerID *uuid.UUID) (*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "Board"), zap.String("boardID", id.String()))
 	logger.Info("Fetching board")
 
-	board, err := r.BoardRepo.GetByID(ctx, id)
+	board, err := r.BoardRepo.GetByID(ctx, id, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch board", zap.Error(err))
 		return nil, err
@@ -32,11 +32,11 @@ func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, 
 }
 
 // BoardByName is the resolver for the boardByName field.
-func (r *queryResolver) BoardByName(ctx context.Context, name string) ([]*model.Board, error) {
+func (r *queryResolver) BoardByName(ctx context.Context, name string, viewerID *uuid.UUID) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "BoardByName"), zap.String("name", name))
 	logger.Info("Fetching boards by name")
 
-	boards, err := r.BoardRepo.GetByName(ctx, name)
+	boards, err := r.BoardRepo.GetByName(ctx, name, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch boards", zap.Error(err))
 		return nil, err
@@ -52,11 +52,11 @@ func (r *queryResolver) BoardByName(ctx context.Context, name string) ([]*model.
 }
 
 // BoardsByGroup is the resolver for the boardsByGroup field.
-func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID) ([]*model.Board, error) {
+func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID, viewerID *uuid.UUID) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "BoardsByGroup"), zap.String("groupID", groupID.String()))
 	logger.Info("Fetching boards by group")
 
-	boards, err := r.BoardRepo.GetByGroup(ctx, groupID)
+	boards, err := r.BoardRepo.GetByGroup(ctx, groupID, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch boards", zap.Error(err))
 		return nil, err
@@ -72,11 +72,11 @@ func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID) ([
 }
 
 // Pin is the resolver for the pin field.
-func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID) (*model.Pin, error) {
+func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID, viewerID *uuid.UUID) (*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "Pin"), zap.String("pinID", id.String()))
 	logger.Info("Fetching pin")
 
-	pin, err := r.PinRepo.GetByID(ctx, id)
+	pin, err := r.PinRepo.GetByID(ctx, id, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch pin", zap.Error(err))
 		return nil, err
@@ -87,11 +87,11 @@ func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID) (*model.Pin, erro
 }
 
 // PinsByUser is the resolver for the pinsByUser field.
-func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID, viewerID *uuid.UUID) ([]*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "PinsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching pins by user")
 
-	pins, err := r.PinRepo.GetByUser(ctx, userID)
+	pins, err := r.PinRepo.GetByUser(ctx, userID, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch pins", zap.Error(err))
 		return nil, err
@@ -107,11 +107,11 @@ func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID) ([]*mo
 }
 
 // PinsByName is the resolver for the pinsByName field.
-func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByName(ctx context.Context, name string, viewerID *uuid.UUID) ([]*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "PinsByName"), zap.String("name", name))
 	logger.Info("Fetching pins by name")
 
-	pins, err := r.PinRepo.GetByName(ctx, name)
+	pins, err := r.PinRepo.GetByName(ctx, name, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch pins", zap.Error(err))
 		return nil, err
@@ -127,7 +127,7 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.P
 }
 
 // PinsByLocation is the resolver for the pinsByLocation field.
-func (r *queryResolver) PinsByLocation(ctx context.Context, query string) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByLocation(ctx context.Context, query string, viewerID *uuid.UUID) ([]*model.Pin, error) {
 	panic(fmt.Errorf("not implemented: PinsByLocation - pinsByLocation"))
 }
 
