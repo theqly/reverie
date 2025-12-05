@@ -39,6 +39,8 @@ type Board struct {
 	OwnerType   OwnerType       `json:"ownerType"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	Pins        []*Pin          `json:"pins,omitempty"`
+	ReactionID  *uuid.UUID      `json:"reactionId,omitempty"`
+	Bookmarked  *bool           `json:"bookmarked,omitempty"`
 }
 
 type CommentToBoard struct {
@@ -97,6 +99,8 @@ type Pin struct {
 	CreatedAt   time.Time   `json:"createdAt"`
 	Place       *Place      `json:"place,omitempty"`
 	Images      []*PinImage `json:"images,omitempty"`
+	ReactionID  *uuid.UUID  `json:"reactionId,omitempty"`
+	Bookmarked  *bool       `json:"bookmarked,omitempty"`
 }
 
 func (Pin) IsEntity() {}

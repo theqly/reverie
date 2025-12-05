@@ -51,7 +51,7 @@ func (r *mutationResolver) UpdateBoard(ctx context.Context, id uuid.UUID, input 
 		return nil, err
 	}
 
-	*board, err = r.BoardRepo.GetByID(ctx, id)
+	*board, err = r.BoardRepo.GetByID(ctx, id, nil)
 	if err != nil {
 		logger.Error("Failed to fetch updated board", zap.Error(err))
 		return nil, err
@@ -86,7 +86,7 @@ func (r *mutationResolver) UpdatePin(ctx context.Context, id uuid.UUID, input mo
 
 	pin := mapper.UpdateToDomainPin(&input)
 
-	prevPin, err := r.PinRepo.GetByID(ctx, id)
+	prevPin, err := r.PinRepo.GetByID(ctx, id, nil)
 	if err != nil {
 		logger.Error("Failed to fetch existing pin", zap.Error(err))
 		return nil, err
@@ -102,7 +102,7 @@ func (r *mutationResolver) UpdatePin(ctx context.Context, id uuid.UUID, input mo
 		return nil, err
 	}
 
-	*pin, err = r.PinRepo.GetByID(ctx, id)
+	*pin, err = r.PinRepo.GetByID(ctx, id, nil)
 	if err != nil {
 		logger.Error("Failed to fetch updated pin", zap.Error(err))
 		return nil, err
@@ -297,9 +297,9 @@ func (r *mutationResolver) AddUserToGroup(ctx context.Context, userID uuid.UUID,
 		logger.Error("Failed to check if the user is in the group", zap.Error(err))
 		return false, err
 	}
-	if isMember == true {
+	if isMember {
 		logger.Error("User already in the group")
-		return false, fmt.Errorf("User already in the group")
+		return false, fmt.Errorf("user already in the group")
 	}
 
 	member := &models.Member{
@@ -326,9 +326,9 @@ func (r *mutationResolver) RemoveUserFromGroup(ctx context.Context, userID uuid.
 		logger.Error("Failed to check if the user is in the group", zap.Error(err))
 		return false, err
 	}
-	if isMember == false {
+	if !isMember {
 		logger.Error("User not in group", zap.String("userID", userID.String()), zap.String("groupID", groupID.String()))
-		return false, fmt.Errorf("User not in group")
+		return false, fmt.Errorf("user not in group")
 	}
 
 	member := &models.Member{
@@ -393,6 +393,34 @@ func (r *mutationResolver) ReactionToBoard(ctx context.Context, boardID uuid.UUI
 	res, err := r.ReactionRepo.ToggleReactionToBoard(ctx, boardID, reactionID, userID)
 	if err != nil {
 		logger.Error("Failed to make reaction to board", zap.Error(err))
+		return false, err
+	}
+
+	return res, nil
+}
+
+// BookmarkToPin is the resolver for the bookmarkToPin field.
+func (r *mutationResolver) BookmarkToPin(ctx context.Context, pinID uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "BookmarkToPin"), zap.String("pinID", pinID.String()), zap.String("userID", userID.String()))
+	logger.Info("Making bookmark to pin")
+
+	res, err := r.BookmarkRepo.ToggleBookmarkToPin(ctx, pinID, userID)
+	if err != nil {
+		logger.Error("Failed to make bookmark to pin", zap.Error(err))
+		return false, err
+	}
+
+	return res, nil
+}
+
+// BookmarkToBoard is the resolver for the bookmarkToBoard field.
+func (r *mutationResolver) BookmarkToBoard(ctx context.Context, boardID uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger := zap.L().With(zap.String("resolver", "BookmarkToBoard"), zap.String("boardID", boardID.String()), zap.String("userID", userID.String()))
+	logger.Info("Making bookmark to board")
+
+	res, err := r.BookmarkRepo.ToggleBookmarkToBoard(ctx, boardID, userID)
+	if err != nil {
+		logger.Error("Failed to make bookmark to board", zap.Error(err))
 		return false, err
 	}
 

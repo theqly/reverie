@@ -63,10 +63,14 @@ func main() {
 
 	boardRepo := repository.NewBoardRepository(database.DB)
 	pinRepo := repository.NewPinRepository(database.DB)
+	reactionRepo := repository.NewReactionRepository(database.DB)
+	bookmarkRepo := repository.NewBookmarkRepository(database.DB)
 
 	resolver := &resolver.Resolver{
-		BoardRepo: boardRepo,
-		PinRepo:   pinRepo,
+		BoardRepo:    boardRepo,
+		PinRepo:      pinRepo,
+		ReactionRepo: reactionRepo,
+		BookmarkRepo: bookmarkRepo,
 	}
 	// srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 

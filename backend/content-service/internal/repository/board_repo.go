@@ -22,14 +22,28 @@ func (r *BoardRepository) Create(ctx context.Context, board models.Board) error 
 	return r.db.WithContext(ctx).Create(&board).Error
 }
 
-func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Board, error) {
-	var board models.Board
+func (r *BoardRepository) baseBoardQuery(ctx context.Context, viewerID *uuid.UUID) *gorm.DB {
+	selectQuery := "boards.*, al.type AS access_level, ot.type AS owner_type"
 
 	tx := r.db.WithContext(ctx).
 		Model(&models.Board{}).
-		Select("boards.*, al.type as access_level, ot.type as owner_type").
-		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
-		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id")
+		Joins("LEFT JOIN access_levels AS al ON al.id = boards.access_level_id").
+		Joins("LEFT JOIN owner_types AS ot ON ot.id = boards.owner_type_id")
+
+	if viewerID != nil {
+		selectQuery += ", rb.reaction_id, (bb.board_id IS NOT NULL) as bookmarked"
+
+		tx = tx.Joins("LEFT JOIN reaction_boards AS ON rb.board_id = boards.id AND rb.owner_id = ?", viewerID)
+		tx = tx.Joins("LEFT JOIN bookmarks_boards AS ON bb.board_id = boards.id AND bb.user_id = ?", viewerID)
+	}
+
+	return tx.Select(selectQuery)
+}
+
+func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID, viewerID *uuid.UUID) (models.Board, error) {
+	var board models.Board
+
+	tx := r.baseBoardQuery(ctx, viewerID)
 
 	requestedFields := utils.DoesItNeedFields(ctx, "pins")
 	if requestedFields != nil && requestedFields["pins"] {
@@ -40,33 +54,24 @@ func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Boa
 	return board, err
 }
 
-func (r *BoardRepository) GetByName(ctx context.Context, name string, limit int, offset int) ([]models.Board, error) {
+func (r *BoardRepository) GetByName(ctx context.Context, name string, viewerID *uuid.UUID, limit int, offset int) ([]models.Board, error) {
 	var boards []models.Board
 
-	tx := r.db.WithContext(ctx).
-		Model(&models.Board{}).
-		Select("boards.*, al.type as access_level, ot.type as owner_type").
-		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
-		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
-		Order("boards.id DESC").
-		Limit(limit).
-		Offset(offset)
+	tx := r.baseBoardQuery(ctx, viewerID).Order("boards.id DESC").Limit(limit).Offset(offset)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "pins")
+	if requestedFields != nil && requestedFields["pins"] {
+		tx = tx.Preload("Pins")
+	}
 
 	err := tx.Where("boards.name = ?", name).Find(&boards).Error
 	return boards, err
 }
 
-func (r *BoardRepository) GetByGroup(ctx context.Context, groupID uuid.UUID, limit int, offset int) ([]models.Board, error) {
+func (r *BoardRepository) GetByGroup(ctx context.Context, groupID uuid.UUID, viewerID *uuid.UUID, limit int, offset int) ([]models.Board, error) {
 	var boards []models.Board
 
-	tx := r.db.WithContext(ctx).
-		Model(&models.Board{}).
-		Select("boards.*, al.type as access_level, ot.type as owner_type").
-		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
-		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
-		Order("boards.id DESC").
-		Limit(limit).
-		Offset(offset)
+	tx := r.baseBoardQuery(ctx, viewerID).Order("boards.id DESC").Limit(limit).Offset(offset)
 
 	subQuery := r.db.Model(&models.OwnerType{}).Select("id").Where("type = ?", "group") // ??? пока что подзапросом
 
@@ -93,7 +98,7 @@ func (r *BoardRepository) AddPinToBoard(ctx context.Context, pinID uuid.UUID, bo
 		return nil, err
 	}
 
-	board, err := r.GetByID(ctx, boardID)
+	board, err := r.GetByID(ctx, boardID, nil)
 
 	return &board, err
 }
@@ -107,7 +112,7 @@ func (r *BoardRepository) RemovePinFromBoard(ctx context.Context, pinID uuid.UUI
 		return nil, err
 	}
 
-	board, err := r.GetByID(ctx, boardID)
+	board, err := r.GetByID(ctx, boardID, nil)
 
 	return &board, err
 }
