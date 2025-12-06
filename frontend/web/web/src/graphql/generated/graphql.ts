@@ -562,6 +562,34 @@ export type GetPinBasicByIdQueryVariables = Exact<{
 
 export type GetPinBasicByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
 
+export type GetUserByNickTagQueryVariables = Exact<{
+  nickname: Scalars['String']['input'];
+}>;
+
+
+export type GetUserByNickTagQuery = { __typename?: 'Query', userByNickname?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } | null };
+
+export type GetUserByIdQueryVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+}>;
+
+
+export type GetUserByIdQuery = { __typename?: 'Query', userById?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } | null };
+
+export type GetUserIdByNickTagQueryVariables = Exact<{
+  nickname: Scalars['String']['input'];
+}>;
+
+
+export type GetUserIdByNickTagQuery = { __typename?: 'Query', userByNickname?: { __typename?: 'User', id: any } | null };
+
+export type GetFollowersByIdQueryVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+}>;
+
+
+export type GetFollowersByIdQuery = { __typename?: 'Query', followersOf: Array<{ __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> }> };
+
 export type CreateGroupMutationVariables = Exact<{
   input: CreateGroupInput;
 }>;
@@ -717,6 +745,211 @@ export type GetPinBasicByIdQueryHookResult = ReturnType<typeof useGetPinBasicByI
 export type GetPinBasicByIdLazyQueryHookResult = ReturnType<typeof useGetPinBasicByIdLazyQuery>;
 export type GetPinBasicByIdSuspenseQueryHookResult = ReturnType<typeof useGetPinBasicByIdSuspenseQuery>;
 export type GetPinBasicByIdQueryResult = Apollo.QueryResult<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>;
+export const GetUserByNickTagDocument = gql`
+    query GetUserByNickTag($nickname: String!) {
+  userByNickname(nickname: $nickname) {
+    id
+    nickname
+    email
+    nickTag
+    profilePicture
+    description
+    status
+    userRating
+    followers {
+      id
+      nickname
+    }
+    following {
+      id
+      nickname
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetUserByNickTagQuery__
+ *
+ * To run a query within a React component, call `useGetUserByNickTagQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUserByNickTagQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUserByNickTagQuery({
+ *   variables: {
+ *      nickname: // value for 'nickname'
+ *   },
+ * });
+ */
+export function useGetUserByNickTagQuery(baseOptions: Apollo.QueryHookOptions<GetUserByNickTagQuery, GetUserByNickTagQueryVariables> & ({ variables: GetUserByNickTagQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUserByNickTagQuery, GetUserByNickTagQueryVariables>(GetUserByNickTagDocument, options);
+      }
+export function useGetUserByNickTagLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUserByNickTagQuery, GetUserByNickTagQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUserByNickTagQuery, GetUserByNickTagQueryVariables>(GetUserByNickTagDocument, options);
+        }
+export function useGetUserByNickTagSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetUserByNickTagQuery, GetUserByNickTagQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetUserByNickTagQuery, GetUserByNickTagQueryVariables>(GetUserByNickTagDocument, options);
+        }
+export type GetUserByNickTagQueryHookResult = ReturnType<typeof useGetUserByNickTagQuery>;
+export type GetUserByNickTagLazyQueryHookResult = ReturnType<typeof useGetUserByNickTagLazyQuery>;
+export type GetUserByNickTagSuspenseQueryHookResult = ReturnType<typeof useGetUserByNickTagSuspenseQuery>;
+export type GetUserByNickTagQueryResult = Apollo.QueryResult<GetUserByNickTagQuery, GetUserByNickTagQueryVariables>;
+export const GetUserByIdDocument = gql`
+    query GetUserById($userId: UUID!) {
+  userById(userId: $userId) {
+    id
+    nickname
+    email
+    nickTag
+    profilePicture
+    description
+    status
+    userRating
+    followers {
+      id
+      nickname
+    }
+    following {
+      id
+      nickname
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetUserByIdQuery__
+ *
+ * To run a query within a React component, call `useGetUserByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUserByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUserByIdQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useGetUserByIdQuery(baseOptions: Apollo.QueryHookOptions<GetUserByIdQuery, GetUserByIdQueryVariables> & ({ variables: GetUserByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUserByIdQuery, GetUserByIdQueryVariables>(GetUserByIdDocument, options);
+      }
+export function useGetUserByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUserByIdQuery, GetUserByIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUserByIdQuery, GetUserByIdQueryVariables>(GetUserByIdDocument, options);
+        }
+export function useGetUserByIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetUserByIdQuery, GetUserByIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetUserByIdQuery, GetUserByIdQueryVariables>(GetUserByIdDocument, options);
+        }
+export type GetUserByIdQueryHookResult = ReturnType<typeof useGetUserByIdQuery>;
+export type GetUserByIdLazyQueryHookResult = ReturnType<typeof useGetUserByIdLazyQuery>;
+export type GetUserByIdSuspenseQueryHookResult = ReturnType<typeof useGetUserByIdSuspenseQuery>;
+export type GetUserByIdQueryResult = Apollo.QueryResult<GetUserByIdQuery, GetUserByIdQueryVariables>;
+export const GetUserIdByNickTagDocument = gql`
+    query GetUserIdByNickTag($nickname: String!) {
+  userByNickname(nickname: $nickname) {
+    id
+  }
+}
+    `;
+
+/**
+ * __useGetUserIdByNickTagQuery__
+ *
+ * To run a query within a React component, call `useGetUserIdByNickTagQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUserIdByNickTagQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUserIdByNickTagQuery({
+ *   variables: {
+ *      nickname: // value for 'nickname'
+ *   },
+ * });
+ */
+export function useGetUserIdByNickTagQuery(baseOptions: Apollo.QueryHookOptions<GetUserIdByNickTagQuery, GetUserIdByNickTagQueryVariables> & ({ variables: GetUserIdByNickTagQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUserIdByNickTagQuery, GetUserIdByNickTagQueryVariables>(GetUserIdByNickTagDocument, options);
+      }
+export function useGetUserIdByNickTagLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUserIdByNickTagQuery, GetUserIdByNickTagQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUserIdByNickTagQuery, GetUserIdByNickTagQueryVariables>(GetUserIdByNickTagDocument, options);
+        }
+export function useGetUserIdByNickTagSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetUserIdByNickTagQuery, GetUserIdByNickTagQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetUserIdByNickTagQuery, GetUserIdByNickTagQueryVariables>(GetUserIdByNickTagDocument, options);
+        }
+export type GetUserIdByNickTagQueryHookResult = ReturnType<typeof useGetUserIdByNickTagQuery>;
+export type GetUserIdByNickTagLazyQueryHookResult = ReturnType<typeof useGetUserIdByNickTagLazyQuery>;
+export type GetUserIdByNickTagSuspenseQueryHookResult = ReturnType<typeof useGetUserIdByNickTagSuspenseQuery>;
+export type GetUserIdByNickTagQueryResult = Apollo.QueryResult<GetUserIdByNickTagQuery, GetUserIdByNickTagQueryVariables>;
+export const GetFollowersByIdDocument = gql`
+    query GetFollowersById($userId: UUID!) {
+  followersOf(userId: $userId) {
+    id
+    nickname
+    email
+    nickTag
+    profilePicture
+    description
+    status
+    userRating
+    followers {
+      id
+      nickname
+    }
+    following {
+      id
+      nickname
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetFollowersByIdQuery__
+ *
+ * To run a query within a React component, call `useGetFollowersByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFollowersByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFollowersByIdQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useGetFollowersByIdQuery(baseOptions: Apollo.QueryHookOptions<GetFollowersByIdQuery, GetFollowersByIdQueryVariables> & ({ variables: GetFollowersByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetFollowersByIdQuery, GetFollowersByIdQueryVariables>(GetFollowersByIdDocument, options);
+      }
+export function useGetFollowersByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFollowersByIdQuery, GetFollowersByIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetFollowersByIdQuery, GetFollowersByIdQueryVariables>(GetFollowersByIdDocument, options);
+        }
+export function useGetFollowersByIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetFollowersByIdQuery, GetFollowersByIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetFollowersByIdQuery, GetFollowersByIdQueryVariables>(GetFollowersByIdDocument, options);
+        }
+export type GetFollowersByIdQueryHookResult = ReturnType<typeof useGetFollowersByIdQuery>;
+export type GetFollowersByIdLazyQueryHookResult = ReturnType<typeof useGetFollowersByIdLazyQuery>;
+export type GetFollowersByIdSuspenseQueryHookResult = ReturnType<typeof useGetFollowersByIdSuspenseQuery>;
+export type GetFollowersByIdQueryResult = Apollo.QueryResult<GetFollowersByIdQuery, GetFollowersByIdQueryVariables>;
 export const CreateGroupDocument = gql`
     mutation CreateGroup($input: CreateGroupInput!) {
   createGroup(input: $input) {

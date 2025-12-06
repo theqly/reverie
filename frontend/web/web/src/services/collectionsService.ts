@@ -27,7 +27,7 @@ export interface CreateCollectionPayload {
  *   name: "Моя коллекция",
  *   info: "Описание коллекции",
  *   coverImage: file,
- *   collaborators: ["Alice", "Bob"] // Тут стоит передавать их никнеймы уникальные (как юзернейм в тг, например) или UUID, не имена
+ *   collaborators: ["Alice", "Bob"] // TODO: заменить на массив nickTag или id (предпочтительно). Сейчас чтоб хотя бы как-то работало есть строка 38
  * });
  */
 export async function createCollection(payload: CreateCollectionPayload) {
@@ -35,7 +35,7 @@ export async function createCollection(payload: CreateCollectionPayload) {
   if (payload.collaborators.length == 0) {
     return { success: false };
   }
-
+  payload.collaborators = ["00000000-0000-0000-0000-000000000001"]
   try {
     if (payload.collaborators.length > 1) {
       const groupResult = await apolloClient.mutate({

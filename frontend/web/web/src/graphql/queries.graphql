@@ -15,6 +15,75 @@ query GetPinBasicById($id: UUID!) {
   }
 }
 
+query GetUserByNickTag($nickname: String!) {
+  userByNickname(nickname: $nickname) {
+    id
+    nickname
+    email
+    nickTag
+    profilePicture
+    description
+    status
+    userRating
+    followers {
+      id
+      nickname
+    }
+    following {
+      id
+      nickname
+    }
+  }
+}
+
+query GetUserById($userId: UUID!) {
+  userById(userId: $userId) {
+    id
+    nickname
+    email
+    nickTag
+    profilePicture
+    description
+    status
+    userRating
+    followers {
+      id
+      nickname
+    }
+    following {
+      id
+      nickname
+    }
+  }
+}
+
+query GetUserIdByNickTag($nickname: String!) {
+  userByNickname(nickname: $nickname) {
+    id
+  }
+}
+
+query GetFollowersById($userId: UUID!) {
+  followersOf(userId: $userId)  {
+    id
+    nickname
+    email
+    nickTag
+    profilePicture
+    description
+    status
+    userRating
+    followers {
+      id
+      nickname
+    }
+    following {
+      id
+      nickname
+    }
+  }
+}
+
 mutation CreateGroup($input: CreateGroupInput!){
   createGroup(input: $input) {
     id
@@ -147,3 +216,39 @@ mutation AddImageToPin($input: AddImageInput!) {
 mutation RemoveImageFromPin($imageId: UUID!) {
   removeImageFromPin(imageId: $imageId)
 }
+
+#query GetBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+#  ownBoardsByUser(userId: $userId, limit: $limit, offset: $offset) {
+#    id
+#    name
+#    accessLevel
+#    ownerId
+#    ownerType
+#    createdAt
+#    pins
+#  }
+#}
+
+#query GetPinsByUserId($userId: UUID!, $viewerId: UUID, $limit: Int = 10, $offset: Int = 0) {
+#  pinsByUser(userId: $userId, viewerId: $$viewerId, limit: $limit, offset: $offset) {
+#    id
+#    name
+#    owner
+#    address
+#    latitude
+#    longitude
+#    description
+#    rating
+#    createdAt
+#    place
+#    images
+#  }
+#}
+
+#query GetFollowersCountById($userId: UUID!) {
+#  followersCount(userId: $userId)
+#}
+#
+#query GetFollowingCountById($userId: UUID!) {
+#  followingCount(userId: $userId)
+#}
