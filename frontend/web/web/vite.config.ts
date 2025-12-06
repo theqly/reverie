@@ -10,4 +10,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // TODO: убрать, когда 07-12-2025 frontend-main вольют в main, где будет фикс проблемы, для которой сейчас этот костыль
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:14000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  }
 })

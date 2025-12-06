@@ -1,4 +1,6 @@
-const GRAPHQL_URL = 'http://localhost:4000/graphql';
+// const GRAPHQL_URL = 'http://localhost:4000/graphql';
+const GRAPHQL_URL = '/api';   // TODO: убрать, когда 07-12-2025 frontend-main вольют в main, где будет фикс проблемы, для которой сейчас этот костыль
+
 
 import {
   ApolloClient,
