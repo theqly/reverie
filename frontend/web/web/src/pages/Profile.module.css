@@ -140,7 +140,7 @@ ul.follow_options li:last-child {
 .editBtn{
     width: 300px;
     height: 40px;
-    margin: 30px 0 20px 0;
+    margin: 30px 0 0 0;
     background-color: #cbcbcb;
     border:none;
     border-radius: 20px;
@@ -191,4 +191,250 @@ ul.follow_options li:last-child {
     display: flex;
     flex-direction: column;
     align-items: start; /* ← вот это */
+}
+
+.pinsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 16px;
+  margin-top: 16px;
+}
+
+.pinTitle {
+  margin-top: 8px;
+  font-size: 14px;
+  text-align: center;
+}
+.pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* background: #f8f8f8; */
+  padding: 8px 8px 8px 8px;
+  border-radius: 8px;
+}
+
+.pinImage {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  aspect-ratio: 1.3 / 1; 
+  cursor: pointer
+}
+
+.pinImageWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pinImageWrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 90%;
+  background-color: rgba(0, 0, 0, 0); /* по умолчанию прозрачный */
+  border-radius: 16px;
+  transition: background-color 0.2s ease;
+  pointer-events: none; /* чтобы не блокировал клики */
+}
+
+.pinImageWrapper:hover::after {
+  background-color: rgba(0, 0, 0, 0.11); /* лёгкая полупрозрачная тень */
+}
+
+
+/* Нижний центр — название пина */
+.pinTitle {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  max-width: 90%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Верхний правый угол — название локации */
+.pinLocation {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Имя автора под картинкой */
+.pinAuthor {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Нижний центр — название пина, перенос строк вверх */
+.pinTitle {
+  position: absolute;
+  bottom: 8px; /* отступ от низа */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 170px;
+  max-width: 100%;
+  
+  white-space: normal;       /* разрешаем перенос строк */
+  word-break: break-word;    /* переносим длинные слова */
+  text-align: center;
+
+  /* Опционально ограничение по высоте */
+  max-height: 48px;          /* примерно 2-3 строки */
+  overflow: hidden;
+}
+.pinAuthorWrapper {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.pinAuthorAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 5px -5px 0; /* расстояние между аватаркой и никнеймом */
+}
+
+.pinAuthor {
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+/* ========== COLLECTIONS (ПОДБОРКИ) ========== */
+
+.collectionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 22px;
+  margin-top: 20px;
+}
+
+.collectionCard {
+  border-radius: 28px;
+  background-color: #ededed;
+  position: relative;
+}
+
+.img1 {
+  width: 220px;
+  padding: 20px 20px 20px 20px;
+  margin-right: -10px;;
+  border-radius: 38px;
+  aspect-ratio: 1.4 / 1;
+  object-fit: cover; /* это че, как лучше */
+}
+
+.collectionLabelWrapper{
+  display: flex;
+  flex-direction: column;
+  padding: 20px 20px 20px 0;
+}
+
+/* Заголовок — справа, как на макете */
+.collectionTitle {
+  font-size: 19px;
+  font-weight: 400;
+
+  color: #000000;
+  padding: 4px 8px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+  display: inline-block;
+}
+
+/* Кол-во пинов (внизу, маленькое) */
+.collectionPinsCount {
+  font-size: 16px;
+  color: #000000;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-top: auto;
+  cursor: pointer;
+  display: block;
+  max-width: 100px;
+}
+
+/* Локация под карточкой */
+.collectionLocation {
+  margin-top: 10px;
+  font-size: 15px;
+  background: #00000065;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-left: 2px;
+}
+
+.pinAuthorWrapperBoard{
+  margin: -20px 20px 10px 20px;
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+
+}
+
+/* ===== ЛАЙКИ — МАКЕТ ===== */
+
+.likesLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* слева подборки, справа пины */
+  gap: 30px;
+  margin-top: 20px;
+}
+
+/* Левая колонка — подборки (одна колонка) */
+.likesCollections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Правая колонка — сетка пинов */
+.likesPins {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* две колонки */
+  gap: 16px;
+}
+
+.btn_container{
+    margin-left: auto;
+    width: 600px;
+    height: 100px;
+    display: block;
 }
