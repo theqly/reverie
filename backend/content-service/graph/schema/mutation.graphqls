@@ -1,5 +1,6 @@
 input CreateBoardInput {
   name: String!
+  boardImageURL: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
@@ -7,6 +8,7 @@ input CreateBoardInput {
 
 input UpdateBoardInput {
   name: String
+  boardImageURL: String
   accessLevel: AccessLevelType
   userId: UUID!
 }

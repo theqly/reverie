@@ -76,6 +76,7 @@ func ToGraphQLBoard(b *models.Board) *model.Board {
 func CreateToDomainBoard(input *model.CreateBoardInput) *models.Board {
 	return &models.Board{
 		Name:          input.Name,
+		BoardImageURL: input.BoardImageURL,
 		AccessLevelID: accessLevelToID[input.AccessLevel],
 		OwnerID:       input.OwnerID,
 		OwnerTypeID:   ownerTypeToID[input.OwnerType],
@@ -86,6 +87,9 @@ func UpdateToDomainBoard(input *model.UpdateBoardInput) *models.Board {
 	board := models.Board{}
 	if input.Name != nil {
 		board.Name = *input.Name
+	}
+	if input.BoardImageURL != nil {
+		board.BoardImageURL = input.BoardImageURL // *string
 	}
 	if input.AccessLevel != nil {
 		board.AccessLevelID = accessLevelToID[*input.AccessLevel]

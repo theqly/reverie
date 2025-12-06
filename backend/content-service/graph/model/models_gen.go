@@ -33,7 +33,7 @@ type AddImageInput struct {
 type Board struct {
 	ID            uuid.UUID       `json:"id"`
 	Name          string          `json:"name"`
-	BoardImageURL *string         `json:"boardImageUrl "`
+	BoardImageURL *string         `json:"boardImageURL,omitempty"`
 	AccessLevel   AccessLevelType `json:"accessLevel"`
 	OwnerID       uuid.UUID       `json:"ownerId"`
 	OwnerType     OwnerType       `json:"ownerType"`
@@ -58,10 +58,11 @@ type CommentToPin struct {
 }
 
 type CreateBoardInput struct {
-	Name        string          `json:"name"`
-	AccessLevel AccessLevelType `json:"accessLevel"`
-	OwnerID     uuid.UUID       `json:"ownerId"`
-	OwnerType   OwnerType       `json:"ownerType"`
+	Name          string          `json:"name"`
+	BoardImageURL *string         `json:"boardImageURL,omitempty"`
+	AccessLevel   AccessLevelType `json:"accessLevel"`
+	OwnerID       uuid.UUID       `json:"ownerId"`
+	OwnerType     OwnerType       `json:"ownerType"`
 }
 
 type CreateGroupInput struct {
@@ -127,9 +128,10 @@ type Reaction struct {
 }
 
 type UpdateBoardInput struct {
-	Name        *string          `json:"name,omitempty"`
-	AccessLevel *AccessLevelType `json:"accessLevel,omitempty"`
-	UserID      uuid.UUID        `json:"userId"`
+	Name          *string          `json:"name,omitempty"`
+	BoardImageURL *string          `json:"boardImageURL,omitempty"`
+	AccessLevel   *AccessLevelType `json:"accessLevel,omitempty"`
+	UserID        uuid.UUID        `json:"userId"`
 }
 
 type UpdatePinInput struct {

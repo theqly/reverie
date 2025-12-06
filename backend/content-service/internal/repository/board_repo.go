@@ -73,6 +73,7 @@ func (r *BoardRepository) Update(ctx context.Context, id uuid.UUID, updated mode
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"name":            updated.Name,
+			"board_image_url": updated.BoardImageURL,
 			"access_level_id": updated.AccessLevelID,
 		}).Error
 }
@@ -317,5 +318,3 @@ func (r *BoardRepository) CountGroupBoardsByUser(ctx context.Context, userID uui
 	return boardsNumber, nil
 
 }
-
-
