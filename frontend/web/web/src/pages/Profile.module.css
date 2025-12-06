@@ -245,30 +245,14 @@ ul.follow_options li:last-child {
 }
 
 
-/* Нижний центр — название пина */
-.pinTitle {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.3);
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 14px;
-  max-width: 90%;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+
 
 /* Верхний правый угол — название локации */
 .pinLocation {
   position: absolute;
   top: 8px;
   right: 8px;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.5);
   color: #fff;
   padding: 2px 6px;
   border-radius: 4px;
@@ -277,6 +261,16 @@ ul.follow_options li:last-child {
   max-width: 80%;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding-left: 17px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 12px 12px;
+  background-position: left 3px top 2px;
+  
+  background-repeat: no-repeat;
+  border: none;
+
+
 }
 
 /* Имя автора под картинкой */
@@ -295,7 +289,7 @@ ul.follow_options li:last-child {
   bottom: 8px; /* отступ от низа */
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.5);
   color: #fff;
   padding: 4px 6px;
   border-radius: 4px;
@@ -346,9 +340,19 @@ ul.follow_options li:last-child {
 }
 
 .collectionCard {
-  border-radius: 28px;
+  border-radius: 22px;
   background-color: #ededed;
   position: relative;
+  cursor:pointer;
+}
+
+.collectionCard:hover {
+    background-color: #e4e4e4;
+        transition: 0.2s;
+
+    
+
+
 }
 
 .img1 {
@@ -399,6 +403,16 @@ ul.follow_options li:last-child {
   border-radius: 10px;
   color: #ffffff;
   margin-left: 2px;
+  padding-left: 26px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  
+  background-repeat: no-repeat;
+  border: none;
+
+
 }
 
 .pinAuthorWrapperBoard{
@@ -438,3 +452,128 @@ ul.follow_options li:last-child {
     height: 100px;
     display: block;
 }
+
+
+.edit_btn,
+.reportBtn, 
+.settingsBtn,
+.shareBtn
+{
+    height: 30px;
+    width: 100px;
+    border-radius: 10px;
+    background-color: rgb(236, 236, 236);
+    border: none;
+    cursor: pointer;
+}
+
+.edit_btn{
+    margin-left: auto;
+    width: 250px;
+    height: 40px;
+    background-color: #b5b5b5;
+    border:none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.settingsBtn{
+  height: 40px;
+  width: 40px;
+  border-radius: 10px;
+
+  background-image: url('../assets/Settings.svg');
+    background-size: 20px 20px;
+    background-color:   rgb(236, 236, 236);
+
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-left: 10px;
+
+}
+
+.shareBtn{
+  height: 40px;
+  width: 40px;
+  border-radius: 10px;
+
+  background-image: url('../assets/Share.svg');
+    background-size: 20px 20px;
+    background-color:   rgb(236, 236, 236);
+
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-left: 10px;
+
+}
+
+.reportBtn{
+    margin: 37px 0 0 15px;
+    width: 25px;
+    height: 25px;
+    border-radius: 15px;
+    font-size: 15px;
+    font-weight: 700;
+    color: rgb(0, 0, 0);
+    background-color: #ffffff;
+    border: 2px solid black;
+}
+.reportBtn:hover{
+    background-color: #f6f6f6;
+
+}
+
+.followLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  gap: 4px;
+  color:#515151;
+}
+.followLink p{
+  margin: 0;
+  color:#000000;
+}
+
+.followLink:hover { 
+  color:#000000;
+}
+
+
+.newBoardBtn{
+  height: 40px;
+  cursor: pointer;
+  background-color: transparent;
+  width: 200px;
+  text-align: left;
+  padding-left: 40px;
+  font-size: 16px;
+
+  background-image: url('../assets/plus.svg');
+  background-size: 30px 30px;
+  background-position: left center ;
+  
+  background-repeat: no-repeat;
+  border: none;
+  margin-left: 15px;
+}
+
+.newBoardBtn:hover{
+  background-size: 35px 35px;
+  padding-left: 45px;
+}
+
+
+
+

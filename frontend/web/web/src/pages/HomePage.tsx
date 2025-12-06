@@ -14,10 +14,45 @@ const HomePage = () => {
     //   showAuthModal();
     // }
   };
+    const handleEditCollection = () => {
+      // Пока заглушка - всегда авторизован
+      navigate('/collection/edit');
+      
+      // Позже добавишь проверку:
+      // if (isAuthenticated) {
+      //   navigate('/collection/create');
+      // } else {
+      //   showAuthModal();
+      // }
+    };
 
    const handleCreatePin = () => {
     // Пока заглушка - всегда авторизован
     navigate('/pin/create');
+    
+    // Позже добавишь проверку:
+    // if (isAuthenticated) {
+    //   navigate('/collection/create');
+    // } else {
+    //   showAuthModal();
+    // }
+  };
+
+      const handleLogin = () => {
+      // Пока заглушка - всегда авторизован
+      navigate('/login');
+      
+      // Позже добавишь проверку:
+      // if (isAuthenticated) {
+      //   navigate('/collection/create');
+      // } else {
+      //   showAuthModal();
+      // }
+    };
+
+     const handleEditPin = () => {
+    // Пока заглушка - всегда авторизован
+    navigate('/pin/edit');
     
     // Позже добавишь проверку:
     // if (isAuthenticated) {
@@ -44,11 +79,20 @@ const HomePage = () => {
       <button onClick={handleCreateCollection}>
         Создать подборку
       </button>
+      <button onClick={handleEditCollection}>
+        Редактировать подборку
+      </button>
       <button onClick={handleCreatePin}>
         Создать пин
       </button>
+      <button onClick={handleEditPin}>
+        Редактировать пин
+      </button>
       <button onClick={handleProfile}>
         Профиль
+      </button>
+      <button onClick={handleLogin}>
+        Логин
       </button>
     </div>
   );

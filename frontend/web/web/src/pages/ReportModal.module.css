@@ -1,0 +1,125 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  width: 380px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  animation: pop 0.25s ease;
+}
+
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.title {
+  margin-bottom: 18px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* ---------- Шаг 1 (список причин) ---------- */
+
+.reasonList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.reasonItem {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  background: #fafafa;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 15px;
+}
+
+.reasonItem:hover {
+  background: #f2f2f2;
+}
+
+.selected {
+  background: #000;
+  color: white;
+  border-color: #000;
+}
+
+.continueBtn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: #000;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ---------- Шаг 2 (ввод текста) ---------- */
+
+.textarea {
+  width: 93%;
+  height: 120px;
+  padding: 12px;
+  border-radius: 12px;
+  resize: none;
+  font-size: 15px;
+  border: 1px solid #ccc;
+}
+
+.invalid {
+  border-color: #ff5555;
+  background: #ffeaea;
+}
+
+.counter {
+  text-align: right;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #666;
+}
+
+.invalidText {
+  color: #d20000;
+}
+
+.sendBtn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #000;
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ---------- Cancel ---------- */
+
+.closeBtn {
+  margin-top: 14px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+}

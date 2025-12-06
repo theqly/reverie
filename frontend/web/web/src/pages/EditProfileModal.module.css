@@ -1,0 +1,94 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 500;
+}
+
+.modal {
+  background: white;
+  padding: 22px;
+  border-radius: 20px;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.avatarBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatarPreview {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarButton {
+  background: #f0f0f0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.avatarButton:hover {
+  background: #e4e4e4;
+}
+
+.fileInput {
+  display: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field input,
+.field textarea {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.textarea {
+  resize: none;
+  height: 70px;
+}
+
+.counter {
+  font-size: 12px;
+  color: #777;
+  align-self: flex-end;
+  margin-top: -4px;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.saveBtn {
+  background: black;
+  color: white;
+  border-radius: 10px;
+  padding: 8px 16px;
+}
+
+.cancelBtn {
+  background: #ddd;
+  border-radius: 10px;
+  padding: 8px 16px;
+}

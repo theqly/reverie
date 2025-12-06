@@ -12,18 +12,40 @@ import placeholder_7 from '../assets/placeholder7.jpg';
 import placeholder_8 from '../assets/placeholder8.jpg';
 import placeholder_9 from '../assets/placeholder9.jpg';
 import placeholder_10 from '../assets/placeholder10.jpg';
-
-
+import EditProfileModal from './EditProfileModal';
+import SettingsModal from "./SettingsModal";
+import ShareModal from "./ShareModal";
+import ReportModal from "./ReportModal";
+import FollowersModal from "./FollowersModal";
+import FollowingModal from "./FollowingModal";
 
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [isShareOpen, setShareOpen] = useState(false);
+  const [isReportOpen, setReportOpen] = useState(false);
+  const [isFollowersOpen, setFollowersOpen] = useState(false);
+  const [isFollowingOpen, setFollowingOpen] = useState(false);
+
+  const [profileData, setProfileData] = useState({
+    name: "Jane Anderson",
+    bio: "The photographer capturing moments around the world based in Paris",
+    avatar: placeholder_3,
+    nickname: "dsfsd"
+  });
+
+  // Подписка / отписка
+  const [isFollowing, setFollowing] = useState(false);
+  const toggleFollow = () => setFollowing(prev => !prev);
+
   
 
   const [activeTab, setActiveTab] = useState<'collections' | 'pins' | 'likes' | 'bookmarks'>('collections');
 
   const handleBack = () => {
-    navigate('/');
+    window.history.back();
   };
 
   /*
@@ -155,11 +177,29 @@ const Profile = () => {
       location: "Prague, Czechia"
     }
   ];
-  const mixedItems = [
-  ...collections.map(col => ({ type: "collection", data: col })),
-  ...pins.map(pin => ({ type: "pin", data: pin }))
-];
 
+    const handleCreateCollection = () => {
+      // Пока заглушка - всегда авторизован
+      navigate('/collection/create');
+      
+      // Позже добавишь проверку:
+      // if (isAuthenticated) {
+      //   navigate('/collection/create');
+      // } else {
+      //   showAuthModal();
+      // }
+    };
+   const handleCreatePin = () => {
+      // Пока заглушка - всегда авторизован
+      navigate('/pin/create');
+      
+      // Позже добавишь проверку:
+      // if (isAuthenticated) {
+      //   navigate('/collection/create');
+      // } else {
+      //   showAuthModal();
+      // }
+    };
 
 
   return (
@@ -176,39 +216,63 @@ const Profile = () => {
           <div style={{ display: "flex", width: "100%"}}>
 
             <div className={styles.profile}>
-              <div className={styles.avatar}></div>
+              <img src={profileData.avatar} className={styles.avatar} />
 
               <div className={styles.info}>
-                <div className={styles.name}>Jane Anderson</div>
+                <div className={styles.name}>{profileData.name}</div>
                 <ul className={styles.follow_options}>
                   <li>
-                    <a><p>1247 </p>подписчиков</a>
+                    <button className={styles.followLink} onClick={() => setFollowersOpen(true)}>
+                      <p>1247</p> подписчиков
+                    </button>
                   </li>
+
                   <li>
-                    <a><p>450 </p>подписок</a>
+                    <button className={styles.followLink} onClick={() => setFollowingOpen(true)}>
+                      <p>450</p> подписок
+                    </button>
                   </li>
+
                 </ul>
               </div>
             </div>
 
             <div className={styles.btn_container} style={{ display: "flex" }}>
-              <button className={styles.reportBtn}>Редактировать профиль </button>
-              <button className={styles.reportBtn}>Настройки </button>
-              <button className={styles.reportBtn}>Поделиться </button>
+              <button 
+                className={styles.edit_btn}
+                onClick={() => setModalOpen(true)}
+              >
+                Редактировать профиль
+              </button>
+
+              <button 
+                className={styles.settingsBtn}
+                onClick={() => setSettingsOpen(true)}
+              ></button>
+
+              <button 
+                className={styles.shareBtn}
+                onClick={() => setShareOpen(true)}
+              ></button>
+
             </div>
 
 
 
           </div>
 
-          <div className={styles.bio}>
-            The photographer capturing moments around the world based in Paris
-          </div>
+        <div className={styles.bio}>{profileData.bio}</div>
+
 
 
         <div style={{ display: "flex" }}>
-          <button className={styles.editBtn}>Подписаться </button>
-          <button className={styles.reportBtn}>Report </button>
+          <button 
+            className={styles.editBtn}
+            onClick={toggleFollow}
+          >
+            {isFollowing ? "Отписаться" : "Подписаться"}
+          </button>
+          <button className={styles.reportBtn} onClick={() => setReportOpen(true)}>!</button>
         </div>
 
         </section>
@@ -246,71 +310,80 @@ const Profile = () => {
 
         <div className={styles.tabContent}>
           {activeTab === 'collections' && (
-            <div className={styles.collectionsGrid}>
-              {collections.map(col => (
-                <div key={col.id} className={styles.collectionCard}>
-                  <div style={{ display: "flex" }}>
+            <div>
+              
+              <button onClick={handleCreateCollection} className={styles.newBoardBtn}>Создать подборку</button>
+              
+              <div className={styles.collectionsGrid}>
+                {collections.map(col => (
+                  <div key={col.id} className={styles.collectionCard}>
+                    <div style={{ display: "flex" }}>
 
-                  <img src={col.image} alt={col.title} className={styles.img1}/>
+                    <img src={col.image} alt={col.title} className={styles.img1}/>
 
-                  <div className={styles.collectionLabelWrapper}>
-                    <div className={styles.collectionTitle}>{col.title}</div>
-                    <div className={styles.collectionPinsCount}>
-                      {col.pinsCount} pins →
+                    <div className={styles.collectionLabelWrapper}>
+                      <div className={styles.collectionTitle}>{col.title}</div>
+                      <div className={styles.collectionPinsCount}>
+                        {col.pinsCount} pins →
+                      </div>
+                      <div className={styles.collectionLocation}>{col.location}</div>
                     </div>
-                    <div className={styles.collectionLocation}>{col.location}</div>
-                  </div>
-                  </div>
-                  
-                  <div className={styles.pinAuthorWrapperBoard}>
-                    <img
-                      src={placeholder_1} // аватарка автора
-                      alt="Author Avatar"
-                      className={styles.pinAuthorAvatar}
-                    />
-                    <div className={styles.pinAuthor}>
-                      {"jane_anderson"}
                     </div>
+                    
+                    <div className={styles.pinAuthorWrapperBoard}>
+                      <img
+                        src={placeholder_1} // аватарка автора
+                        alt="Author Avatar"
+                        className={styles.pinAuthorAvatar}
+                      />
+                      <div className={styles.pinAuthor}>
+                        {"jane_anderson"}
+                      </div>
+                    </div>
+
+
                   </div>
-
-
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
 
           {activeTab === 'pins' && (
-            <div className={styles.pinsGrid}>
-              {pins.map(pin => (
-                <div key={pin.id} className={styles.pin}>
-                  <div className={styles.pinImageWrapper}>
-                    <img src={pin.image} alt={pin.title} className={styles.pinImage} />
+            <div>
+              <button onClick={handleCreatePin} className={styles.newBoardBtn}>Создать пин</button>
 
-                    {/* Верхний правый угол — локация */}
-                    <div className={styles.pinLocation}>
-                      {pin.location || "Paris"}
+              <div className={styles.pinsGrid}>
+                {pins.map(pin => (
+                  <div key={pin.id} className={styles.pin}>
+                    <div className={styles.pinImageWrapper}>
+                      <img src={pin.image} alt={pin.title} className={styles.pinImage} />
+
+                      {/* Верхний правый угол — локация */}
+                      <div className={styles.pinLocation}>
+                        {pin.location || "Paris"}
+                      </div>
+
+                      {/* Нижний центр — название */}
+                      <div className={styles.pinTitle}>
+                        {pin.title}
+                      </div>
                     </div>
 
-                    {/* Нижний центр — название */}
-                    <div className={styles.pinTitle}>
-                      {pin.title}
+                    {/* Имя автора под картинкой */}
+                    <div className={styles.pinAuthorWrapper}>
+                      <img
+                        src={pin.authorAvatar || placeholder_1} // аватарка автора
+                        alt="Author Avatar"
+                        className={styles.pinAuthorAvatar}
+                      />
+                      <div className={styles.pinAuthor}>
+                        {pin.author || "jane_nderson"}
+                      </div>
                     </div>
                   </div>
-
-                  {/* Имя автора под картинкой */}
-                  <div className={styles.pinAuthorWrapper}>
-                    <img
-                      src={pin.authorAvatar || placeholder_1} // аватарка автора
-                      alt="Author Avatar"
-                      className={styles.pinAuthorAvatar}
-                    />
-                    <div className={styles.pinAuthor}>
-                      {pin.author || "jane_nderson"}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
@@ -378,6 +451,42 @@ const Profile = () => {
 
           {activeTab === 'bookmarks' && <h3>🔖 Ваши закладки</h3>}
         </div>
+        <EditProfileModal
+          isOpen={isModalOpen}
+          onClose={() => setModalOpen(false)}
+          onSave={(data) => setProfileData(data)}
+          initialData={profileData}
+        />
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
+
+        <ShareModal
+          isOpen={isShareOpen}
+          onClose={() => setShareOpen(false)}
+        />
+        <ReportModal
+          isOpen={isReportOpen}
+          onClose={() => setReportOpen(false)}
+          onSubmit={(data) => {
+            console.log("Жалоба отправлена:", data);
+            // Тут можешь отправить на сервер
+          }}
+        />
+        <FollowersModal
+          isOpen={isFollowersOpen}
+          onClose={() => setFollowersOpen(false)}
+        />
+
+        <FollowingModal
+          isOpen={isFollowingOpen}
+          onClose={() => setFollowingOpen(false)}
+        />
+
+
+
+
       </main>
     </div>
   );
