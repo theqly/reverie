@@ -41,7 +41,7 @@ authentication:
   router:
     jwt:
       jwks: 
-        - url: "http://keycloak:8080/realms/TODO/protocol/openid-connect/certs"
+        - url: "http://keycloak:8080/realms/reverie-realm/protocol/openid-connect/certs"
       header_name: Authorization
       header_value_prefix: Bearer
       on_error: Error
