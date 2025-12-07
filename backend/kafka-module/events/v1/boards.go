@@ -12,7 +12,7 @@ type BoardCreated struct {
 	OwnerID     string    `json:"owner_id"`
 	OwnerType   string    `json:"owner_type"`
 	CreatedAt   time.Time `json:"created_at"`
-	BoardIDs    []string  `json:"board_ids,omitempty"`
+	PinIDs      []string  `json:"pin_ids,omitempty"`
 }
 
 type BoardUpdated struct {
