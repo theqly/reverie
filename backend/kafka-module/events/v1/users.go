@@ -7,7 +7,7 @@ type UserCreated struct {
 	UserID      string  `json:"user_id"`
 	Nickname    string  `json:"nickname"`
 	NickTag     string  `json:"nick_tag"`
-	Email       string  `json:"email,omitempty"` // опционально (приватность)
+	Email       string  `json:"email,omitempty"`
 	Description string  `json:"description,omitempty"`
 	UserRating  float64 `json:"user_rating"`
 	Status      string  `json:"status"` // "active" или "deleted"

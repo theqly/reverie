@@ -17,15 +17,15 @@ type PinCreated struct {
 	Address          string    `json:"address,omitempty"`
 	Rating           float64   `json:"rating"`
 	CreatedAt        time.Time `json:"created_at"`
-	AccessLevel      string    `json:"access_level"` // подтягивается из подборки, для которой создается
+	AccessLevel      string    `json:"access_level,omitempty"`
 	PlaceID          string    `json:"place_id"`
-	GisID            string    `json:"gis_id"`
-	PlaceName        string    `json:"place_name"`
-	PlaceLatitude    float64   `json:"place_latitude"`
-	PlaceLongitude   float64   `json:"place_longitude"`
+	GisID            string    `json:"gis_id,omitempty"`
+	PlaceName        string    `json:"place_name,omitempty"`
+	PlaceLatitude    float64   `json:"place_latitude,omitempty"`
+	PlaceLongitude   float64   `json:"place_longitude,omitempty"`
 	PlaceAddress     string    `json:"place_address,omitempty"`
-	PlacePurposeName string    `json:"place_purpose_name"`
-	PlaceType        string    `json:"place_type"`
+	PlacePurposeName string    `json:"place_purpose_name,omitempty"`
+	PlaceType        string    `json:"place_type,omitempty"`
 }
 
 type PinUpdated struct {
