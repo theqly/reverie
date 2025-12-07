@@ -65,7 +65,7 @@ func main() {
 
 	kafkaPublisher := kafka.NewProducer([]string{"localhost:9092"}, nil)
 
-	boardRepo := repository.NewBoardRepository(database.DB)
+	boardRepo := repository.NewBoardRepository(database.DB, kafkaPublisher)
 	pinRepo := repository.NewPinRepository(database.DB, kafkaPublisher)
 	reactionRepo := repository.NewReactionRepository(database.DB)
 	bookmarkRepo := repository.NewBookmarkRepository(database.DB)
