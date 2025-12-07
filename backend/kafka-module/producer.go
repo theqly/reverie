@@ -140,13 +140,13 @@ func (p *Producer) PublishBoardPinsAdded(ctx context.Context, event events.Board
 	})
 }
 
-func (p *Producer) PublishBoardPinsRemoved(ctx context.Context, event events.BoardPinsRemoved) error {
+func (p *Producer) PublishBoardPinsDeleted(ctx context.Context, event events.BoardPinsDeleted) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "board.pins.removed",
+		Topic: "board.pins.deleted",
 		Key:   []byte(event.BoardID),
 		Value: data,
 	})

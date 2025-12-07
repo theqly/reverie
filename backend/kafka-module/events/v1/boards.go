@@ -33,7 +33,7 @@ type BoardPinsAdded struct {
 	PinIDs  []string `json:"pin_ids"`
 }
 
-type BoardPinsRemoved struct {
+type BoardPinsDeleted struct {
 	BaseEvent
 	BoardID string   `json:"board_id"`
 	PinIDs  []string `json:"pin_ids"`
