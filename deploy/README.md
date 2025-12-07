@@ -7,10 +7,7 @@
 2. после этого нужно совместить схемы graphql в одну для каждого сервиса. для этого существует простой файлик unificate.sh в папочке apollo. делаем:
 
 ```
-cd apollo/
-```
-```
-bash unificate.sh
+bash ./apollo/unificate.sh
 ```
 
 3. теперь нужно провернуть некие махинации с загрузкой конфига и схемы для router'а. для этого из папки deploy(или сами пути прописывайте) делаем:
@@ -28,7 +25,7 @@ docker run --rm --name rover \
   -v "$(pwd)/apollo":/etc/apollo:ro \
   -v rover_data:/config \
   rover \
-  /bin/sh -c 'rover supergraph compose --config /etc/apollo/supergraph-config.yaml --output /config/schema.graphql --log=debug && echo "supergraph written" && cp /etc/apollo/router_config.yaml /config/ && echo "router_config written"'
+  /bin/sh -c 'cp -r /etc/apollo/router-config/config/ / && rover supergraph compose --config /etc/apollo/supergraph-config.yaml --output /config/schema.graphql --log=debug && echo "supergraph written" &&  echo "router_config written"'
 
 ```
 

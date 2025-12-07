@@ -244,8 +244,8 @@ services:
     volumes:
       - opensearch_data:/usr/share/opensearch/data
     ports:
-      - "9200:9200"
-      - "9600:9600"
+      - "${OPENSEARCH_HTTP_PORT}:${OPENSEARCH_HTTP_PORT}"
+      - "${OPENSEARCH_PA_PORT}:${OPENSEARCH_PA_PORT}"
     networks:
       - reverie-network
 
@@ -253,9 +253,9 @@ services:
     image: opensearchproject/opensearch-dashboards:3
     container_name: opensearch-dashboards
     environment:
-      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+      - OPENSEARCH_HOSTS=["${OPENSEARCH_HOSTS}"]
     ports:
-      - "5601:5601"
+      - "${OPENSEARCH_DASHBOARD_PORT}:${OPENSEARCH_DASHBOARD_PORT}"
     depends_on:
       - opensearch
     networks:
@@ -270,6 +270,8 @@ services:
     volumes:
       - rover_data:/config
     environment:
+      APOLLO_KEY: ${APOLLO_KEY}
+      APOLLO_GRAPH_REF: "${APOLLO_GRAPH_REF}"
       APOLLO_ROUTER_CONFIG_PATH: /config/router_config.yaml
       APOLLO_ROUTER_SUPERGRAPH_PATH: /config/schema.graphql
     networks:
