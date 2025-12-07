@@ -237,6 +237,30 @@ func (p *Producer) PublishBoardBookmarkDeleted(ctx context.Context, event events
 	})
 }
 
+func (p *Producer) PublishBoardGroupMembersAdded(ctx context.Context, event events.BoardGroupMembersAdded) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "board.members.added",
+		Key:   []byte(event.BoardID),
+		Value: data,
+	})
+}
+
+func (p *Producer) PublishBoardGroupMembersDeleted(ctx context.Context, event events.BoardGroupMembersDeleted) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: "board.members.deleted",
+		Key:   []byte(event.BoardID),
+		Value: data,
+	})
+}
+
 func (p *Producer) PublishPinCreated(ctx context.Context, event events.PinCreated) error {
 	data, err := json.Marshal(event)
 	if err != nil {

@@ -6,13 +6,14 @@ import (
 
 type BoardCreated struct {
 	BaseEvent
-	BoardID     string    `json:"board_id"`
-	Name        string    `json:"name"`
-	AccessLevel string    `json:"access_level"`
-	OwnerID     string    `json:"owner_id"`
-	OwnerType   string    `json:"owner_type"`
-	CreatedAt   time.Time `json:"created_at"`
-	PinIDs      []string  `json:"pin_ids,omitempty"`
+	BoardID        string    `json:"board_id"`
+	Name           string    `json:"name"`
+	AccessLevel    string    `json:"access_level"`
+	OwnerID        string    `json:"owner_id"`
+	OwnerType      string    `json:"owner_type"`
+	CreatedAt      time.Time `json:"created_at"`
+	PinIDs         []string  `json:"pin_ids,omitempty"`
+	GroupMemberIDs []string  `json:"group_member_ids,omitempty"`
 }
 
 type BoardUpdated struct {
@@ -90,4 +91,16 @@ type BoardBookmarkDeleted struct {
 	BaseEvent
 	BoardID string `json:"board_id"`
 	OwnerID string `json:"owner_id"`
+}
+
+type BoardGroupMembersAdded struct {
+	BaseEvent
+	BoardID        string   `json:"board_id"`
+	GroupMemberIDs []string `json:"group_member_ids"`
+}
+
+type BoardGroupMembersDeleted struct {
+	BaseEvent
+	BoardID        string   `json:"board_id"`
+	GroupMemberIDs []string `json:"group_member_ids"`
 }
