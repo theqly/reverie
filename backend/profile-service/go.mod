@@ -10,7 +10,9 @@ require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
+	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208034302-d9c7cd41ae78
 	github.com/vektah/gqlparser/v2 v2.5.30
+	go.uber.org/zap v1.27.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
 )
@@ -50,12 +52,10 @@ require (
 	github.com/quic-go/quic-go v0.54.0 // indirect
 	github.com/segmentio/kafka-go v0.4.49 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
-	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208025641-ee7befcc6e59 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	go.uber.org/zap v1.27.1 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/mod v0.28.0 // indirect

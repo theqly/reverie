@@ -48,7 +48,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/segmentio/kafka-go v0.4.49 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
-	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251207180720-3524b9148549 // indirect
+	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208034302-d9c7cd41ae78 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
