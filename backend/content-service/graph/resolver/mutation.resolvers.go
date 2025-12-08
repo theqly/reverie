@@ -44,8 +44,9 @@ func (r *mutationResolver) UpdateBoard(ctx context.Context, id uuid.UUID, input 
 	logger.Info("Updating board")
 
 	board := mapper.UpdateToDomainBoard(&input)
+	board.ID = id
 
-	err := r.BoardRepo.Update(ctx, id, *board)
+	err := r.BoardRepo.Update(ctx, *board)
 	if err != nil {
 		logger.Error("Failed to update board", zap.Error(err))
 		return nil, err

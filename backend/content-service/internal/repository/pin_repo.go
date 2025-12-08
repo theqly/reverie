@@ -7,19 +7,48 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	kafka "github.com/theqly/reverie/backend/kafka-module"
+	events1 "github.com/theqly/reverie/backend/kafka-module/events/v1"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type PinRepository struct {
-	db *gorm.DB
+	db        *gorm.DB
+	publisher *kafka.Producer
 }
 
-func NewPinRepository(db *gorm.DB) *PinRepository {
-	return &PinRepository{db: db}
+func NewPinRepository(db *gorm.DB, publisher *kafka.Producer) *PinRepository {
+	return &PinRepository{db: db, publisher: publisher}
 }
 
 func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
-	return r.db.WithContext(ctx).Create(&pin).Error
+	logger := zap.L().With(zap.String("repository", "CreatePin"))
+
+	err := r.db.WithContext(ctx).Create(&pin).Error
+
+	if err == nil && r.publisher != nil {
+		go func(p models.Pin) {
+			event := events1.PinCreated{
+				BaseEvent:   kafka.NewBaseEvent(),
+				PinID:       p.ID.String(),
+				Name:        p.Name,
+				OwnerID:     p.OwnerID.String(),
+				Description: p.Description,
+				Latitude:    p.Latitude,
+				Longitude:   p.Longitude,
+				Address:     p.Address,
+				Rating:      p.Rating,
+				CreatedAt:   p.CreatedAt,
+				PlaceID:     "0",
+			}
+			if err := r.publisher.PublishPinCreated(context.Background(), event); err != nil {
+				logger.Info("failed to publish pin.created event: %v", zap.String("err", err.Error()))
+			}
+		}(pin)
+	}
+
+	return err
 }
 
 func (r *PinRepository) withViewerData(tx *gorm.DB, viewerID *uuid.UUID) *gorm.DB {
@@ -83,7 +112,9 @@ func (r *PinRepository) GetByName(ctx context.Context, name string, viewerID *uu
 }
 
 func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models.Pin) error {
-	return r.db.WithContext(ctx).Model(&models.Pin{}).
+	logger := zap.L().With(zap.String("repository", "UpdatePin"))
+
+	err := r.db.WithContext(ctx).Model(&models.Pin{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"name":        updated.Name,
@@ -92,6 +123,27 @@ func (r *PinRepository) Update(ctx context.Context, id uuid.UUID, updated models
 			"description": updated.Description,
 			"rating":      updated.Rating,
 		}).Error
+
+	if err == nil && r.publisher != nil {
+		go func(p models.Pin) {
+			event := events1.PinUpdated{
+				BaseEvent:   kafka.NewBaseEvent(),
+				PinID:       p.ID.String(),
+				Name:        p.Name,
+				Description: p.Description,
+				Latitude:    p.Latitude,
+				Longitude:   p.Longitude,
+				Address:     p.Address,
+				Rating:      p.Rating,
+				PlaceID:     "0",
+			}
+			if err := r.publisher.PublishPinUpdated(context.Background(), event); err != nil {
+				logger.Info("failed to publish pin.updated event: %v", zap.String("err", err.Error()))
+			}
+		}(updated)
+	}
+
+	return err
 }
 
 func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID, limit, offset int) ([]models.PinComment, error) {
@@ -108,26 +160,63 @@ func (r *PinRepository) GetCommentsByPin(ctx context.Context, pinID uuid.UUID, l
 }
 
 func (r *PinRepository) AddCommentToPin(ctx context.Context, pinID uuid.UUID, userID uuid.UUID, message string) (*models.PinComment, error) {
+	logger := zap.L().With(zap.String("repository", "AddCommentToPin"))
+
 	comment := &models.PinComment{
 		PinID:   pinID,
 		OwnerID: userID,
 		Message: message,
 	}
 
-	if err := r.db.WithContext(ctx).Create(comment).Error; err != nil {
+	err := r.db.WithContext(ctx).Create(comment).Error
+
+	if err != nil {
 		return nil, err
+	}
+
+	if r.publisher != nil {
+		go func(p models.PinComment) {
+			event := events1.PinCommented{
+				BaseEvent: kafka.NewBaseEvent(),
+				PinID:     p.ID.String(),
+				CommentID: p.ID.String(),
+				OwnerID:   p.OwnerID.String(),
+				Message:   p.Message,
+			}
+			if err := r.publisher.PublishPinCommented(context.Background(), event); err != nil {
+				logger.Info("failed to publish pin.comment.created event: %v", zap.String("err", err.Error()))
+			}
+		}(*comment)
 	}
 
 	return comment, nil
 }
 
 func (r *PinRepository) DeleteCommentToPinByID(ctx context.Context, commentID uuid.UUID) error {
-	return r.db.WithContext(ctx).
+	logger := zap.L().With(zap.String("repository", "DeleteCommentToPinByID"))
+
+	err := r.db.WithContext(ctx).
 		Where("id = ?", commentID).
 		Delete(&models.PinComment{}).Error
+
+	if err == nil && r.publisher != nil {
+		go func(commentID uuid.UUID) {
+			event := events1.PinCommentDeleted{
+				BaseEvent: kafka.NewBaseEvent(),
+				CommentID: commentID.String(),
+			}
+			if err := r.publisher.PublishPinCommentDeleted(context.Background(), event); err != nil {
+				logger.Info("failed to publish pin.comment.deleted event: %v", zap.String("err", err.Error()))
+			}
+		}(commentID)
+	}
+
+	return err
 }
 
 func (r *PinRepository) UpdateCommentToPin(ctx context.Context, commentID uuid.UUID, newMessage string) (*models.PinComment, error) {
+	logger := zap.L().With(zap.String("repository", "UpdateCommentToPin"))
+
 	res := r.db.WithContext(ctx).
 		Model(&models.PinComment{}).
 		Where("id = ?", commentID).
@@ -138,6 +227,19 @@ func (r *PinRepository) UpdateCommentToPin(ctx context.Context, commentID uuid.U
 	}
 	if res.RowsAffected == 0 {
 		return nil, fmt.Errorf("comment not found")
+	}
+
+	if r.publisher != nil {
+		go func(commentID uuid.UUID, newMessage string) {
+			event := events1.PinCommented{
+				BaseEvent: kafka.NewBaseEvent(),
+				CommentID: commentID.String(),
+				Message:   newMessage,
+			}
+			if err := r.publisher.PublishPinCommented(context.Background(), event); err != nil {
+				logger.Info("failed to publish pin.comment.updated event: %v", zap.String("err", err.Error()))
+			}
+		}(commentID, newMessage)
 	}
 
 	var updatedComment models.PinComment

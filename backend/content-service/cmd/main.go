@@ -17,6 +17,8 @@ import (
 	"content-service/pkg/database"
 	"content-service/pkg/middleware"
 
+	kafka "github.com/theqly/reverie/backend/kafka-module"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -61,10 +63,14 @@ func main() {
 		log.Fatalf("failed to load mappings from database: %v", err)
 	}
 
-	boardRepo := repository.NewBoardRepository(database.DB)
-	pinRepo := repository.NewPinRepository(database.DB)
-	reactionRepo := repository.NewReactionRepository(database.DB)
-	bookmarkRepo := repository.NewBookmarkRepository(database.DB)
+	// kafkaPublisher := kafka.NewProducer([]string{"localhost:9092"}, nil)
+	var kafkaPublisher *kafka.Producer
+	kafkaPublisher = nil
+
+	boardRepo := repository.NewBoardRepository(database.DB, kafkaPublisher)
+	pinRepo := repository.NewPinRepository(database.DB, kafkaPublisher)
+	reactionRepo := repository.NewReactionRepository(database.DB, kafkaPublisher)
+	bookmarkRepo := repository.NewBookmarkRepository(database.DB, kafkaPublisher)
 
 	resolver := &resolver.Resolver{
 		BoardRepo:    boardRepo,
