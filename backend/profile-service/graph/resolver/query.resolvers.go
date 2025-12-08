@@ -187,7 +187,6 @@ func (r *queryResolver) FollowingOf(ctx context.Context, userID uuid.UUID) ([]*m
 func (r *queryResolver) FollowersCount(ctx context.Context, userID uuid.UUID) (int, error) {
 	count, err := r.UserRepo.GetNumberOfFollowers(ctx, userID)
 	return count, err
-
 }
 
 // FollowingCount is the resolver for the followingCount field.

@@ -1,5 +1,6 @@
 input CreateBoardInput {
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
@@ -7,6 +8,7 @@ input CreateBoardInput {
 
 input UpdateBoardInput {
   name: String
+  description: String
   accessLevel: AccessLevelType
   userId: UUID!
 }
@@ -81,5 +83,8 @@ type Mutation {
 
   reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
   reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+
+  bookmarkToPin(pinId: UUID!, userId: UUID!): Boolean!
+  bookmarkToBoard(boardId: UUID!, userId: UUID!): Boolean!
 }
 

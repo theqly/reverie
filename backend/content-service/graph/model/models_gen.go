@@ -33,11 +33,14 @@ type AddImageInput struct {
 type Board struct {
 	ID          uuid.UUID       `json:"id"`
 	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
 	AccessLevel AccessLevelType `json:"accessLevel"`
 	OwnerID     uuid.UUID       `json:"ownerId"`
 	OwnerType   OwnerType       `json:"ownerType"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	Pins        []*Pin          `json:"pins,omitempty"`
+	ReactionID  *uuid.UUID      `json:"reactionId,omitempty"`
+	Bookmarked  *bool           `json:"bookmarked,omitempty"`
 }
 
 type CommentToBoard struct {
@@ -58,6 +61,7 @@ type CommentToPin struct {
 
 type CreateBoardInput struct {
 	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
 	AccessLevel AccessLevelType `json:"accessLevel"`
 	OwnerID     uuid.UUID       `json:"ownerId"`
 	OwnerType   OwnerType       `json:"ownerType"`
@@ -95,6 +99,8 @@ type Pin struct {
 	CreatedAt   time.Time   `json:"createdAt"`
 	Place       *Place      `json:"place,omitempty"`
 	Images      []*PinImage `json:"images,omitempty"`
+	ReactionID  *uuid.UUID  `json:"reactionId,omitempty"`
+	Bookmarked  *bool       `json:"bookmarked,omitempty"`
 }
 
 func (Pin) IsEntity() {}
@@ -127,6 +133,7 @@ type Reaction struct {
 
 type UpdateBoardInput struct {
 	Name        *string          `json:"name,omitempty"`
+	Description *string          `json:"description,omitempty"`
 	AccessLevel *AccessLevelType `json:"accessLevel,omitempty"`
 	UserID      uuid.UUID        `json:"userId"`
 }

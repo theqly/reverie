@@ -17,11 +17,11 @@ import (
 )
 
 // Board is the resolver for the board field.
-func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, error) {
+func (r *queryResolver) Board(ctx context.Context, id uuid.UUID, viewerID *uuid.UUID) (*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "Board"), zap.String("boardID", id.String()))
 	logger.Info("Fetching board")
 
-	board, err := r.BoardRepo.GetByID(ctx, id)
+	board, err := r.BoardRepo.GetByID(ctx, id, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch board", zap.Error(err))
 		return nil, err
@@ -32,11 +32,16 @@ func (r *queryResolver) Board(ctx context.Context, id uuid.UUID) (*model.Board, 
 }
 
 // BoardByName is the resolver for the boardByName field.
-func (r *queryResolver) BoardByName(ctx context.Context, name string) ([]*model.Board, error) {
+func (r *queryResolver) BoardByName(ctx context.Context, name string, viewerID *uuid.UUID, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "BoardByName"), zap.String("name", name))
 	logger.Info("Fetching boards by name")
 
-	boards, err := r.BoardRepo.GetByName(ctx, name)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
+	boards, err := r.BoardRepo.GetByName(ctx, name, viewerID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch boards", zap.Error(err))
 		return nil, err
@@ -52,11 +57,16 @@ func (r *queryResolver) BoardByName(ctx context.Context, name string) ([]*model.
 }
 
 // BoardsByGroup is the resolver for the boardsByGroup field.
-func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID) ([]*model.Board, error) {
+func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID, viewerID *uuid.UUID, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "BoardsByGroup"), zap.String("groupID", groupID.String()))
 	logger.Info("Fetching boards by group")
 
-	boards, err := r.BoardRepo.GetByGroup(ctx, groupID)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
+	boards, err := r.BoardRepo.GetByGroup(ctx, groupID, viewerID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch boards", zap.Error(err))
 		return nil, err
@@ -72,11 +82,11 @@ func (r *queryResolver) BoardsByGroup(ctx context.Context, groupID uuid.UUID) ([
 }
 
 // Pin is the resolver for the pin field.
-func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID) (*model.Pin, error) {
+func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID, viewerID *uuid.UUID) (*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "Pin"), zap.String("pinID", id.String()))
 	logger.Info("Fetching pin")
 
-	pin, err := r.PinRepo.GetByID(ctx, id)
+	pin, err := r.PinRepo.GetByID(ctx, id, viewerID)
 	if err != nil {
 		logger.Error("Failed to fetch pin", zap.Error(err))
 		return nil, err
@@ -87,11 +97,16 @@ func (r *queryResolver) Pin(ctx context.Context, id uuid.UUID) (*model.Pin, erro
 }
 
 // PinsByUser is the resolver for the pinsByUser field.
-func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID, viewerID *uuid.UUID, limit *int, offset *int) ([]*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "PinsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching pins by user")
 
-	pins, err := r.PinRepo.GetByUser(ctx, userID)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
+	pins, err := r.PinRepo.GetByUser(ctx, userID, viewerID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch pins", zap.Error(err))
 		return nil, err
@@ -107,11 +122,16 @@ func (r *queryResolver) PinsByUser(ctx context.Context, userID uuid.UUID) ([]*mo
 }
 
 // PinsByName is the resolver for the pinsByName field.
-func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByName(ctx context.Context, name string, viewerID *uuid.UUID, limit *int, offset *int) ([]*model.Pin, error) {
 	logger := zap.L().With(zap.String("resolver", "PinsByName"), zap.String("name", name))
 	logger.Info("Fetching pins by name")
 
-	pins, err := r.PinRepo.GetByName(ctx, name)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
+	pins, err := r.PinRepo.GetByName(ctx, name, viewerID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch pins", zap.Error(err))
 		return nil, err
@@ -127,7 +147,7 @@ func (r *queryResolver) PinsByName(ctx context.Context, name string) ([]*model.P
 }
 
 // PinsByLocation is the resolver for the pinsByLocation field.
-func (r *queryResolver) PinsByLocation(ctx context.Context, query string) ([]*model.Pin, error) {
+func (r *queryResolver) PinsByLocation(ctx context.Context, query string, viewerID *uuid.UUID, limit *int, offset *int) ([]*model.Pin, error) {
 	panic(fmt.Errorf("not implemented: PinsByLocation - pinsByLocation"))
 }
 
@@ -161,12 +181,17 @@ func (r *queryResolver) IsUserInGroup(ctx context.Context, userID uuid.UUID, gro
 }
 
 // GroupsOfUser is the resolver for the groupsOfUser field.
-func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*model.Group, error) {
+func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Group, error) {
 	logger := zap.L().With(zap.String("resolver", "GroupsOfUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching groups of user")
 
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
 	var members []models.Member
-	members, err := r.BoardRepo.GetGroups(ctx, userID)
+	members, err := r.BoardRepo.GetGroups(ctx, userID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to find groups for user", zap.Error(err))
 		return nil, err
@@ -187,11 +212,16 @@ func (r *queryResolver) GroupsOfUser(ctx context.Context, userID uuid.UUID) ([]*
 }
 
 // CommentsByBoard is the resolver for the commentsByBoard field.
-func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID) ([]*model.CommentToBoard, error) {
+func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID, limit *int, offset *int) ([]*model.CommentToBoard, error) {
 	logger := zap.L().With(zap.String("resolver", "CommentsByBoard"), zap.String("boardID", boardID.String()))
 	logger.Info("Fetching comments by board")
 
-	comments_row, err := r.BoardRepo.GetCommentsByBoard(ctx, boardID)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
+	comments_row, err := r.BoardRepo.GetCommentsByBoard(ctx, boardID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch comments by board", zap.Error(err))
 		return nil, err
@@ -207,11 +237,16 @@ func (r *queryResolver) CommentsByBoard(ctx context.Context, boardID uuid.UUID) 
 }
 
 // CommentsByPin is the resolver for the commentsByPin field.
-func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*model.CommentToPin, error) {
+func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID, limit *int, offset *int) ([]*model.CommentToPin, error) {
 	logger := zap.L().With(zap.String("resolver", "CommentsByPin"), zap.String("pinID", pinID.String()))
 	logger.Info("Fetching comments by pin")
 
-	comments_row, err := r.PinRepo.GetCommentsByPin(ctx, pinID)
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
+	comments_row, err := r.PinRepo.GetCommentsByPin(ctx, pinID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch comments by pin", zap.Error(err))
 		return nil, err
@@ -227,12 +262,17 @@ func (r *queryResolver) CommentsByPin(ctx context.Context, pinID uuid.UUID) ([]*
 }
 
 // OwnBoardsByUser is the resolver for the ownBoardsByUser field.
-func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error) {
+func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "OwnBoardsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching own boards by user")
 
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
 	var boards []models.Board
-	boards, err := r.BoardRepo.GetOwnBoardsByUser(ctx, userID)
+	boards, err := r.BoardRepo.GetOwnBoardsByUser(ctx, userID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch own boards by user", zap.Error(err))
 		return nil, err
@@ -248,12 +288,17 @@ func (r *queryResolver) OwnBoardsByUser(ctx context.Context, userID uuid.UUID) (
 }
 
 // GroupBoardsByUser is the resolver for the groupBoardsByUser field.
-func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID) ([]*model.Board, error) {
+func (r *queryResolver) GroupBoardsByUser(ctx context.Context, userID uuid.UUID, limit *int, offset *int) ([]*model.Board, error) {
 	logger := zap.L().With(zap.String("resolver", "GroupBoardsByUser"), zap.String("userID", userID.String()))
 	logger.Info("Fetching group boards by user")
 
+	if limit == nil || offset == nil {
+		logger.Error("No default behavior for NULL value")
+		return nil, fmt.Errorf("null value in args for limit / offset")
+	}
+
 	var boards []models.Board
-	boards, err := r.BoardRepo.GetGroupBoardsByUser(ctx, userID)
+	boards, err := r.BoardRepo.GetGroupBoardsByUser(ctx, userID, *limit, *offset)
 	if err != nil {
 		logger.Error("Failed to fetch group boards by user", zap.Error(err))
 		return nil, err
@@ -294,6 +339,20 @@ func (r *queryResolver) CountGroupBoardsByUser(ctx context.Context, userID uuid.
 	}
 
 	return int(boardsNumber), nil
+}
+
+// CountPinsByUser is the resolver for the countPinsByUser field.
+func (r *queryResolver) CountPinsByUser(ctx context.Context, userID uuid.UUID) (int, error) {
+	logger := zap.L().With(zap.String("resolver", "CountPinsByUser"), zap.String("userID", userID.String()))
+	logger.Info("Counting own pins by user")
+
+	pinsNumber, err := r.PinRepo.CountPinsByUser(ctx, userID)
+	if err != nil {
+		logger.Error("Failed to count own pins by user", zap.Error(err))
+		return 0, err
+	}
+
+	return int(pinsNumber), nil
 }
 
 // Reactions is the resolver for the reactions field.

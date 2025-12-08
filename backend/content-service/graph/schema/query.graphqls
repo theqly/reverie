@@ -1,27 +1,28 @@
 type Query {
-  board(id: UUID!): Board
-  boardByName(name: String!): [Board!]
-  boardsByGroup(groupId: UUID!): [Board!]
+  board(id: UUID!, viewerId: UUID): Board
+  boardByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
+  boardsByGroup(groupId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
 
-  pin(id: UUID!): Pin
-  pinsByUser(userId: UUID!): [Pin!]
-  pinsByName(name: String!): [Pin!]
-  pinsByLocation(query: String!): [Pin!]
+  pin(id: UUID!, viewerId: UUID): Pin
+  pinsByUser(userId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByLocation(query: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
 
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
-  groupsOfUser(userId: UUID!): [Group!]!
+  groupsOfUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Group!]!
 
-  commentsByBoard(boardId: UUID!): [CommentToBoard]!
-  commentsByPin(pinId: UUID!): [CommentToPin]!
+  commentsByBoard(boardId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToBoard]!
+  commentsByPin(pinId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToPin]!
 
-  ownBoardsByUser(userId: UUID!): [Board!]!
-  groupBoardsByUser(userId: UUID!): [Board!]!
+  ownBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  groupBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
   countOwnBoardsByUser(userId: UUID!): Int!
   countGroupBoardsByUser(userId: UUID!): Int!
+
+  countPinsByUser(userId: UUID!): Int!
 
   reactions: [Reaction!]!
   countAllReactionsToPin(pinId: UUID!): Int!
   countAllReactionsToBoard(boardId: UUID!): Int!
 }
-

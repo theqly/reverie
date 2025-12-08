@@ -33,6 +33,7 @@ CREATE TABLE owner_types (
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
+    description TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
     owner_type_id INTEGER NOT NULL,
@@ -244,11 +245,14 @@ enum OwnerType {
 type Board {
   id: UUID!
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
+  reactionId: UUID
+  bookmarked: Boolean
 }
 
 type CommentToBoard {
@@ -266,6 +270,7 @@ type Group {
 
 input CreateBoardInput {
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
@@ -273,8 +278,52 @@ input CreateBoardInput {
 
 input UpdateBoardInput {
   name: String
+  description: String
   accessLevel: AccessLevelType
   userId: UUID!
+}
+
+type Pin @key(fields: "id") {
+  id: UUID!
+  name: String!
+  owner: User!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  description: String
+  rating: Float!
+  createdAt: Time!
+
+  place: Place
+  images: [PinImage!]
+
+  reactionId: UUID
+  bookmarked: Boolean
+}
+
+type PinImage {
+  id: UUID!
+  orderNumber: Int!
+  imageUrl: String!
+}
+
+type CommentToPin {
+  id: UUID!
+  pinId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+
+type Place {
+  id: UUID!
+  gis_id: UUID
+  name: String!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  purpose_name: String
+  type: String
 }
 
 input CreatePinInput {
@@ -327,21 +376,30 @@ type Reaction {
 }
 
 ##### Реализованные методы
-  board(id: UUID!): Board
-  boardByName(name: String!): [Board!]
-  boardsByGroup(groupId: UUID!): [Board!]
+  board(id: UUID!, viewerId: UUID): Board
+  boardByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
+  boardsByGroup(groupId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
 
-  pin(id: UUID!): Pin
-  pinsByUser(userId: UUID!): [Pin!]
-  pinsByName(name: String!): [Pin!]
-  pinsByLocation(query: String!): [Pin!]
+  pin(id: UUID!, viewerId: UUID): Pin
+  pinsByUser(userId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
+  pinsByLocation(query: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
 
   groupById(groupId: UUID!): Group
   isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
-  groupsOfUser(userId: UUID!): [Group!]!
+  groupsOfUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Group!]!
 
-  commentsByBoard(boardId: UUID!): [CommentToBoard]!
-  commentsByPin(pinId: UUID!): [CommentToPin]!
+  commentsByBoard(boardId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToBoard]!
+  commentsByPin(pinId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToPin]!
+
+  ownBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  groupBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  countOwnBoardsByUser(userId: UUID!): Int!
+  countGroupBoardsByUser(userId: UUID!): Int!
+
+  reactions: [Reaction!]!
+  countAllReactionsToPin(pinId: UUID!): Int!
+  countAllReactionsToBoard(boardId: UUID!): Int!
 
   createBoard(input: CreateBoardInput!): Board!
   updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
@@ -371,23 +429,13 @@ type Reaction {
   requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
   acceptJoinToGroup(requestId: UUID!): Boolean!
 
-  ownBoardsByUser(userId: UUID!): [Board!]!
-  groupBoardsByUser(userId: UUID!): [Board!]!
-  countOwnBoardsByUser(userId: UUID!): Int!
-  countGroupBoardsByUser(userId: UUID!): Int!
-
-  reactions: [Reaction!]!
-  countAllReactionsToPin(pinId: UUID!): Int!
-  countAllReactionsToBoard(boardId: UUID!): Int!
-
   reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
   reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
 
+  bookmarkToPin(pinId: UUID!, userId: UUID!): Boolean!
+  bookmarkToBoard(boardId: UUID!, userId: UUID!): Boolean!
+
 ##### Необходимо реализовать:
-- boardToBookmarks(boardId: UUID!, userId: UUID!): Boolean!
-- pinToBookmarks(pinId: UUID!, userId: UUID!): Boolean!
-- removeBoardFromBookmarks(boardId: UUID!, userId: UUID!): Boolean!
-- removePinFromBookmarks(pinId: UUID!, userId: UUID!): Boolean!
 - copyPin(pinId: UUID!, userId: UUID!, boardId: UUID!): Pin! (возвращаем id нового пина, возможно хватит возвращать UUID!)
 - copyBoard(boardId: UUID!, userId: UUID!): Board! (возвращаем id новой доски, возможно хватит возвращать UUID!)
 - complaintStatuses(): [complaintStatuses!]!

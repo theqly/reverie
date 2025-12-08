@@ -12,6 +12,9 @@ type Pin @key(fields: "id") {
   place: Place
   images: [PinImage!]
   # comments: [Comment!]
+
+  reactionId: UUID
+  bookmarked: Boolean
 }
 
 type PinImage {
