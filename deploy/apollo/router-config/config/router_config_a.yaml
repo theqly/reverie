@@ -9,6 +9,9 @@ sandbox:
 homepage:
   enabled: false
 
+rhai:
+  scripts: "/config/rhai"
+
 health_check:
   listen: 0.0.0.0:8088
   enabled: true
@@ -33,4 +36,21 @@ cors:
     - OPTIONS
   allow_headers: []
   expose_headers: []
-  
+
+authentication:
+  router:
+    jwt:
+      jwks: 
+        - url: "http://keycloak:8080/realms/reverie-realm/protocol/openid-connect/certs"
+      header_name: Authorization
+      header_value_prefix: Bearer
+      on_error: Error
+      sources:
+        - type: header
+          name: X-Authorization
+          value_prefix: Bearer
+        - type: cookie
+          name: authz
+
+authorization:
+  require_authentication: true
