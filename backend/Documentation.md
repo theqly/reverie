@@ -564,7 +564,8 @@ input UpdateUserInput {
 ##### Реализованные методы
 ```graphql
 - userById(userId: UUID!): User
-- userByNickname(nickname: String!): User
+- userByNickname(nickname: String!): [User!]
+- userByTag(nickTag: String!): User
 - userByEmail(email: String!): User
 
 - followersOf(userId: UUID!): [User!]!
