@@ -67,7 +67,7 @@ func main() {
 
 	boardRepo := repository.NewBoardRepository(database.DB, kafkaPublisher)
 	pinRepo := repository.NewPinRepository(database.DB, kafkaPublisher)
-	reactionRepo := repository.NewReactionRepository(database.DB)
+	reactionRepo := repository.NewReactionRepository(database.DB, kafkaPublisher)
 	bookmarkRepo := repository.NewBookmarkRepository(database.DB)
 
 	resolver := &resolver.Resolver{

@@ -118,6 +118,8 @@ github.com/theqly/reverie/backend/kafka-module v0.0.0-20251207153442-f6ff3b2b896
 github.com/theqly/reverie/backend/kafka-module v0.0.0-20251207153442-f6ff3b2b8961/go.mod h1:F8fp0xEWm7ZReHVDEJo9rIGAH8X1T8+zJkjRWSWX+x8=
 github.com/theqly/reverie/backend/kafka-module v0.0.0-20251207160524-506563d04dfc h1:yKemz1Uuf+AgYU5U3kwfjk+mbF9cWSTuopfJlOt5cgg=
 github.com/theqly/reverie/backend/kafka-module v0.0.0-20251207160524-506563d04dfc/go.mod h1:F8fp0xEWm7ZReHVDEJo9rIGAH8X1T8+zJkjRWSWX+x8=
+github.com/theqly/reverie/backend/kafka-module v0.0.0-20251207180720-3524b9148549 h1:3xLoUOt7qv0Vb8gAIUQ4xbWPkPPuNXNlZqLt2Sm2XHc=
+github.com/theqly/reverie/backend/kafka-module v0.0.0-20251207180720-3524b9148549/go.mod h1:F8fp0xEWm7ZReHVDEJo9rIGAH8X1T8+zJkjRWSWX+x8=
 github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS4MhqMhdFk5YI=
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65EE=
