@@ -8,6 +8,7 @@ require (
 	github.com/99designs/gqlgen v0.17.73
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
+	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208054250-c92e2922b914
 	github.com/vektah/gqlparser/v2 v2.5.26
 	go.uber.org/zap v1.27.1
 	gorm.io/driver/postgres v1.5.11
@@ -48,7 +49,6 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/segmentio/kafka-go v0.4.49 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
-	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208034302-d9c7cd41ae78 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
