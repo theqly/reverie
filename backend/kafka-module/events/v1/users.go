@@ -24,6 +24,7 @@ type UserUpdated struct {
 	Status         string  `json:"status,omitempty"`
 }
 
+// в опенсерч надо поставить статус deleted
 type UserDeleted struct {
 	BaseEvent
 	UserID string `json:"user_id"`
