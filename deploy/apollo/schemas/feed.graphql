@@ -1,0 +1,11 @@
+scalar UUID
+scalar Time
+
+extend type Pin @key(fields: "id") {
+  id: UUID! @external
+}
+
+type Query {
+  feed: [Pin!]!
+}
+

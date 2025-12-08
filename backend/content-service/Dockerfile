@@ -1,6 +1,11 @@
 FROM golang:1.24.1-alpine AS builder
 WORKDIR /app
 
+ARG GITHUB_TOKEN
+RUN apk add --no-cache git
+
+RUN git config --global url."https://${GITHUB_TOKEN}@github.com/theqly/reverie".insteadOf "https://github.com/theqly/reverie"
+
 COPY go.mod go.sum ./
 RUN go mod download
 
