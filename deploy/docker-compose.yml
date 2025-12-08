@@ -106,6 +106,8 @@ services:
     build:
       context: ../backend/profile-service
       dockerfile: Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: profile_service
     restart: unless-stopped
     environment:
@@ -132,6 +134,8 @@ services:
     build:
       context: ../backend/content-service
       dockerfile: Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: content_service
     restart: unless-stopped
     environment:
