@@ -2,16 +2,14 @@
 
 1. вам нужен .env файл с тестовыми переменными окружения для баз и т.д. поэтому когда будете собирать, нужно написать некому артему гаану и попросить этот файл, чтобы я его не заливал на гит
 
-## УТОЧНЕНИЕ! если вы уже собирали проект и схемы graphql не менялись, то шаги 2 и 3 МОЖНО ПРОПУСТИТЬ
+### УТОЧНЕНИЕ! если вы уже собирали проект и схемы graphql не менялись, то шаги 2 и 3 МОЖНО ПРОПУСТИТЬ
 
 2. после этого нужно совместить схемы graphql в одну для каждого сервиса. для этого существует простой файлик unificate.sh в папочке apollo. делаем:
 
 ```
-cd apollo/
+bash ./apollo/unificate.sh
 ```
-```
-bash unificate.sh
-```
+### В папке apollo/router-config/config если файл router_config_a.yaml. Это файл со включенной авторизацией и аутентификаей на роутере. Без нормального токена от keycloak с таким конфигом роутер вас не пропустит в бек. Поэтому по умолчанию сейчас этот функционал выключен, но если вам он нужен, то router_config.yaml надо переименовать как угодно, а router_config_a.yaml переименовать в router_config.yaml
 
 3. теперь нужно провернуть некие махинации с загрузкой конфига и схемы для router'а. для этого из папки deploy(или сами пути прописывайте) делаем:
 
@@ -28,7 +26,7 @@ docker run --rm --name rover \
   -v "$(pwd)/apollo":/etc/apollo:ro \
   -v rover_data:/config \
   rover \
-  /bin/sh -c 'rover supergraph compose --config /etc/apollo/supergraph-config.yaml --output /config/schema.graphql --log=debug && echo "supergraph written" && cp /etc/apollo/router_config.yaml /config/ && echo "router_config written"'
+  /bin/sh -c 'cp -r /etc/apollo/router-config/config/ / && rover supergraph compose --config /etc/apollo/supergraph-config.yaml --output /config/schema.graphql --log=debug && echo "supergraph written" &&  echo "router_config written"'
 
 ```
 

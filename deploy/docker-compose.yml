@@ -19,7 +19,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${PROFILE_POSTGRES_USER} -d ${PROFILE_POSTGRES_DB} -h localhost || exit 1"]
       interval: 5s
       timeout: 5s
-      retries: 15
+      retries: 25
       start_period: 5s
 
   content-db:
@@ -39,7 +39,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${CONTENT_POSTGRES_USER} -d ${CONTENT_POSTGRES_DB} -h localhost || exit 1"]
       interval: 5s
       timeout: 5s
-      retries: 15
+      retries: 25
       start_period: 5s
 
   feed-db:
@@ -59,7 +59,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${FEED_POSTGRES_USER} -d ${FEED_POSTGRES_DB} -h localhost || exit 1"]
       interval: 5s
       timeout: 5s
-      retries: 15
+      retries: 25
       start_period: 5s
 
   # DB migrators runners
@@ -183,6 +183,50 @@ services:
 
   # Infra
 
+  # kafka
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "${ZOOKEEPER_CLIENT_PORT}:${ZOOKEEPER_CLIENT_PORT}"
+    networks:
+      - reverie-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo stat | nc localhost ${ZOOKEEPER_CLIENT_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_CLIENT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:${KAFKA_INTERNAL_CLIENT_PORT},PLAINTEXT_HOST://localhost:${KAFKA_EXTERNAL_CLIENT_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+    ports:
+      - "${KAFKA_EXTERNAL_CLIENT_PORT}:${KAFKA_EXTERNAL_CLIENT_PORT}"
+    networks:
+      - reverie-network
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:${KAFKA_INTERNAL_CLIENT_PORT}", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   # keycloak
   keycloak:
     image: quay.io/keycloak/keycloak:20.0.0
@@ -191,12 +235,13 @@ services:
     environment:
       KC_HEALTH_ENABLED: "true"
       KC_METRICS_ENABLED: "true"
+      KC_IMPORT_STRATEGY: IGNORE_EXISTING
       KC_DB: "postgres"
       KC_DB_URL: "jdbc:postgresql://keycloak-db:${INNER_DB_PORT}/${KEYCLOAK_POSTGRES_DB}"
       KC_DB_USERNAME: ${KEYCLOAK_POSTGRES_USER}
       KC_DB_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD}
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     ports:
       - "${KEYCLOAK_PORT}:${INNER_SERVICE_PORT}"
     depends_on:
@@ -244,8 +289,8 @@ services:
     volumes:
       - opensearch_data:/usr/share/opensearch/data
     ports:
-      - "9200:9200"
-      - "9600:9600"
+      - "${OPENSEARCH_HTTP_PORT}:${OPENSEARCH_HTTP_PORT}"
+      - "${OPENSEARCH_PA_PORT}:${OPENSEARCH_PA_PORT}"
     networks:
       - reverie-network
 
@@ -253,11 +298,31 @@ services:
     image: opensearchproject/opensearch-dashboards:3
     container_name: opensearch-dashboards
     environment:
-      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+      - OPENSEARCH_HOSTS=["${OPENSEARCH_HOSTS}"]
     ports:
-      - "5601:5601"
+      - "${OPENSEARCH_DASHBOARD_PORT}:${OPENSEARCH_DASHBOARD_PORT}"
     depends_on:
       - opensearch
+    networks:
+      - reverie-network
+
+  data-prepper:
+    image: opensearchproject/data-prepper:2.5.0
+    container_name: data-prepper
+    depends_on:
+      - opensearch
+      - kafka
+    environment:
+      OPENSEARCH_HOSTS: '["${OPENSEARCH_HOSTS}"]'
+      OPENSEARCH_USERNAME: admin
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      OPENSEARCH_SSL: "true"
+      OPENSEARCH_SSL_CERTIFICATE_VERIFICATION: "false"
+    volumes:
+      - ./opensearch/pipelines.yaml:/usr/share/data-prepper/pipelines/pipelines.yaml
+      - ./opensearch/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml
+    ports:
+      - "${DATA_PREPPER_PORT}:${DATA_PREPPER_PORT}"
     networks:
       - reverie-network
 
@@ -270,6 +335,8 @@ services:
     volumes:
       - rover_data:/config
     environment:
+      APOLLO_KEY: ${APOLLO_KEY}
+      APOLLO_GRAPH_REF: "${APOLLO_GRAPH_REF}"
       APOLLO_ROUTER_CONFIG_PATH: /config/router_config.yaml
       APOLLO_ROUTER_SUPERGRAPH_PATH: /config/schema.graphql
     networks:
@@ -283,6 +350,8 @@ volumes:
   rover_data:
     external: true
   opensearch_data:
+  zookeeper_data:
+  kafka_data:
 
 networks:
   reverie-network:
