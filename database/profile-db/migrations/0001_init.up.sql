@@ -3,7 +3,7 @@ CREATE TYPE user_status AS ENUM ('active', 'deleted');
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nickname VARCHAR(255) NOT NULL,
-    nick_tag VARCHAR(255) NOT NULL,
+    nick_tag VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     profile_picture TEXT,
     description TEXT,

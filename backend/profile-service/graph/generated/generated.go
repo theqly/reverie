@@ -71,6 +71,7 @@ type ComplexityRoot struct {
 		UserByEmail         func(childComplexity int, email string) int
 		UserByID            func(childComplexity int, userID uuid.UUID) int
 		UserByNickname      func(childComplexity int, nickname string) int
+		UserByTag           func(childComplexity int, nickTag string) int
 		__resolve__service  func(childComplexity int) int
 		__resolve_entities  func(childComplexity int, representations []map[string]any) int
 	}
@@ -112,7 +113,8 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	UserByID(ctx context.Context, userID uuid.UUID) (*model.User, error)
-	UserByNickname(ctx context.Context, nickname string) (*model.User, error)
+	UserByNickname(ctx context.Context, nickname string) ([]*model.User, error)
+	UserByTag(ctx context.Context, nickTag string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
 	FollowersOf(ctx context.Context, userID uuid.UUID) ([]*model.User, error)
 	FollowingOf(ctx context.Context, userID uuid.UUID) ([]*model.User, error)
@@ -314,6 +316,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.UserByNickname(childComplexity, args["nickname"].(string)), true
+
+	case "Query.userByTag":
+		if e.complexity.Query.UserByTag == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userByTag_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserByTag(childComplexity, args["nickTag"].(string)), true
 
 	case "Query._service":
 		if e.complexity.Query.__resolve__service == nil {
@@ -567,7 +581,8 @@ type SettingsStatuses {
 `, BuiltIn: false},
 	{Name: "../schema/query.graphqls", Input: `type Query {
   userById(userId: UUID!): User
-  userByNickname(nickname: String!): User
+  userByNickname(nickname: String!): [User!]
+  userByTag(nickTag: String!): User
   userByEmail(email: String!): User
 
   followersOf(userId: UUID!): [User!]!
@@ -1172,6 +1187,34 @@ func (ec *executionContext) field_Query_userByNickname_argsNickname(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("nickname"))
 	if tmp, ok := rawArgs["nickname"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_userByTag_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_userByTag_argsNickTag(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["nickTag"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_userByTag_argsNickTag(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["nickTag"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("nickTag"))
+	if tmp, ok := rawArgs["nickTag"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -1847,9 +1890,9 @@ func (ec *executionContext) _Query_userByNickname(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖprofileᚑserviceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖprofileᚑserviceᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userByNickname(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1892,6 +1935,80 @@ func (ec *executionContext) fieldContext_Query_userByNickname(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_userByNickname_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_userByTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_userByTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UserByTag(rctx, fc.Args["nickTag"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖprofileᚑserviceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_userByTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "nickname":
+				return ec.fieldContext_User_nickname(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "nickTag":
+				return ec.fieldContext_User_nickTag(ctx, field)
+			case "profilePicture":
+				return ec.fieldContext_User_profilePicture(ctx, field)
+			case "description":
+				return ec.fieldContext_User_description(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "userRating":
+				return ec.fieldContext_User_userRating(ctx, field)
+			case "followers":
+				return ec.fieldContext_User_followers(ctx, field)
+			case "following":
+				return ec.fieldContext_User_following(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_userByTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5460,6 +5577,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userByTag":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userByTag(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "userByEmail":
 			field := field
 
@@ -6792,6 +6928,53 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOUser2ᚕᚖprofileᚑserviceᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUser2ᚖprofileᚑserviceᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOUser2ᚖprofileᚑserviceᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {

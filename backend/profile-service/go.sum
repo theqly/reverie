@@ -110,8 +110,6 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
-github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208025641-ee7befcc6e59 h1:7zGri9PyoMjeKPkW6A2RGpZ0xztfTJGR803OhpitVCI=
-github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208025641-ee7befcc6e59/go.mod h1:F8fp0xEWm7ZReHVDEJo9rIGAH8X1T8+zJkjRWSWX+x8=
 github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208034302-d9c7cd41ae78 h1:+1izhoA04Fu0rZy5P+w3/P47WQ/o5cb0vsJjxVKTP2s=
 github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208034302-d9c7cd41ae78/go.mod h1:F8fp0xEWm7ZReHVDEJo9rIGAH8X1T8+zJkjRWSWX+x8=
 github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS4MhqMhdFk5YI=

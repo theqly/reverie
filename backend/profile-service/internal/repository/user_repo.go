@@ -96,9 +96,15 @@ func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) e
 	return err
 }
 
-func (r *UserRepository) GetUserByNickname(ctx context.Context, nickname string) (models.User, error) {
+func (r *UserRepository) GetUsersByNickname(ctx context.Context, nickname string) ([]models.User, error) {
+	var users []models.User
+	err := r.db.WithContext(ctx).Find(users, "nickname = ?", nickname).Error
+	return users, err
+}
+
+func (r *UserRepository) GetUserByNickTag(ctx context.Context, nickTag string) (models.User, error) {
 	var user models.User
-	err := r.db.WithContext(ctx).First(&user, "nickname = ?", nickname).Error
+	err := r.db.WithContext(ctx).First(&user, "nick_tag = ?", nickTag).Error
 	return user, err
 }
 

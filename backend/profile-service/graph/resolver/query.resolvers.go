@@ -60,11 +60,58 @@ func (r *queryResolver) UserByID(ctx context.Context, userID uuid.UUID) (*model.
 }
 
 // UserByNickname is the resolver for the userByNickname field.
-func (r *queryResolver) UserByNickname(ctx context.Context, nickname string) (*model.User, error) {
+func (r *queryResolver) UserByNickname(ctx context.Context, nickname string) ([]*model.User, error) {
+	var users []models.User
+	var err error
+	if users, err = r.UserRepo.GetUsersByNickname(ctx, nickname); err != nil {
+		return nil, fmt.Errorf("users not found with nickname %s: %w", nickname, err)
+	}
+
+	//TODO another resolvers
+
+	var res []*model.User
+	for _, user := range users {
+		var followerLinks []models.Follower
+		if followerLinks, err = r.UserRepo.GetFollowers(ctx, user.ID); err != nil {
+			return nil, fmt.Errorf("failed to load followers: %w", err)
+		}
+
+		var followers []*model.User
+		for _, link := range followerLinks {
+			var u models.User
+			if u, err = r.UserRepo.GetUserByID(ctx, link.FollowerID); err == nil {
+				followers = append(followers, mapper.MapUserToGraphQL(&u))
+			}
+		}
+
+		var followingLinks []models.Follower
+		if followingLinks, err = r.UserRepo.GetFollowings(ctx, user.ID); err != nil {
+			return nil, fmt.Errorf("failed to load following: %w", err)
+		}
+
+		var following []*model.User
+		for _, link := range followingLinks {
+			var u models.User
+			if u, err = r.UserRepo.GetUserByID(ctx, link.UserID); err == nil {
+				following = append(following, mapper.MapUserToGraphQL(&u))
+			}
+		}
+
+		u := mapper.MapUserToGraphQL(&user)
+		u.Followers = followers
+		u.Following = following
+
+		res = append(res, u)
+	}
+	return res, nil
+}
+
+// UserByTag is the resolver for the userByTag field.
+func (r *queryResolver) UserByTag(ctx context.Context, nickTag string) (*model.User, error) {
 	var user models.User
 	var err error
-	if user, err = r.UserRepo.GetUserByNickname(ctx, nickname); err != nil {
-		return nil, fmt.Errorf("user not found with nickname %s: %w", nickname, err)
+	if user, err = r.UserRepo.GetUserByNickTag(ctx, nickTag); err != nil {
+		return nil, fmt.Errorf("user not found with nickTag %s: %w", nickTag, err)
 	}
 
 	//TODO another resolvers
