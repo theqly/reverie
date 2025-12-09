@@ -144,7 +144,7 @@ func (r *mutationResolver) UpdatePin(ctx context.Context, id uuid.UUID, input mo
 	// User can only edit if they are the owner (not just saved/copied)
 	if prevPin.OwnerID != input.UserID {
 		logger.Warn("User is not owner of pin", zap.String("userID", input.UserID.String()))
-		return nil, errors.New("incorrect user (not pin`s owner)")
+		return nil, errors.New("incorrect user (not pin's owner)")
 	}
 	// Additional check: user cannot edit if they're not the original author (copied content)
 	if prevPin.AuthorID != input.UserID {
