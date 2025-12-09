@@ -20,6 +20,9 @@ type Pin struct {
 	PlaceID *uuid.UUID `gorm:"type:uuid"`
 	Images  []PinImage `gorm:"foreignKey:PinID"`
 	// BoardID uuid.UUID
+
+	ReactionID *uuid.UUID `gorm:"->"`
+	Bookmarked *bool      `gorm:"->"`
 }
 
 func (Pin) TableName() string {

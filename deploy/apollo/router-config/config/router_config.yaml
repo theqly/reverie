@@ -19,3 +19,18 @@ telemetry:
     logging:
       common:
         service_name: "apollo-router"
+
+cors:
+  policies:
+    - origins:
+        - "http://localhost:5173"
+  methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+  allow_headers: []
+  expose_headers: []
+  

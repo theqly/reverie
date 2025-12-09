@@ -6,12 +6,16 @@ import (
 	"profile-service/internal/models"
 
 	"github.com/google/uuid"
+	kafka "github.com/theqly/reverie/backend/kafka-module"
+	events1 "github.com/theqly/reverie/backend/kafka-module/events/v1"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type UserRepository struct {
 	db             *gorm.DB
 	userStatusesDB map[string]struct{}
+	publisher      *kafka.Producer
 }
 
 func getUserStatuses(db *gorm.DB) (map[string]struct{}, error) {
@@ -39,7 +43,7 @@ func getUserStatuses(db *gorm.DB) (map[string]struct{}, error) {
 	return userStatusesDB, nil
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
+func NewUserRepository(db *gorm.DB, publisher *kafka.Producer) *UserRepository {
 	userStatusesDB, err := getUserStatuses(db)
 	if err != nil {
 		panic(err)
@@ -55,7 +59,7 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 		panic("user status in graph/model does not match SQL user_status enum")
 	}
 
-	return &UserRepository{db: db, userStatusesDB: userStatusesDB}
+	return &UserRepository{db: db, userStatusesDB: userStatusesDB, publisher: publisher}
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (models.User, error) {
@@ -65,6 +69,8 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (models.
 }
 
 func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	logger := zap.L().With(zap.String("repository", "SoftDeleteUserByID"))
+
 	var user models.User
 	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
 	if err != nil {
@@ -73,7 +79,21 @@ func (r *UserRepository) SoftDeleteUserByID(ctx context.Context, id uuid.UUID) e
 
 	user.Status = model.UserStatusDeleted
 
-	return r.db.WithContext(ctx).Save(&user).Error
+	err = r.db.WithContext(ctx).Save(&user).Error
+
+	if err == nil && r.publisher != nil {
+		go func(UserID uuid.UUID) {
+			event := events1.UserDeleted{
+				BaseEvent: kafka.NewBaseEvent(),
+				UserID:    UserID.String(),
+			}
+			if err := r.publisher.PublishUserDeleted(context.Background(), event); err != nil {
+				logger.Info("failed to publish user.deleted event: %v", zap.String("err", err.Error()))
+			}
+		}(user.ID)
+	}
+
+	return err
 }
 
 func (r *UserRepository) GetUserByNickname(ctx context.Context, nickname string) (models.User, error) {
@@ -89,11 +109,54 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (mode
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user models.User) error {
-	return r.db.WithContext(ctx).Create(&user).Error
+	logger := zap.L().With(zap.String("repository", "CreateUser"))
+
+	err := r.db.WithContext(ctx).Create(&user).Error
+
+	if err == nil && r.publisher != nil {
+		go func(u models.User) {
+			event := events1.UserCreated{
+				BaseEvent:   kafka.NewBaseEvent(),
+				UserID:      u.ID.String(),
+				Nickname:    u.Nickname,
+				NickTag:     u.NickTag,
+				Email:       u.Email,
+				Description: *u.Description,
+				UserRating:  u.UserRating,
+				Status:      u.Status.String(),
+			}
+			if err := r.publisher.PublishUserCreated(context.Background(), event); err != nil {
+				logger.Info("failed to publish user.created event: %v", zap.String("err", err.Error()))
+			}
+		}(user)
+	}
+
+	return err
 }
 
 func (r *UserRepository) SaveUser(ctx context.Context, user models.User) error {
-	return r.db.WithContext(ctx).Save(&user).Error
+	logger := zap.L().With(zap.String("repository", "SaveUser"))
+
+	err := r.db.WithContext(ctx).Save(&user).Error
+
+	if err == nil && r.publisher != nil {
+		go func(u models.User) {
+			event := events1.UserUpdated{
+				BaseEvent:   kafka.NewBaseEvent(),
+				UserID:      u.ID.String(),
+				Nickname:    u.Nickname,
+				NickTag:     u.NickTag,
+				Description: *u.Description,
+				UserRating:  u.UserRating,
+				Status:      u.Status.String(),
+			}
+			if err := r.publisher.PublishUserUpdated(context.Background(), event); err != nil {
+				logger.Info("failed to publish user.updated event: %v", zap.String("err", err.Error()))
+			}
+		}(user)
+	}
+
+	return err
 }
 
 func (r *UserRepository) GetFollow(ctx context.Context, userID uuid.UUID, followerID uuid.UUID) (models.Follower, error) {
@@ -103,11 +166,45 @@ func (r *UserRepository) GetFollow(ctx context.Context, userID uuid.UUID, follow
 }
 
 func (r *UserRepository) CreateFollow(ctx context.Context, follow models.Follower) error {
-	return r.db.WithContext(ctx).Create(&follow).Error
+	logger := zap.L().With(zap.String("repository", "CreateFollow"))
+
+	err := r.db.WithContext(ctx).Create(&follow).Error
+
+	if err == nil && r.publisher != nil {
+		go func(u models.Follower) {
+			event := events1.FollowCreated{
+				BaseEvent:  kafka.NewBaseEvent(),
+				UserID:     u.UserID.String(),
+				FollowerID: u.FollowerID.String(),
+			}
+			if err := r.publisher.PublishFollowCreated(context.Background(), event); err != nil {
+				logger.Info("failed to publish user.follow.created event: %v", zap.String("err", err.Error()))
+			}
+		}(follow)
+	}
+
+	return err
 }
 
 func (r *UserRepository) DeleteFollow(ctx context.Context, follow models.Follower) error {
-	return r.db.WithContext(ctx).Delete(&follow).Error
+	logger := zap.L().With(zap.String("repository", "DeleteFollow"))
+
+	err := r.db.WithContext(ctx).Delete(&follow).Error
+
+	if err == nil && r.publisher != nil {
+		go func(u models.Follower) {
+			event := events1.FollowDeleted{
+				BaseEvent:  kafka.NewBaseEvent(),
+				UserID:     u.UserID.String(),
+				FollowerID: u.FollowerID.String(),
+			}
+			if err := r.publisher.PublishFollowDeleted(context.Background(), event); err != nil {
+				logger.Info("failed to publish user.follow.deleted event: %v", zap.String("err", err.Error()))
+			}
+		}(follow)
+	}
+
+	return err
 }
 
 func (r *UserRepository) GetFollowers(ctx context.Context, userID uuid.UUID) ([]models.Follower, error) {

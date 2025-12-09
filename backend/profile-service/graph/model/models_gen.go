@@ -52,6 +52,8 @@ type User struct {
 	Following      []*User    `json:"following"`
 }
 
+func (User) IsEntity() {}
+
 type UserStatus string
 
 const (

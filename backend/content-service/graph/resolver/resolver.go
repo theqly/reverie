@@ -10,4 +10,5 @@ type Resolver struct {
 	BoardRepo    *repository.BoardRepository
 	PinRepo      *repository.PinRepository
 	ReactionRepo *repository.ReactionRepository
+	BookmarkRepo *repository.BookmarkRepository
 }

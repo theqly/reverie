@@ -64,17 +64,26 @@ func ToGraphQLBoard(b *models.Board) *model.Board {
 	return &model.Board{
 		ID:          b.ID,
 		Name:        b.Name,
+		Description: &b.Description,
 		AccessLevel: model.AccessLevelType(b.AccessLevel),
 		OwnerID:     b.OwnerID,
 		OwnerType:   model.OwnerType(b.OwnerType),
 		CreatedAt:   b.CreatedAt,
 		Pins:        toGraphQlSlicePin(b.Pins),
+		ReactionID:  b.ReactionID,
+		Bookmarked:  b.Bookmarked,
 	}
 }
 
 func CreateToDomainBoard(input *model.CreateBoardInput) *models.Board {
+	desc := ""
+	if input.Description != nil {
+		desc = *input.Description
+	}
+
 	return &models.Board{
 		Name:          input.Name,
+		Description:   desc,
 		AccessLevelID: accessLevelToID[input.AccessLevel],
 		OwnerID:       input.OwnerID,
 		OwnerTypeID:   ownerTypeToID[input.OwnerType],
@@ -85,6 +94,9 @@ func UpdateToDomainBoard(input *model.UpdateBoardInput) *models.Board {
 	board := models.Board{}
 	if input.Name != nil {
 		board.Name = *input.Name
+	}
+	if input.Description != nil {
+		board.Description = *input.Description
 	}
 	if input.AccessLevel != nil {
 		board.AccessLevelID = accessLevelToID[*input.AccessLevel]
@@ -105,6 +117,8 @@ func ToGraphQLPin(p *models.Pin) *model.Pin {
 		CreatedAt:   p.CreatedAt,
 		Images:      toGraphQLImages(p.Images),
 		// TODO: Comments, Place
+		ReactionID: p.ReactionID,
+		Bookmarked: p.Bookmarked,
 	}
 }
 

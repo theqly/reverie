@@ -13,11 +13,15 @@ enum OwnerType {
 type Board {
   id: UUID!
   name: String!
+  description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
   ownerType: OwnerType!
   createdAt: Time!
   pins: [Pin!]
+
+  reactionId: UUID
+  bookmarked: Boolean
 }
 
 type CommentToBoard {

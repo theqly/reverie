@@ -12,6 +12,8 @@ import (
 	"profile-service/pkg/database"
 	"profile-service/pkg/middleware"
 
+	kafka "github.com/theqly/reverie/backend/kafka-module"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -53,7 +55,11 @@ func main() {
 
 	waitMigration(60)
 
-	userRepo := repository.NewUserRepository(database.DB)
+	// kafkaPublisher := kafka.NewProducer([]string{"localhost:9092"}, nil)
+	var kafkaPublisher *kafka.Producer
+	kafkaPublisher = nil
+
+	userRepo := repository.NewUserRepository(database.DB, kafkaPublisher)
 
 	resolver := &resolver.Resolver{
 		UserRepo: userRepo,

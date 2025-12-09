@@ -1,0 +1,21 @@
+version: "2"
+reverie-pipeline:
+  source:
+    kafka:
+      bootstrap_servers: ["kafka:9092"]
+      topics:
+        - name: "reverie"
+          group_id: "data-prepper-group"
+          auto_offset_reset: "earliest"
+          workers: 2
+          serde_format: "json"
+      encryption:
+        type: "none"
+  sink:
+    - opensearch:
+        hosts: ["https://opensearch:9200"]
+        index_type: custom
+        index: "reverie-%{yyyy.MM.dd}"
+        username: "admin"
+        password: "!Demon666AndAndroid228"
+        insecure: true
