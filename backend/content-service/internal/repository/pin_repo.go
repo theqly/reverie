@@ -73,39 +73,47 @@ func (r *PinRepository) CopyPin(ctx context.Context, pinID uuid.UUID, newOwnerID
 	}
 
 	// Create a copy with new owner and current saved_at time
-	copiedPin := models.Pin{
-		Name:        originalPin.Name,
-		OwnerID:     newOwnerID,
-		AuthorID:    originalPin.AuthorID, // Keep original author
-		Address:     originalPin.Address,
-		Latitude:    originalPin.Latitude,
-		Longitude:   originalPin.Longitude,
-		Description: originalPin.Description,
-		Rating:      originalPin.Rating,
-		CreatedAt:   originalPin.CreatedAt, // Keep original creation time
-		SavedAt:     time.Now(),            // Set current time as saved time
-		PlaceID:     originalPin.PlaceID,
-	}
+	var copiedPin models.Pin
+	// Start transaction for atomicity
+	err = r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		copiedPin = models.Pin{
+			Name:        originalPin.Name,
+			OwnerID:     newOwnerID,
+			AuthorID:    originalPin.AuthorID, // Keep original author
+			Address:     originalPin.Address,
+			Latitude:    originalPin.Latitude,
+			Longitude:   originalPin.Longitude,
+			Description: originalPin.Description,
+			Rating:      originalPin.Rating,
+			CreatedAt:   originalPin.CreatedAt, // Keep original creation time
+			SavedAt:     time.Now(),            // Set current time as saved time
+			PlaceID:     originalPin.PlaceID,
+		}
 
-	err = r.db.WithContext(ctx).Create(&copiedPin).Error
-	if err != nil {
-		logger.Error("Failed to create copied pin", zap.Error(err))
-		return nil, err
-	}
+		if err := tx.Create(&copiedPin).Error; err != nil {
+			logger.Error("Failed to create copied pin", zap.Error(err))
+			return err
+		}
 
-	// Copy images if they exist
-	if len(originalPin.Images) > 0 {
-		for _, img := range originalPin.Images {
-			newImage := models.PinImage{
-				PinID:       copiedPin.ID,
-				ImageURL:    img.ImageURL,
-				OrderNumber: img.OrderNumber,
-			}
-			if err := r.db.WithContext(ctx).Create(&newImage).Error; err != nil {
-				logger.Error("Failed to copy pin image", zap.Error(err))
-				// Continue copying other images even if one fails
+		// Copy images if they exist
+		if len(originalPin.Images) > 0 {
+			for _, img := range originalPin.Images {
+				newImage := models.PinImage{
+					PinID:       copiedPin.ID,
+					ImageURL:    img.ImageURL,
+					OrderNumber: img.OrderNumber,
+				}
+				if err := tx.Create(&newImage).Error; err != nil {
+					logger.Error("Failed to copy pin image", zap.Error(err))
+					// Rollback the transaction if any image fails to copy
+					return err
+				}
 			}
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if r.publisher != nil {

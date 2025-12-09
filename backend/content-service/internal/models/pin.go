@@ -15,7 +15,7 @@ type Pin struct {
 	Latitude    float64 `gorm:"not null"`
 	Longitude   float64 `gorm:"not null"`
 	Description string
-	Rating      float64   `gorm:"default:0.0"`
+	Rating      float64   `gorm:"not null;default:0.0"`
 	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	SavedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 

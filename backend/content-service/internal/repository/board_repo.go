@@ -82,50 +82,57 @@ func (r *BoardRepository) Create(ctx context.Context, board models.Board) error 
 func (r *BoardRepository) CopyBoard(ctx context.Context, boardID uuid.UUID, newOwnerID uuid.UUID) (*models.Board, error) {
 	logger := zap.L().With(zap.String("repository", "CopyBoard"))
 
-	originalBoard, err := r.GetByID(ctx, boardID, nil)
-	if err != nil {
-		logger.Error("Failed to get original board", zap.Error(err))
-		return nil, err
-	}
+	var copiedBoard *models.Board
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		originalBoard, err := r.GetByID(ctx, boardID, nil)
+		if err != nil {
+			logger.Error("Failed to get original board", zap.Error(err))
+			return err
+		}
 
-	// Get owner type ID for user: idk, maybe it's should be done once on the start
-	var ownerType models.OwnerType
-	err = r.db.Where("type = ?", "user").First(&ownerType).Error
-	if err != nil {
-		return nil, err
-	}
-	ownerTypeUserID := ownerType.ID
+		// Get owner type ID for user: idk, maybe it's should be done once on the start
+		var ownerType models.OwnerType
+		if err := tx.Where("type = ?", "user").First(&ownerType).Error; err != nil {
+			return err
+		}
+		ownerTypeUserID := ownerType.ID
 
-	copiedBoard := models.Board{
-		Name:          originalBoard.Name,
-		Description:   originalBoard.Description,
-		AccessLevelID: originalBoard.AccessLevelID,
-		OwnerID:       newOwnerID,
-		AuthorID:      originalBoard.AuthorID,
-		OwnerTypeID:   ownerTypeUserID,
-		CreatedAt:     originalBoard.CreatedAt,
-		SavedAt:       time.Time{},
-	}
+		board := models.Board{
+			Name:          originalBoard.Name,
+			Description:   originalBoard.Description,
+			AccessLevelID: originalBoard.AccessLevelID,
+			OwnerID:       newOwnerID,
+			AuthorID:      originalBoard.AuthorID,
+			OwnerTypeID:   ownerTypeUserID,
+			CreatedAt:     originalBoard.CreatedAt,
+			SavedAt:       time.Time{},
+		}
 
-	err = r.Create(ctx, copiedBoard)
-	if err != nil {
-		logger.Error("Failed to create copied board", zap.Error(err))
-		return nil, err
-	}
+		if err := tx.Create(&board).Error; err != nil {
+			logger.Error("Failed to create copied board", zap.Error(err))
+			return err
+		}
 
-	if len(originalBoard.Pins) > 0 {
-		for _, pin := range originalBoard.Pins {
-			boardPin := models.BoardPin{
-				BoardID: copiedBoard.ID,
-				PinID:   pin.ID,
-			}
-			if err := r.db.WithContext(ctx).Create(&boardPin).Error; err != nil {
-				logger.Error("Failed to copy board pin", zap.Error(err))
+		if len(originalBoard.Pins) > 0 {
+			for _, pin := range originalBoard.Pins {
+				boardPin := models.BoardPin{
+					BoardID: board.ID,
+					PinID:   pin.ID,
+				}
+				if err := tx.Create(&boardPin).Error; err != nil {
+					logger.Error("Failed to copy board pin", zap.Error(err))
+					return err
+				}
 			}
 		}
-	}
 
-	return &copiedBoard, nil
+		copiedBoard = &board
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return copiedBoard, nil
 }
 
 func (r *BoardRepository) baseBoardQuery(ctx context.Context, viewerID *uuid.UUID) *gorm.DB {
