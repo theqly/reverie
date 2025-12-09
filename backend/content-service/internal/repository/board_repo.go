@@ -105,7 +105,7 @@ func (r *BoardRepository) CopyBoard(ctx context.Context, boardID uuid.UUID, newO
 			AuthorID:      originalBoard.AuthorID,
 			OwnerTypeID:   ownerTypeUserID,
 			CreatedAt:     originalBoard.CreatedAt,
-			SavedAt:       time.Time{},
+			SavedAt:       time.Now(),
 		}
 
 		if err := tx.Create(&board).Error; err != nil {
