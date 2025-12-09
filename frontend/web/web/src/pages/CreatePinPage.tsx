@@ -5,15 +5,15 @@ import logo from '../assets/Reverie.svg';
 import AddPinModal from "./AddPinModal";
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header'; 
-
+import { createPin } from "../services/pinService";
 
 
 const CreatePinPage = () => {
   const navigate = useNavigate();
   
   // Состояния для полей формы
-  const [collectionName, setCollectionName] = useState('');
-  const [collectionInfo, setCollectionInfo] = useState('');
+  const [pinName, setPinName] = useState('');
+  const [pinInfo, setPinInfo] = useState('');
   const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState<string[]>([]); // ← заглушка: имена соавторов
@@ -68,20 +68,23 @@ const CreatePinPage = () => {
   };
 
 
-  const handleSaveCollection = () => {
-    // Заглушка для сохранения
-    console.log('Save collection:', {
-      name: collectionName,
-      info: collectionInfo,
-      cover: coverImage,
+  const handleSavePin = () => {
+
+    const payload = {
+      name: pinName,
+      info: pinInfo,
+      coverImage,
       pinCount
-    });
+    };
+
+    await createPin(payload);
+    console.log("createPin вызвана с payload:", payload);
   };
 
   // Валидация для кнопки сохранения
-  const isSaveEnabled = collectionName.trim().length > 0 && 
-                       collectionName.length <= 50 && 
-                       collectionInfo.length <= 1000 &&
+  const isSaveEnabled = pinName.trim().length > 0 && 
+                       pinName.length <= 50 && 
+                       pinInfo.length <= 1000 &&
                        coverImage !== null;
   return (
 
@@ -103,16 +106,16 @@ const CreatePinPage = () => {
                 <input
                 id="collection-name"
                 type="text"
-                value={collectionName}
-                onChange={(e) => setCollectionName(e.target.value)}
+                value={pinName}
+                onChange={(e) => setPinName(e.target.value)}
                 maxLength={50}
-                className={collectionName.length > 50 ? styles.error : styles.name_input}
+                className={pinName.length > 50 ? styles.error : styles.name_input}
                 />
 
                 <div className={styles.characterCounter}>
-                {collectionName.length}/50
+                {pinName.length}/50
                 </div>
-                {collectionName.length > 50 && (
+                {pinName.length > 50 && (
                 <div className={styles.errorMessage}>
                     Collection name must be 50 characters or less
                 </div>
@@ -127,17 +130,17 @@ const CreatePinPage = () => {
             <div className={styles.discr_input_block}>
                 <textarea
                 id="collection-info"
-                value={collectionInfo}
-                onChange={(e) => setCollectionInfo(e.target.value)}
+                value={pinInfo}
+                onChange={(e) => setPinInfo(e.target.value)}
                 maxLength={1000}
                 rows={4}
-                className={collectionInfo.length > 1000 ? styles.error : styles.discr_input}
+                className={pinInfo.length > 1000 ? styles.error : styles.discr_input}
                 />
 
                 <div className={styles.characterCounter}>
-                {collectionInfo.length}/1000
+                {pinInfo.length}/1000
                 </div>
-                {collectionInfo.length > 1000 && (
+                {pinInfo.length > 1000 && (
                 <div className={styles.errorMessage}>
                     Collection info must be 1000 characters or less
                 </div>
@@ -252,7 +255,7 @@ const CreatePinPage = () => {
         
         <button 
             type="button" 
-            onClick={handleSaveCollection}
+            onClick={handleSavePin}
             disabled={!isSaveEnabled}
             className={styles.saveButton}
           >
