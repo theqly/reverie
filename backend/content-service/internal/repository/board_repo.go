@@ -27,12 +27,10 @@ func NewBoardRepository(db *gorm.DB, publisher *kafka.Producer) *BoardRepository
 func (r *BoardRepository) Create(ctx context.Context, board models.Board) error {
 	logger := zap.L().With(zap.String("repository", "CreateBoard"))
 
-	// Set author_id to owner_id for new boards (original content)
 	if board.AuthorID == uuid.Nil {
 		board.AuthorID = board.OwnerID
 	}
 
-	// Set saved_at to current time if not set
 	if board.SavedAt.IsZero() {
 		board.SavedAt = board.CreatedAt
 	}
@@ -84,26 +82,29 @@ func (r *BoardRepository) Create(ctx context.Context, board models.Board) error 
 func (r *BoardRepository) CopyBoard(ctx context.Context, boardID uuid.UUID, newOwnerID uuid.UUID) (*models.Board, error) {
 	logger := zap.L().With(zap.String("repository", "CopyBoard"))
 
-	// Get the original board
 	originalBoard, err := r.GetByID(ctx, boardID, nil)
 	if err != nil {
 		logger.Error("Failed to get original board", zap.Error(err))
 		return nil, err
 	}
 
-	// Create a copy with new owner and current saved_at time
-	// Note: Copied boards are always user-owned (not group-owned)
-	ownerTypeUserID := 1 // Assuming 1 is the ID for "user" type
+	// Get owner type ID for user: idk, maybe it's should be done once on the start
+	var ownerType models.OwnerType
+	err = r.db.Where("type = ?", "user").First(&ownerType).Error
+	if err != nil {
+		return nil, err
+	}
+	ownerTypeUserID := ownerType.ID
 
 	copiedBoard := models.Board{
 		Name:          originalBoard.Name,
 		Description:   originalBoard.Description,
 		AccessLevelID: originalBoard.AccessLevelID,
 		OwnerID:       newOwnerID,
-		AuthorID:      originalBoard.AuthorID, // Keep original author
+		AuthorID:      originalBoard.AuthorID,
 		OwnerTypeID:   ownerTypeUserID,
-		CreatedAt:     originalBoard.CreatedAt, // Keep original creation time
-		SavedAt:       time.Time{},             // Will be set by Create method
+		CreatedAt:     originalBoard.CreatedAt,
+		SavedAt:       time.Time{},
 	}
 
 	err = r.Create(ctx, copiedBoard)
@@ -112,7 +113,6 @@ func (r *BoardRepository) CopyBoard(ctx context.Context, boardID uuid.UUID, newO
 		return nil, err
 	}
 
-	// Copy pins if they exist
 	if len(originalBoard.Pins) > 0 {
 		for _, pin := range originalBoard.Pins {
 			boardPin := models.BoardPin{
@@ -121,7 +121,6 @@ func (r *BoardRepository) CopyBoard(ctx context.Context, boardID uuid.UUID, newO
 			}
 			if err := r.db.WithContext(ctx).Create(&boardPin).Error; err != nil {
 				logger.Error("Failed to copy board pin", zap.Error(err))
-				// Continue copying other pins even if one fails
 			}
 		}
 	}
