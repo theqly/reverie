@@ -19,7 +19,7 @@ type User @key(fields: "id") {
 }
 
 type SettingsStatuses {
-  id: UUID!
+  id: Int!
   type: String!
   description: String
 }

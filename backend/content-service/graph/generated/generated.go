@@ -1270,7 +1270,7 @@ scalar UUID`, BuiltIn: false},
 	{Name: "../schema/reaction.graphqls", Input: `type Reaction {
   id: UUID!
   type: String!
-  description: String!
+  description: String
 }
 
 `, BuiltIn: false},
@@ -6702,9 +6702,9 @@ func (ec *executionContext) _Reaction_description(ctx context.Context, field gra
 			return obj.Description, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -9900,9 +9900,6 @@ func (ec *executionContext) _Reaction(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "description":
 			out.Values[i] = ec._Reaction_description(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

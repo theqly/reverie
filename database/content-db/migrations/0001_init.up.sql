@@ -10,7 +10,7 @@ CREATE TABLE owner_types (
 
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(50) NOT NULL,
     description TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE pins (
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
     description TEXT,
-    rating FLOAT DEFAULT 0.0,
+    rating FLOAT NOT NULL DEFAULT 0.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     place_id UUID,

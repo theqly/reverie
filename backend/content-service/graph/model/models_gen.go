@@ -132,7 +132,7 @@ type Query struct {
 type Reaction struct {
 	ID          uuid.UUID `json:"id"`
 	Type        string    `json:"type"`
-	Description string    `json:"description"`
+	Description *string   `json:"description,omitempty"`
 }
 
 type UpdateBoardInput struct {
