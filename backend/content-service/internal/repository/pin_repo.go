@@ -54,7 +54,7 @@ func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 				PlaceID:     "0",
 			}
 			if err := r.publisher.PublishPinCreated(context.Background(), event); err != nil {
-				logger.Info("failed to publish pin.created event: %v", zap.String("err", err.Error()))
+				logger.Info("failed to publish pin.created event", zap.Error(err))
 			}
 		}(pin)
 	}
