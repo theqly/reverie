@@ -27,6 +27,16 @@ func NewBoardRepository(db *gorm.DB, publisher *kafka.Producer) *BoardRepository
 func (r *BoardRepository) Create(ctx context.Context, board models.Board) error {
 	logger := zap.L().With(zap.String("repository", "CreateBoard"))
 
+	// Set author_id to owner_id for new boards (original content)
+	if board.AuthorID == uuid.Nil {
+		board.AuthorID = board.OwnerID
+	}
+
+	// Set saved_at to current time if not set
+	if board.SavedAt.IsZero() {
+		board.SavedAt = board.CreatedAt
+	}
+
 	err := r.db.WithContext(ctx).Create(&board).Error
 
 	var members []models.Member
@@ -69,6 +79,54 @@ func (r *BoardRepository) Create(ctx context.Context, board models.Board) error 
 	}
 
 	return err
+}
+
+func (r *BoardRepository) CopyBoard(ctx context.Context, boardID uuid.UUID, newOwnerID uuid.UUID) (*models.Board, error) {
+	logger := zap.L().With(zap.String("repository", "CopyBoard"))
+
+	// Get the original board
+	originalBoard, err := r.GetByID(ctx, boardID, nil)
+	if err != nil {
+		logger.Error("Failed to get original board", zap.Error(err))
+		return nil, err
+	}
+
+	// Create a copy with new owner and current saved_at time
+	// Note: Copied boards are always user-owned (not group-owned)
+	ownerTypeUserID := 1 // Assuming 1 is the ID for "user" type
+
+	copiedBoard := models.Board{
+		Name:          originalBoard.Name,
+		Description:   originalBoard.Description,
+		AccessLevelID: originalBoard.AccessLevelID,
+		OwnerID:       newOwnerID,
+		AuthorID:      originalBoard.AuthorID, // Keep original author
+		OwnerTypeID:   ownerTypeUserID,
+		CreatedAt:     originalBoard.CreatedAt, // Keep original creation time
+		SavedAt:       time.Time{},             // Will be set by Create method
+	}
+
+	err = r.Create(ctx, copiedBoard)
+	if err != nil {
+		logger.Error("Failed to create copied board", zap.Error(err))
+		return nil, err
+	}
+
+	// Copy pins if they exist
+	if len(originalBoard.Pins) > 0 {
+		for _, pin := range originalBoard.Pins {
+			boardPin := models.BoardPin{
+				BoardID: copiedBoard.ID,
+				PinID:   pin.ID,
+			}
+			if err := r.db.WithContext(ctx).Create(&boardPin).Error; err != nil {
+				logger.Error("Failed to copy board pin", zap.Error(err))
+				// Continue copying other pins even if one fails
+			}
+		}
+	}
+
+	return &copiedBoard, nil
 }
 
 func (r *BoardRepository) baseBoardQuery(ctx context.Context, viewerID *uuid.UUID) *gorm.DB {
@@ -487,7 +545,7 @@ func (r *BoardRepository) GetOwnBoardsByUser(ctx context.Context, userID uuid.UU
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("ot.type = ?", "user").
 		Where("boards.owner_id = ?", userID).
-		Order("boards.id DESC").
+		Order("boards.saved_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&boards).
@@ -514,7 +572,7 @@ func (r *BoardRepository) GetGroupBoardsByUser(ctx context.Context, userID uuid.
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
 		Where("boards.owner_type_id = (?)", ownerTypeGroupSubQuery).
 		Where("boards.owner_id IN (?)", userGroupsSubQuery).
-		Order("boards.id DESC").
+		Order("boards.saved_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&boards).

@@ -5,6 +5,7 @@ import (
 	"content-service/internal/utils"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	kafka "github.com/theqly/reverie/backend/kafka-module"
@@ -24,6 +25,16 @@ func NewPinRepository(db *gorm.DB, publisher *kafka.Producer) *PinRepository {
 
 func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 	logger := zap.L().With(zap.String("repository", "CreatePin"))
+
+	// Set author_id to owner_id for new pins (original content)
+	if pin.AuthorID == uuid.Nil {
+		pin.AuthorID = pin.OwnerID
+	}
+
+	// Set saved_at to current time if not set
+	if pin.SavedAt.IsZero() {
+		pin.SavedAt = pin.CreatedAt
+	}
 
 	err := r.db.WithContext(ctx).Create(&pin).Error
 
@@ -49,6 +60,76 @@ func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 	}
 
 	return err
+}
+
+func (r *PinRepository) CopyPin(ctx context.Context, pinID uuid.UUID, newOwnerID uuid.UUID) (*models.Pin, error) {
+	logger := zap.L().With(zap.String("repository", "CopyPin"))
+
+	// Get the original pin
+	originalPin, err := r.GetByID(ctx, pinID, nil)
+	if err != nil {
+		logger.Error("Failed to get original pin", zap.Error(err))
+		return nil, err
+	}
+
+	// Create a copy with new owner and current saved_at time
+	copiedPin := models.Pin{
+		Name:        originalPin.Name,
+		OwnerID:     newOwnerID,
+		AuthorID:    originalPin.AuthorID, // Keep original author
+		Address:     originalPin.Address,
+		Latitude:    originalPin.Latitude,
+		Longitude:   originalPin.Longitude,
+		Description: originalPin.Description,
+		Rating:      originalPin.Rating,
+		CreatedAt:   originalPin.CreatedAt, // Keep original creation time
+		SavedAt:     time.Now(),            // Set current time as saved time
+		PlaceID:     originalPin.PlaceID,
+	}
+
+	err = r.db.WithContext(ctx).Create(&copiedPin).Error
+	if err != nil {
+		logger.Error("Failed to create copied pin", zap.Error(err))
+		return nil, err
+	}
+
+	// Copy images if they exist
+	if len(originalPin.Images) > 0 {
+		for _, img := range originalPin.Images {
+			newImage := models.PinImage{
+				PinID:       copiedPin.ID,
+				ImageURL:    img.ImageURL,
+				OrderNumber: img.OrderNumber,
+			}
+			if err := r.db.WithContext(ctx).Create(&newImage).Error; err != nil {
+				logger.Error("Failed to copy pin image", zap.Error(err))
+				// Continue copying other images even if one fails
+			}
+		}
+	}
+
+	if r.publisher != nil {
+		go func(p models.Pin) {
+			event := events1.PinCreated{
+				BaseEvent:   kafka.NewBaseEvent(),
+				PinID:       p.ID.String(),
+				Name:        p.Name,
+				OwnerID:     p.OwnerID.String(),
+				Description: p.Description,
+				Latitude:    p.Latitude,
+				Longitude:   p.Longitude,
+				Address:     p.Address,
+				Rating:      p.Rating,
+				CreatedAt:   p.CreatedAt,
+				PlaceID:     "0",
+			}
+			if err := r.publisher.PublishPinCreated(context.Background(), event); err != nil {
+				logger.Info("failed to publish pin.created event: %v", zap.String("err", err.Error()))
+			}
+		}(copiedPin)
+	}
+
+	return &copiedPin, nil
 }
 
 func (r *PinRepository) withViewerData(tx *gorm.DB, viewerID *uuid.UUID) *gorm.DB {
@@ -91,7 +172,7 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, viewerI
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Order("id DESC").Limit(limit).Offset(offset).Find(&pins, "owner_id = ?", userID).Error
+	err := tx.Order("saved_at DESC").Limit(limit).Offset(offset).Find(&pins, "owner_id = ?", userID).Error
 	return pins, err
 }
 

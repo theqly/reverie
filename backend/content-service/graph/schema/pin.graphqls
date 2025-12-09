@@ -2,12 +2,14 @@ type Pin @key(fields: "id") {
   id: UUID!
   name: String!
   owner: User!
+  author: User!
   address: String
   latitude: Float!
   longitude: Float!
   description: String
   rating: Float!
   createdAt: Time!
+  savedAt: Time!
 
   place: Place
   images: [PinImage!]

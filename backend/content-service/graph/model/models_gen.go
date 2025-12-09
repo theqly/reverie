@@ -36,8 +36,10 @@ type Board struct {
 	Description *string         `json:"description,omitempty"`
 	AccessLevel AccessLevelType `json:"accessLevel"`
 	OwnerID     uuid.UUID       `json:"ownerId"`
+	AuthorID    uuid.UUID       `json:"authorId"`
 	OwnerType   OwnerType       `json:"ownerType"`
 	CreatedAt   time.Time       `json:"createdAt"`
+	SavedAt     time.Time       `json:"savedAt"`
 	Pins        []*Pin          `json:"pins,omitempty"`
 	ReactionID  *uuid.UUID      `json:"reactionId,omitempty"`
 	Bookmarked  *bool           `json:"bookmarked,omitempty"`
@@ -91,12 +93,14 @@ type Pin struct {
 	ID          uuid.UUID   `json:"id"`
 	Name        string      `json:"name"`
 	Owner       *User       `json:"owner"`
+	Author      *User       `json:"author"`
 	Address     *string     `json:"address,omitempty"`
 	Latitude    float64     `json:"latitude"`
 	Longitude   float64     `json:"longitude"`
 	Description *string     `json:"description,omitempty"`
 	Rating      float64     `json:"rating"`
 	CreatedAt   time.Time   `json:"createdAt"`
+	SavedAt     time.Time   `json:"savedAt"`
 	Place       *Place      `json:"place,omitempty"`
 	Images      []*PinImage `json:"images,omitempty"`
 	ReactionID  *uuid.UUID  `json:"reactionId,omitempty"`
