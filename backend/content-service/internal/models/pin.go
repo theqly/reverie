@@ -10,12 +10,14 @@ type Pin struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Name        string    `gorm:"size:255;not null"`
 	OwnerID     uuid.UUID `gorm:"type:uuid;not null"`
+	AuthorID    uuid.UUID `gorm:"type:uuid;not null"`
 	Address     string
 	Latitude    float64 `gorm:"not null"`
 	Longitude   float64 `gorm:"not null"`
 	Description string
-	Rating      float64   `gorm:"default:0.0"`
+	Rating      float64   `gorm:"not null;default:0.0"`
 	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	SavedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 
 	PlaceID *uuid.UUID `gorm:"type:uuid"`
 	Images  []PinImage `gorm:"foreignKey:PinID"`

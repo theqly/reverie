@@ -1,6 +1,6 @@
 type Reaction {
   id: UUID!
   type: String!
-  description: String!
+  description: String
 }
 

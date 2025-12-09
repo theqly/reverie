@@ -14,5 +14,5 @@ type User struct {
 	ProfilePicture *string          `gorm:"type:text"`
 	Description    *string          `gorm:"type:text"`
 	UserRating     float64          `gorm:"default:0"`
-	Status         model.UserStatus `gorm:"type:user_status;not nulldefault: 'active'"`
+	Status         model.UserStatus `gorm:"type:user_status;not null;default:'active'"`
 }

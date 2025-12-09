@@ -55,9 +55,11 @@ input CreateGroupInput {
 type Mutation {
   createBoard(input: CreateBoardInput!): Board!
   updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
+  copyBoard(boardId: UUID!, userId: UUID!): Board!
 
   createPin(input: CreatePinInput!): Pin!
   updatePin(id: UUID!, input: UpdatePinInput!): Pin!
+  copyPin(pinId: UUID!, userId: UUID!): Pin!
 
   addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
   removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!

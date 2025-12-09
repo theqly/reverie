@@ -6,8 +6,8 @@ import (
 
 type Reaction struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Type        string    `gorm:"size:255;not null"`
-	Description string    `gorm:"size:255;not null"`
+	Type        string    `gorm:"size:255;not null;unique"`
+	Description *string   `gorm:"type:text"`
 }
 
 func (Reaction) TableName() string {

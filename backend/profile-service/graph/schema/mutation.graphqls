@@ -9,7 +9,7 @@ input CreateUserInput {
 input UpdateUserInput {
   nickname: String
   email: String
-  nick_tag: String!
+  nick_tag: String
   profilePicture: String
   description: String
 }
@@ -22,5 +22,5 @@ type Mutation {
   followUser(userId: UUID!, followerId: UUID!): Boolean!
   unfollowUser(userId: UUID!, followerId: UUID!): Boolean!
 
-  changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
+  changeAccessBookmarks(userId: UUID!, newStatus: Int!): Boolean!
 }

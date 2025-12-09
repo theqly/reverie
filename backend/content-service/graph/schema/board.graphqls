@@ -16,8 +16,10 @@ type Board {
   description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
+  authorId: UUID!
   ownerType: OwnerType!
   createdAt: Time!
+  savedAt: Time!
   pins: [Pin!]
 
   reactionId: UUID

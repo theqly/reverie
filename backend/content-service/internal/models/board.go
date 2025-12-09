@@ -18,12 +18,14 @@ type OwnerType struct {
 
 type Board struct {
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name          string    `gorm:"size:255;not null"`
+	Name          string    `gorm:"size:50;not null"`
 	Description   string
 	AccessLevelID int       `gorm:"not null"`
 	OwnerID       uuid.UUID `gorm:"type:uuid;not null"`
+	AuthorID      uuid.UUID `gorm:"type:uuid;not null"`
 	OwnerTypeID   int       `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	SavedAt       time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 
 	Pins []*Pin `gorm:"many2many:board_pins;"`
 

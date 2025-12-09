@@ -32,12 +32,14 @@ CREATE TABLE owner_types (
 
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(50) NOT NULL,
     description TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
+	author_id UUID NOT NULL,
     owner_type_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (access_level_id) REFERENCES access_levels(id),
     FOREIGN KEY (owner_type_id) REFERENCES owner_types(id)
 );
@@ -57,12 +59,14 @@ CREATE TABLE pins (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     owner_id UUID NOT NULL,
+	author_id UUID NOT NULL,
     address TEXT,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
     description TEXT,
-    rating FLOAT DEFAULT 0.0,
+    rating FLOAT NOT NULL DEFAULT 0.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     place_id UUID,
     FOREIGN KEY (place_id) REFERENCES places(id)
 );
@@ -199,7 +203,8 @@ INSERT INTO owner_types (type) VALUES
 
 CREATE INDEX idx_members_user_id ON members(user_id);
 CREATE INDEX idx_members_group_id ON members(group_id);
-
+CREATE INDEX idx_boards_author_id ON boards(author_id);
+CREATE INDEX idx_boards_owner_saved_at ON boards(owner_id, saved_at DESC);
 
 CREATE INDEX idx_boards_owner_id ON boards(owner_id);
 CREATE INDEX idx_boards_name ON boards(name);
@@ -207,6 +212,8 @@ CREATE INDEX idx_boards_owner_created_at ON boards(owner_id, created_at DESC);
 
 CREATE INDEX idx_pins_owner_id ON pins(owner_id);
 CREATE INDEX idx_pins_name ON pins(name);
+CREATE INDEX idx_pins_author_id ON pins(author_id);
+CREATE INDEX idx_pins_owner_saved_at ON pins(owner_id, saved_at DESC);
 
 CREATE INDEX idx_board_pins_pin_id ON board_pins(pin_id);
 CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
@@ -248,8 +255,10 @@ type Board {
   description: String
   accessLevel: AccessLevelType!
   ownerId: UUID!
+  authorId: UUID!
   ownerType: OwnerType!
   createdAt: Time!
+  savedAt: Time!
   pins: [Pin!]
   reactionId: UUID
   bookmarked: Boolean
@@ -287,12 +296,14 @@ type Pin @key(fields: "id") {
   id: UUID!
   name: String!
   owner: User!
+  author: User!
   address: String
   latitude: Float!
   longitude: Float!
   description: String
   rating: Float!
   createdAt: Time!
+  savedAt: Time!
 
   place: Place
   images: [PinImage!]
@@ -372,7 +383,7 @@ type User @key(fields: "id") {
 type Reaction {
   id: UUID!
   type: String!
-  description: String!
+  description: String
 }
 
 ##### Реализованные методы
@@ -403,9 +414,11 @@ type Reaction {
 
   createBoard(input: CreateBoardInput!): Board!
   updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
+  copyBoard(boardId: UUID!, userId: UUID!): Board!
 
   createPin(input: CreatePinInput!): Pin!
   updatePin(id: UUID!, input: UpdatePinInput!): Pin!
+  copyPin(pinId: UUID!, userId: UUID!): Pin!
 
   addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
   removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!
@@ -539,7 +552,7 @@ type User {
 }
 
 type SettingsStatuses {
-  id: UUID!
+  id: Int!
   type: String!
   description: String
 }
@@ -555,7 +568,7 @@ input CreateUserInput {
 input UpdateUserInput {
   nickname: String
   email: String
-  nick_tag: String!
+  nick_tag: String
   profilePicture: String
   description: String
 }
@@ -577,6 +590,8 @@ input UpdateUserInput {
 
 - followUser(userId: UUID!, followerId: ID!): Boolean!
 - unfollowUser(userId: UUID!, followerId: ID!): Boolean!
+
+- changeAccessBookmarks(userId: UUID!, newStatus: Int!): Boolean!
 ```
 
 ##### Необходимо реализовать:
