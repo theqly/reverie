@@ -5,7 +5,7 @@ import logo from '../assets/Reverie.svg';
 import AddPinModal from "./AddPinModal";
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header'; 
-import { createPin } from "../services/pinService";
+//import { createPin } from "../services/pinService";
 
 
 const CreatePinPage = () => {
@@ -77,7 +77,7 @@ const CreatePinPage = () => {
       pinCount
     };
 
-    await createPin(payload);
+    //await createPin(payload);
     console.log("createPin вызвана с payload:", payload);
   };
 
