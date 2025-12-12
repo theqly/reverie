@@ -12,6 +12,10 @@ import LikedPins from './pages/LikedPins';
 import Profile from './pages/Profile';
 import LoginPage from './pages/LoginPage';
 
+import PinViewPage from './pages/PinViewPage';
+import CollectionViewPage from './pages/CollectionViewPage';
+
+
 
 
 function App() {
@@ -23,6 +27,10 @@ function App() {
         <Route path="/pin/create" element={<CreatePinPage />} />
         <Route path="/pin/edit" element={<EditPinPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/pin/view" element={<PinViewPage />} />
+        <Route path="/collection/view" element={<CollectionViewPage />} />
+
+
 
 
         <Route path="/collection/edit" element={<EditCollectionPage />} />

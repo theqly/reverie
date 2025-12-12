@@ -17,41 +17,12 @@ body {
     box-sizing: border-box;
 }
 
-.header_container {
-    height: 70px;
-    display: flex;
-    padding: 15px 0 0 35px;
-}
 
-.rev_logo {
-    margin-right: 50px;
-    padding: 8px;
-    height: 22px;
-}
-
-.search_input {
-    padding: 5px 0 0 34px;
-    height: 40px;
-    border-radius: 15px;
-    border: none;
-    background-color: #CDCDCD;
-    box-sizing: border-box;
-    font-size: 16px;
-    width: 600px;
-
-    background-image: url('../assets/search.svg');
-    background-size: 15px;
-    background-position: 10px 14px;
-    background-repeat: no-repeat;
-}
-
-.search_input:hover {
-    background-color: #c5c5c5;
-}
 
 .h_container {
     display: flex;
     align-items: center;
+    margin: 20px;
 }
 
 h1 {
@@ -80,8 +51,7 @@ h1 {
 }
 
 .collectionContent{
-    margin-left: 100px;
-    margin-right: 100px;
+    margin: 0;
 }
 
 .back_btn {
@@ -139,4 +109,11 @@ h1 {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+.mapWrap  {
+  width: 100vw;
+  height: 400px;
+  overflow: hidden;
+}
+
 

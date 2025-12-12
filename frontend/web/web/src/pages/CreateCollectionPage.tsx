@@ -38,18 +38,21 @@ const CreateCollectionPage = () => {
     setCollaborators(prev => [...prev, newCollaborator]);
   };
 
+  
   const handleSaveCollection = async () => {
+    const currentUser = "some_owner"; 
+
     const payload = {
       name: collectionName,
       info: collectionInfo,
       coverImage,
-      collaborators
+      collaborators: [currentUser, ...collaborators]
     };
 
     await createCollection(payload);
-
-    console.log("createCollection вызвана с payload:", payload);
+    console.log("createCollection вызвана с payload(c owner):", payload);
   };
+
 
   // Валидация для кнопки сохранения
   const isSaveEnabled = collectionName.trim().length > 0 && 

@@ -197,7 +197,7 @@ ul.follow_options li:last-child {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 6px 16px;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .pinTitle {
@@ -283,28 +283,15 @@ ul.follow_options li:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 /* Нижний центр — название пина, перенос строк вверх */
 .pinTitle {
-  position: absolute;
-  bottom: 8px; /* отступ от низа */
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  padding: 4px 6px;
-  border-radius: 4px;
-  font-size: 14px;
-  width: 170px;
-  max-width: 100%;
-  
-  white-space: normal;       /* разрешаем перенос строк */
-  word-break: break-word;    /* переносим длинные слова */
-  text-align: center;
-
-  /* Опционально ограничение по высоте */
-  max-height: 48px;          /* примерно 2-3 строки */
-  overflow: hidden;
+    margin: 5px 0;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: start;
 }
+
 .pinAuthorWrapper {
   display: flex;
   align-items: center;
@@ -344,15 +331,13 @@ ul.follow_options li:last-child {
   background-color: #ededed;
   position: relative;
   cursor:pointer;
+  width: 45vw;
+  min-width: 400px;
 }
 
 .collectionCard:hover {
     background-color: #e4e4e4;
-        transition: 0.2s;
-
-    
-
-
+    transition: 0.2s;
 }
 
 .img1 {
@@ -388,7 +373,7 @@ ul.follow_options li:last-child {
   color: #000000;
   padding: 3px 8px;
   border-radius: 6px;
-  margin-top: auto;
+  margin-top: 10px;
   cursor: pointer;
   display: block;
   max-width: 100px;
@@ -551,7 +536,8 @@ ul.follow_options li:last-child {
 }
 
 
-.newBoardBtn{
+.newBoardBtn,
+.newPinBtn{
   height: 40px;
   cursor: pointer;
   background-color: transparent;
@@ -568,12 +554,124 @@ ul.follow_options li:last-child {
   border: none;
   margin-left: 15px;
 }
+.newPinBtn{
+  margin-bottom: 20px;
+}
 
 .newBoardBtn:hover{
   background-size: 35px 35px;
   padding-left: 45px;
 }
 
+/* === ЛЕНТА "ПОНРАВИВШИЕСЯ" — БЛОКАМИ === */
+.likesFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px 32px;
+  align-items: center;
+}
 
+.feedBlock {
+  width: 100%;
+}
 
+/* Блок подборок — горизонтальная лента */
+.collectionsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 8px 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.collectionsRow::-webkit-scrollbar {
+  display: none;
+}
 
+.collectionCardInFeed {
+  flex: 0 0 auto;
+  width: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Блок пинов — сетка (используем уже существующий .pinsGrid) */
+.pinsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* На мобильных — 1 колонка */
+@media (max-width: 600px) {
+  .collectionsRow {
+    gap: 12px;
+  }
+  .collectionCardInFeed {
+    width: 180px;
+  }
+  .pinsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Локация под карточкой */
+.collectionLocation {
+  margin-top: 10px;
+  font-size: 15px;
+  background: #00000065;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-left: 2px;
+  padding-left: 26px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  
+  background-repeat: no-repeat;
+  border: none;
+
+  width: max-content;      /* ширина ровно под текст */
+  white-space: nowrap;     /* не переносить строки */
+  background: #00000065;
+  padding: 6px 10px 6px 26px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-top: 10px;
+  margin-left: 2px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  background-repeat: no-repeat;
+
+  display: inline-block;   /* чтобы работало корректно */      /* чтобы работало ограничение */
+}
+
+.lilPinTitle {
+  position: absolute;
+  bottom: 8px; /* отступ от низа */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 170px;
+  max-width: 100%;
+  
+  white-space: normal;       /* разрешаем перенос строк */
+  word-break: break-word;    /* переносим длинные слова */
+  text-align: center;
+
+  /* Опционально ограничение по высоте */
+  max-height: 48px;          /* примерно 2-3 строки */
+  overflow: hidden;
+}

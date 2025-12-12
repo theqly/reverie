@@ -22,14 +22,19 @@ const MapPage = () => {
 
             <button onClick={handleBack} className={styles.back_btn}></button>
             <h2>Выберите точку на карте</h2>
+
         </div >
+
+        <div className={styles.mapWrap}>
       
         <MapPicker onSelect={(c) => setCoords(c)} />
+          </div>
         {coords && (
             <p>
             Выбраны координаты: {coords[0].toFixed(6)}, {coords[1].toFixed(6)}
             </p>
         )}
+        
 
         <button className={styles.saveButton}>  Добавить точку </button>
 

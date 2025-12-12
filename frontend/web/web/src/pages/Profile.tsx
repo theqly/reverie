@@ -178,6 +178,55 @@ const Profile = () => {
     }
   ];
 
+  // === 🌟 ФОРМИРОВАНИЕ ЛЕНТЫ "ПОНРАВИВШИЕСЯ" (likesFeed) ===
+// Параметры (можно менять!):
+const PINS_PER_ROW = 2;          // сколько пинов в одной строке
+const COLLECTIONS_PER_ROW = 1;   // сколько подборок подряд (обычно 1)
+const START_WITH = 'collection'; // 'collection' или 'pin-row'
+
+// Копируем массивы, чтобы не мутировать оригиналы
+const collectionsCopy = [...collections];
+const pinsCopy = [...pins];
+
+const likesFeed: { type: 'collection' | 'pin-row'; data: any }[] = [];
+
+let nextItemType = START_WITH;
+
+while (collectionsCopy.length > 0 || pinsCopy.length > 0) {
+  if (nextItemType === 'collection' && collectionsCopy.length > 0) {
+    // Берём N подборок подряд (обычно 1)
+    const batch = collectionsCopy.splice(0, COLLECTIONS_PER_ROW);
+    batch.forEach(collection => {
+      likesFeed.push({ type: 'collection', data: collection });
+    });
+    nextItemType = 'pin-row'; // после подборки — пины
+
+  } else if (nextItemType === 'pin-row' && pinsCopy.length > 0) {
+    // Берём K пинов для одной строки
+    const batch = pinsCopy.splice(0, PINS_PER_ROW);
+    likesFeed.push({ type: 'pin-row', data: batch });
+    nextItemType = 'collection'; // после пинов — подборка
+
+  } else {
+    // Если одного типа больше нет — переключаемся на оставшийся
+    nextItemType = collectionsCopy.length > 0 ? 'collection' : 'pin-row';
+  }
+}
+
+// 💡 Пример результата (при 4 подборках и 11 пинах, PINS_PER_ROW=2):
+// [
+//   {type:'collection', data: coll1},
+//   {type:'pin-row', data: [pin1, pin2]},
+//   {type:'collection', data: coll2},
+//   {type:'pin-row', data: [pin3, pin4]},
+//   {type:'collection', data: coll3},
+//   {type:'pin-row', data: [pin5, pin6]},
+//   {type:'collection', data: coll4},
+//   {type:'pin-row', data: [pin7, pin8]},
+//   {type:'pin-row', data: [pin9, pin10]},
+//   {type:'pin-row', data: [pin11]}   ← остаток
+// ]2
+
     const handleCreateCollection = () => {
       // Пока заглушка - всегда авторизован
       navigate('/collection/create');
@@ -323,10 +372,10 @@ const Profile = () => {
 
                     <div className={styles.collectionLabelWrapper}>
                       <div className={styles.collectionTitle}>{col.title}</div>
+                      <div className={styles.collectionLocation}>{col.location}</div>
                       <div className={styles.collectionPinsCount}>
                         {col.pinsCount} pins →
                       </div>
-                      <div className={styles.collectionLocation}>{col.location}</div>
                     </div>
                     </div>
                     
@@ -351,7 +400,7 @@ const Profile = () => {
 
           {activeTab === 'pins' && (
             <div>
-              <button onClick={handleCreatePin} className={styles.newBoardBtn}>Создать пин</button>
+              <button onClick={handleCreatePin} className={styles.newPinBtn}>Создать пин</button>
 
               <div className={styles.pinsGrid}>
                 {pins.map(pin => (
@@ -390,23 +439,50 @@ const Profile = () => {
 
 
           {activeTab === 'likes' && (
-            <div className={styles.likesLayout}>
-              
-              {/* Левая колонка — подборки */}
-              <div className={styles.likesCollections}>
-                {collections.map(col => (
+    <div className={styles.likesFeed}>
+      {/* ——— ФОРМИРОВАНИЕ ЛЕНТЫ (встроено прямо здесь — никаких внешних переменных) ——— */}
+      {(() => {
+        const COLLECTIONS_PER_BLOCK = 2;
+        const PINS_PER_BLOCK = 5;
+
+        const colls = [...collections];
+        const ps = [...pins];
+        const feed: { type: 'collections' | 'pins'; items: any[] }[] = [];
+
+        let next = 'collections' as 'collections' | 'pins';
+
+        while (colls.length > 0 || ps.length > 0) {
+          if (next === 'collections' && colls.length > 0) {
+            const batch = colls.splice(0, COLLECTIONS_PER_BLOCK);
+            feed.push({ type: 'collections', items: batch });
+            next = 'pins';
+          } else if (next === 'pins' && ps.length > 0) {
+            const batch = ps.splice(0, PINS_PER_BLOCK);
+            feed.push({ type: 'pins', items: batch });
+            next = 'collections';
+          } else {
+            next = colls.length > 0 ? 'collections' : 'pins';
+          }
+        }
+
+        return feed.map((block, idx) => (
+          <div key={idx} className={styles.feedBlock}>
+            {block.type === 'collections' && (
+              <div className={styles.collectionsRow}>
+                {block.items.map((col: any) => (
                   <div key={col.id} className={styles.collectionCard}>
+                    
                     <div style={{ display: "flex" }}>
                       <img src={col.image} alt={col.title} className={styles.img1} />
-
                       <div className={styles.collectionLabelWrapper}>
                         <div className={styles.collectionTitle}>{col.title}</div>
-                        <div className={styles.collectionPinsCount}>{col.pinsCount} pins →</div>
                         <div className={styles.collectionLocation}>{col.location}</div>
+                        <div className={styles.collectionPinsCount}>
+                          {col.pinsCount} pins →
+                        </div>
+                        
                       </div>
                     </div>
-
-                    {/* Автор под подборкой */}
                     <div className={styles.pinAuthorWrapperBoard}>
                       <img
                         src={placeholder_1}
@@ -418,35 +494,40 @@ const Profile = () => {
                   </div>
                 ))}
               </div>
+            )}
 
-              {/* Правая часть — 2 колонки пинов */}
-              <div className={styles.likesPins}>
-                {pins.map(pin => (
+            {block.type === 'pins' && (
+              <div className={styles.pinsGrid}>
+                {block.items.map((pin: any) => (
                   <div key={pin.id} className={styles.pin}>
                     <div className={styles.pinImageWrapper}>
                       <img src={pin.image} alt={pin.title} className={styles.pinImage} />
-
                       <div className={styles.pinLocation}>
                         {pin.location}
                       </div>
-
-                      <div className={styles.pinTitle}>{pin.title}</div>
+                      <div className={styles.pinTitle}>
+                        {pin.title}
+                      </div>
                     </div>
-
                     <div className={styles.pinAuthorWrapper}>
                       <img
                         src={pin.authorAvatar}
                         alt="Author Avatar"
                         className={styles.pinAuthorAvatar}
                       />
-                      <div className={styles.pinAuthor}>{pin.author}</div>
+                      <div className={styles.pinAuthor}>
+                        {pin.author}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
-
-            </div>
-          )}
+            )}
+          </div>
+        ));
+      })()}
+    </div>
+  )}
 
 
           {activeTab === 'bookmarks' && <h3>🔖 Ваши закладки</h3>}
