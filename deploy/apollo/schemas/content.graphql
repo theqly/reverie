@@ -1,0 +1,199 @@
+enum AccessLevelType {
+  private
+  public
+  group
+  group_public
+}
+
+enum OwnerType {
+  user
+  group
+}
+
+type Board {
+  id: UUID!
+  name: String!
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  ownerType: OwnerType!
+  createdAt: Time!
+  pins: [Pin!]
+}
+
+type CommentToBoard {
+  id: UUID!
+  boardId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+type Group {
+  id: UUID!
+  members: [User!]! @external
+}
+input CreateBoardInput {
+  name: String!
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  ownerType: OwnerType!
+}
+
+input UpdateBoardInput {
+  name: String
+  accessLevel: AccessLevelType
+  userId: UUID!
+}
+
+input CreatePinInput {
+  name: String!
+  ownerId: UUID!
+  latitude: Float!
+  longitude: Float!
+  description: String
+}
+
+input UpdatePinInput {
+  name: String
+  latitude: Float
+  longitude: Float
+  description: String
+  rating: Float
+  userId: UUID!
+}
+
+input AddCommentToPinInput {
+  pinId: UUID!
+  userId: UUID!
+  message: String!
+}
+
+input AddCommentToBoardInput {
+  boardId: UUID!
+  userId: UUID!
+  message: String!
+}
+
+input AddImageInput {
+  pinId: UUID!
+  imageUrl: String!
+  orderNumber: Int!
+}
+
+input CreateGroupInput {
+  members: [UUID!]!
+}
+
+type Mutation {
+  createBoard(input: CreateBoardInput!): Board!
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board!
+
+  createPin(input: CreatePinInput!): Pin!
+  updatePin(id: UUID!, input: UpdatePinInput!): Pin!
+
+  addPinToBoard(pinId: UUID!, boardId: UUID!): Board!
+  removePinFromBoard(pinId: UUID!, boardId: UUID!): Board!
+
+  addImageToPin(input: AddImageInput!): PinImage!
+  removeImageFromPin(imageId: UUID!): Boolean!
+  updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage!
+
+  addCommentToPin(input: AddCommentToPinInput!): CommentToPin!
+  updateCommentToPin(id: UUID!, message: String!): CommentToPin!
+  deleteCommentToPin(id: UUID!): Boolean!
+
+  addCommentToBoard(input: AddCommentToBoardInput!): CommentToBoard!
+  updateCommentToBoard(id: UUID!, message: String!): CommentToBoard!
+  deleteCommentToBoard(id: UUID!): Boolean!
+
+  createGroup(input: CreateGroupInput!): Group!
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean!
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean!
+  deleteGroup(groupId: UUID!): Boolean!
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean!
+  acceptJoinToGroup(requestId: UUID!): Boolean!
+
+  reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+  reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean!
+}
+
+
+type Pin @key(fields: "id") {
+  id: UUID!
+  name: String!
+  owner: User!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  description: String
+  rating: Float!
+  createdAt: Time!
+
+  place: Place
+  images: [PinImage!]
+  # comments: [Comment!]
+}
+
+type PinImage {
+  id: UUID!
+  orderNumber: Int!
+  imageUrl: String!
+}
+
+type CommentToPin {
+  id: UUID!
+  pinId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+
+type Place {
+  id: UUID!
+  gis_id: UUID
+  name: String!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  purpose_name: String
+  type: String
+}
+type Query {
+  board(id: UUID!): Board
+  boardByName(name: String!): [Board!]
+  boardsByGroup(groupId: UUID!): [Board!]
+
+  pin(id: UUID!): Pin
+  pinsByUser(userId: UUID!): [Pin!]
+  pinsByName(name: String!): [Pin!]
+  pinsByLocation(query: String!): [Pin!]
+
+  groupById(groupId: UUID!): Group
+  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean!
+  groupsOfUser(userId: UUID!): [Group!]!
+
+  commentsByBoard(boardId: UUID!): [CommentToBoard]!
+  commentsByPin(pinId: UUID!): [CommentToPin]!
+
+  ownBoardsByUser(userId: UUID!): [Board!]!
+  groupBoardsByUser(userId: UUID!): [Board!]!
+  countOwnBoardsByUser(userId: UUID!): Int!
+  countGroupBoardsByUser(userId: UUID!): Int!
+
+  reactions: [Reaction!]!
+  countAllReactionsToPin(pinId: UUID!): Int!
+  countAllReactionsToBoard(boardId: UUID!): Int!
+}
+
+
+type Reaction {
+  id: UUID!
+  type: String!
+  description: String!
+}
+
+
+scalar Time
+scalar UUID
+extend type User @key(fields: "id") {
+  id: UUID! @external
+}

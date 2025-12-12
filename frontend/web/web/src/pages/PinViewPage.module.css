@@ -1,0 +1,458 @@
+.collectionContent {
+    padding-bottom: 40px;
+}
+
+.h_container {
+    display: flex;
+    align-items: center;
+    margin: 20px;
+}
+
+.back_btn {
+    padding: 8px;
+    height: 40px;
+    width: 40px;
+    margin-right: 20px;
+
+    background-image: url('../assets/back.svg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: white;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.back_btn:hover {
+    background-color: rgb(237, 237, 237);
+    transition: 0.2s;
+}
+
+.mapWrapper {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+}
+
+/* Карточка поверх карты */
+.pinCard {
+    min-width: 600px;       /* карточка приятной ширины */
+    max-width: 600px;
+    width: fit-content;
+
+    padding: 22px 26px;
+    background: white;
+    border-radius: 14px;
+    /* box-shadow: 0 4px 20px rgba(0,0,0,0.15); */
+    background-color: #eeeeee;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    margin: 0 20px;        /* нормальные отступы */
+    box-sizing: border-box;
+}
+
+.pinTitle {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.pinDescription {
+    display: block;          /* уже есть */
+    font-size: 16px;
+    line-height: 1.45;
+    color: #444;
+
+    max-width: 700px;        /* ширина блока, можно менять */
+    width: 100%;             /* чтобы не растягивался больше родителя */
+    
+    white-space: normal;     /* перенос строк по словам */
+    word-break: break-word;  /* переносит длинные слова */
+}
+
+
+.pinCoords {
+    font-size: 14px;
+    color: #777;
+    margin-top: 10px;
+}
+
+.pinTitle {
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+
+
+.pinDescription {
+    font-size: 15px;
+    color: #444;
+}
+
+.pinCoords {
+    font-size: 13px;
+    color: #777;
+}
+
+/* Если MapPicker отдаёт div с фиксированной высотой – адаптируем */
+.mapWrapper > *:first-child {
+    width: 100%;
+    height: 100%; /* можно менять */
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.img1 {
+    border-radius: 15px;
+    
+}
+.collectionLocation {
+  margin-top: 10px;
+  font-size: 15px;
+  background: #00000065;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-left: 2px;
+  padding-left: 26px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  
+  background-repeat: no-repeat;
+  border: none;
+
+  width: max-content;      /* ширина ровно под текст */
+  white-space: nowrap;     /* не переносить строки */
+  background: #00000065;
+  padding: 6px 10px 6px 26px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-top: 10px;
+  margin-left: 2px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  background-repeat: no-repeat;
+
+  display: inline-block;   /* чтобы работало корректно */      /* чтобы работало ограничение */
+  margin: 0;
+
+
+
+}
+
+.pageWrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* Контейнер под контент под хедером */
+.contentWrapper {
+  display: flex;
+  width: 100%;
+  position: relative;
+}
+
+/* Высота хедера фиксируется здесь — важный момент */
+:root {
+  --header-height: 70px;
+}
+
+/* Левая часть — больше НЕ скроллится */
+.leftColumn {
+  width: 50vw;
+  padding: 0 30px 20px 20px;
+  box-sizing: border-box;
+
+  
+  
+  /* УБРАНО overflow-y: auto; */
+  /* УБРАНО height */
+  /* она просто растёт по контенту */
+}
+
+/* Правая карта остаётся фиксированной */
+.mapWrapperFixed {
+  position: fixed;
+  top: 65px;
+  right: 0;
+  width: 50vw;
+  height: calc(100vh - var(--header-height));
+  overflow: hidden;
+  border-left: 1px solid #ddd;
+}
+
+
+.mapWrapperFixed > *:first-child {
+  width: 100%;
+  height: 100%;
+}
+
+.reactionBlock,
+.likesWrapper,
+.bmWrapper {
+    display: flex;
+}
+
+.bmWrapper{
+    margin-right: -10px;
+}
+
+.likesWrapper button,
+.bmWrapper button {
+    width: 20px;
+    height: 20px;
+}
+
+.reactionBlock {
+    gap: 15px;
+}
+
+.likesWrapper {
+    margin-left: auto;
+}
+
+.likesWrapper button{
+    background-image: url('../assets/Heart.svg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.bmWrapper button {
+    background-image: url('../assets/Bookmark.svg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+
+.likesWrapper p{
+    font-weight: 700;
+    margin: 0;
+}
+
+.commentCard {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  max-width: 568px;
+  margin-bottom: 12px;
+  word-wrap: break-word;
+}
+
+.commentAuthorWrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.commentAuthorAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.commentAuthorName {
+  font-weight: 600;
+  font-size: 14px;
+  color: #222;
+}
+
+.commentText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.commentDate {
+  font-size: 12px;
+  color: #999;
+  align-self: flex-end;
+}
+
+.commentWrapper{
+    margin-left: 20px;
+}
+
+
+
+
+
+
+
+
+/* стили для подборок */
+
+
+
+.pinsWrapper{
+  max-width: 600px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pinsTitle{
+    margin: 40px 20px 10px 20px;
+    font-size: 25px;
+    font-weight: 600;
+    text-align: start;
+
+}
+
+.pinsGrid {
+
+  max-width: 600px;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 16px;
+  margin-top: 0;
+}
+
+
+.pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* background: #f8f8f8; */
+  padding: 8px 8px 8px 8px;
+  border-radius: 8px;
+}
+
+.pinImage {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  aspect-ratio: 1.3 / 1; 
+  cursor: pointer
+}
+
+.pinImageWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pinImageWrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 90%;
+  background-color: rgba(0, 0, 0, 0); /* по умолчанию прозрачный */
+  border-radius: 16px;
+  transition: background-color 0.2s ease;
+  pointer-events: none; /* чтобы не блокировал клики */
+}
+
+.pinImageWrapper:hover::after {
+  background-color: rgba(0, 0, 0, 0.11); /* лёгкая полупрозрачная тень */
+}
+
+/* Верхний правый угол — название локации */
+.pinLocation {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 17px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 12px 12px;
+  background-position: left 3px top 2px;
+  
+  background-repeat: no-repeat;
+  border: none;
+}
+
+/* Имя автора под картинкой */
+.pinAuthor {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Нижний центр — название пина, перенос строк вверх */
+
+.pinAuthorWrapper {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.pinAuthorAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 5px -5px 0; /* расстояние между аватаркой и никнеймом */
+}
+
+.pinAuthor {
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.lilPinTitle {
+  position: absolute;
+  bottom: 8px; /* отступ от низа */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 170px;
+  max-width: 100%;
+  
+  white-space: normal;       /* разрешаем перенос строк */
+  word-break: break-word;    /* переносим длинные слова */
+  text-align: center;
+
+  /* Опционально ограничение по высоте */
+  max-height: 48px;          /* примерно 2-3 строки */
+  overflow: hidden;
+}

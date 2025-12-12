@@ -67,3 +67,22 @@
     background-color: #cccbcb;
 
 }
+
+.collectionHeader {
+    position: fixed;         /* фиксируем */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+
+    background-color: #e4e4e4;
+    box-sizing: border-box;
+    z-index: 1000;           /* чтобы карта и контент не накрывали header */
+}
+
+.header_container {
+    height: 65px;
+    display: flex;
+    padding: 13px 25px 0 35px;
+}
+

@@ -62,7 +62,7 @@ const HomePage = () => {
     // }
   };
 
-     const handleProfile = () => {
+  const handleProfile = () => {
     // Пока заглушка - всегда авторизован
     navigate('/profile');
     
@@ -73,6 +73,32 @@ const HomePage = () => {
     //   showAuthModal();
     // }
   };
+
+  
+  const handleViewPin = () => {
+    // Пока заглушка - всегда авторизован
+    navigate('/pin/view');
+    
+    // Позже добавишь проверку:
+    // if (isAuthenticated) {
+    //   navigate('/collection/create');
+    // } else {
+    //   showAuthModal();
+    // }
+  };
+
+    const handleViewCollection = () => {
+    // Пока заглушка - всегда авторизован
+    navigate('/collection/view');
+    
+    // Позже добавишь проверку:
+    // if (isAuthenticated) {
+    //   navigate('/collection/create');
+    // } else {
+    //   showAuthModal();
+    // }
+  };
+
 
   return (
     <div className="home-page">
@@ -93,6 +119,12 @@ const HomePage = () => {
       </button>
       <button onClick={handleLogin}>
         Логин
+      </button>
+      <button onClick={handleViewPin}>
+        Посмотреть пин
+      </button>
+      <button onClick={handleViewCollection}>
+        Посмотреть подборку
       </button>
     </div>
   );
