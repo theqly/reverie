@@ -9,6 +9,7 @@ const CommentSection = ({
   return (
     <div className={styles.commentWrapper}>
       <p>{title}</p>
+      
       <section className={styles.commentSection}>
         {comments.length > 0 ? (
           comments.map((comment, index) => (

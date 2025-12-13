@@ -1,6 +1,8 @@
 import React from 'react';
 import PinGridItem from './PinGridItem';
-import styles from './PinGridItem.module.css'; // или используй стили из Feed.module.css
+import styles from './PinGridItem.module.css'; 
+
+
 
 const PinGrid = ({ pins, onPinClick }) => {
   return (

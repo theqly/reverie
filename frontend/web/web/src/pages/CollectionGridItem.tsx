@@ -22,7 +22,9 @@ const CollectionGridItem = ({ collection, onClick }) => {
   return (
     <div key={id} className={styles.collectionCard} onClick={handleClick}>
       <div style={{ display: "flex" }}>
-        <img src={image} alt={title} className={styles.img1} />
+        <div className={styles.imgWrapper}>
+          <img src={image} alt={title} className={styles.img1} />
+        </div>
         
         <div className={styles.collectionLabelWrapper}>
           <div className={styles.collectionTitle}>{title}</div>
