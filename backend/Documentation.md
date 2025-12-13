@@ -36,10 +36,10 @@ CREATE TABLE boards (
     description TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
-	author_id UUID NOT NULL,
+	  author_id UUID NOT NULL,
     owner_type_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	  saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (access_level_id) REFERENCES access_levels(id),
     FOREIGN KEY (owner_type_id) REFERENCES owner_types(id)
 );
@@ -59,14 +59,14 @@ CREATE TABLE pins (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     owner_id UUID NOT NULL,
-	author_id UUID NOT NULL,
+	  author_id UUID NOT NULL,
     address TEXT,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
     description TEXT,
     rating FLOAT NOT NULL DEFAULT 0.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	  saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     place_id UUID,
     FOREIGN KEY (place_id) REFERENCES places(id)
 );
