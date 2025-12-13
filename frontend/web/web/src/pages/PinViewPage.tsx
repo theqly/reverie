@@ -1,39 +1,57 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from 'react';
 import Header from "./Header";
 import MapPicker from "./MapPicker";
 import styles from "./PinViewPage.module.css";
-import placeholder_2 from "../assets/placeholder3.jpg";
 import placeholder_1 from '../assets/placeholder1.jpg';
 import ReactionBlock from './ReactionBlock';
-import CommentSection from './CommentSection'
+import CommentSection from './CommentSection';
+import { getPinById } from '../utils/mockData'; // Импортируем функцию
+import { mockPins } from '../utils/mockData'; // Импортируем массив (опционально)
 
-
-
-interface PinViewPageProps {
-  title?: string;
-  description?: string;
-  coords?: [number, number];
-}
-
-const PinViewPage = ({
-  title = "Сигнатура функции — это уникальная подпись, которая",
-  description = "Описание пина. Здесь будет ваш текст. Описание пина. Описание пина. Описание пина. Здесь будет ваш текст. Описание пина. Здесь будет ваш текст. Описание пина. Здесь будет ваш текст. Описание пина. Здесь будет ваш текст. Описание пина. Здесь будет ваш текст. Описание пина. Здесь будет ваш текст.",
-  coords = [55.751244, 37.618423],
-}: PinViewPageProps) => {
+const PinViewPage = () => {
   const navigate = useNavigate();
+  const { pinId } = useParams(); // Получаем ID из URL
+  const [pin, setPin] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleBack = () => navigate("/");
+  // Загружаем данные пина при монтировании или изменении pinId
+  useEffect(() => {
+    if (pinId) {
+      const foundPin = getPinById(pinId);
+      
+      if (foundPin) {
+        setPin(foundPin);
+        setError(null);
+      } else {
+        setError(`Пин с ID ${pinId} не найден`);
+      }
+      
+      setLoading(false);
+    }
+  }, [pinId]);
 
-    const comments = [
+  const handleBack = () => {
+    // Возвращаемся на предыдущую страницу или на фид по умолчанию
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/feed');
+    }
+  };
+
+  // Моковые комментарии (можно потом вынести в mockData)
+  const comments = [
     {
-      authorName: "jane_anderson",
-      authorAvatar: placeholder_1,
+      authorName: pin?.author || "jane_anderson",
+      authorAvatar: pin?.authorAvatar || placeholder_1,
       commentText: "Отличное фото! Очень красивое место.",
       commentDate: "2 часа назад"
     },
     {
       authorName: "alex_smith",
-      authorAvatar: placeholder_2,
+      authorAvatar: placeholder_1,
       commentText: "Был там прошлым летом, незабываемые впечатления!",
       commentDate: "5 часов назад"
     },
@@ -45,6 +63,48 @@ const PinViewPage = ({
     }
   ];
 
+  // Показываем загрузку
+  if (loading) {
+    return (
+      <div className={styles.pageWrapper}>
+        <Header />
+        <div className={styles.loading}>Загрузка...</div>
+      </div>
+    );
+  }
+
+  // Показываем ошибку
+  if (error) {
+    return (
+      <div className={styles.pageWrapper}>
+        <Header />
+        <div className={styles.errorContainer}>
+          <h2>Ошибка</h2>
+          <p>{error}</p>
+          <button onClick={() => navigate('/feed')} className={styles.backButton}>
+            Вернуться на главную
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Если пин не найден (защита на случай undefined)
+  if (!pin) {
+    return (
+      <div className={styles.pageWrapper}>
+        <Header />
+        <div className={styles.errorContainer}>
+          <h2>Пин не найден</h2>
+          <button onClick={() => navigate('/feed')} className={styles.backButton}>
+            Вернуться на главную
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Основной рендер с данными пина
   return (
     <div className={styles.pageWrapper}>
       <Header />
@@ -54,21 +114,20 @@ const PinViewPage = ({
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
-            <h2>Просмотр пина</h2>
+            <h2>Пин</h2>
+            <button className={styles.settingsBtn}></button>
           </div>
 
           <div className={styles.pinCard}>
-            <img src={placeholder_2} className={styles.img1} />
-            <h3 className={styles.pinTitle}>{title}</h3>
-            <p className={styles.collectionLocation}>Paris</p>
-            <p className={styles.pinDescription}>{description}</p>
+            <img src={pin.image} alt={pin.title} className={styles.img1} />
+            <h3 className={styles.pinTitle}>{pin.title}</h3>
+            <p className={styles.collectionLocation}>{pin.location}</p>
+            <p className={styles.pinDescription}>{pin.description}</p>
 
             <p className={styles.pinCoords}>
-              Координаты: {coords[0]}, {coords[1]}
+              Координаты: {pin.coords[0]}, {pin.coords[1]}
             </p>
-
-
-
+            
             <ReactionBlock 
               initialLikes={226}
               initialLiked={false}
@@ -78,20 +137,19 @@ const PinViewPage = ({
             />
           </div>
           
-
           <CommentSection 
             comments={comments}
             title="Комментарии"
           />
-
-
-
-
         </div>
 
         {/* Правая фиксированная карта */}
         <div className={styles.mapWrapperFixed}>
-          <MapPicker onSelect={() => {}} initialCoords={coords} readOnly />
+          <MapPicker 
+            onSelect={() => {}} 
+            initialCoords={pin.coords} 
+            readOnly 
+          />
         </div>
       </div>
     </div>

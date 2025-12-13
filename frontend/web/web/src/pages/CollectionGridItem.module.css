@@ -208,3 +208,39 @@
   text-overflow: ellipsis;
   font-weight: 600;
 }
+
+/* Локация под карточкой */
+.collectionLocation {
+  margin-top: 10px;
+  font-size: 15px;
+  background: #00000065;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-left: 2px;
+  padding-left: 26px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  
+  background-repeat: no-repeat;
+  border: none;
+
+  width: max-content;      /* ширина ровно под текст */
+  white-space: nowrap;     /* не переносить строки */
+  background: #00000065;
+  padding: 6px 10px 6px 26px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-top: 10px;
+  margin-left: 2px;
+
+  background-image: url('../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  background-repeat: no-repeat;
+
+  display: inline-block;   /* чтобы работало корректно */      /* чтобы работало ограничение */
+}
+

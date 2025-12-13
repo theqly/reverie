@@ -449,31 +449,10 @@ while (collectionsCopy.length > 0 || pinsCopy.length > 0) {
             )}
 
             {block.type === 'pins' && (
-              <div className={styles.pinsGrid}>
-                {block.items.map((pin: any) => (
-                  <div key={pin.id} className={styles.pin}>
-                    <div className={styles.pinImageWrapper}>
-                      <img src={pin.image} alt={pin.title} className={styles.pinImage} />
-                      <div className={styles.pinLocation}>
-                        {pin.location}
-                      </div>
-                      <div className={styles.pinTitle}>
-                        {pin.title}
-                      </div>
-                    </div>
-                    <div className={styles.pinAuthorWrapper}>
-                      <img
-                        src={pin.authorAvatar}
-                        alt="Author Avatar"
-                        className={styles.pinAuthorAvatar}
-                      />
-                      <div className={styles.pinAuthor}>
-                        {pin.author}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <PinGrid 
+                pins={pins} 
+                onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
+              />
             )}
           </div>
         ));
