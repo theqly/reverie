@@ -58,7 +58,9 @@ func (r *BoardRepository) Create(ctx context.Context, board models.Board) error 
 				AccessLevel: b.AccessLevel,
 				OwnerID:     b.OwnerID.String(),
 				OwnerType:   b.OwnerType,
+				AuthorID:    b.AuthorID.String(),
 				CreatedAt:   b.CreatedAt,
+				SavedAt:     b.SavedAt,
 			}
 
 			if members != nil {

@@ -45,12 +45,14 @@ func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 				PinID:       p.ID.String(),
 				Name:        p.Name,
 				OwnerID:     p.OwnerID.String(),
+				AuthorID:    p.AuthorID.String(),
 				Description: p.Description,
 				Latitude:    p.Latitude,
 				Longitude:   p.Longitude,
 				Address:     p.Address,
 				Rating:      p.Rating,
 				CreatedAt:   p.CreatedAt,
+				SavedAt:     p.SavedAt,
 				PlaceID:     "0",
 			}
 			if err := r.publisher.PublishPinCreated(context.Background(), event); err != nil {
