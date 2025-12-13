@@ -13,10 +13,9 @@ import Profile from './pages/Profile';
 import LoginPage from './pages/LoginPage';
 
 import PinViewPage from './pages/PinViewPage';
+import Feed from './pages/Feed';
+
 import CollectionViewPage from './pages/CollectionViewPage';
-
-
-
 
 function App() {
   return (
@@ -27,19 +26,15 @@ function App() {
         <Route path="/pin/create" element={<CreatePinPage />} />
         <Route path="/pin/edit" element={<EditPinPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/feed" element={<Feed />} />
+
         <Route path="/pin/view" element={<PinViewPage />} />
         <Route path="/collection/view" element={<CollectionViewPage />} />
-
-
-
-
         <Route path="/collection/edit" element={<EditCollectionPage />} />
 
         <Route path="/map" element={<MapPage />} />
         <Route path="/likes/feed" element={<LikedPins />} />
         <Route path="/profile" element={<Profile />} />
-
-
 
       </Routes>
     </Router>

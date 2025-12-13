@@ -18,6 +18,10 @@ import ShareModal from "./ShareModal";
 import ReportModal from "./ReportModal";
 import FollowersModal from "./FollowersModal";
 import FollowingModal from "./FollowingModal";
+import PinGrid from './PinGrid'; // или './PinGrid', в зависимости от структуры
+import CollectionGrid from './CollectionGrid';
+
+
 
 
 const Profile = () => {
@@ -358,83 +362,31 @@ while (collectionsCopy.length > 0 || pinsCopy.length > 0) {
         </div>
 
         <div className={styles.tabContent}>
-          {activeTab === 'collections' && (
-            <div>
-              
-              <button onClick={handleCreateCollection} className={styles.newBoardBtn}>Создать подборку</button>
-              
-              <div className={styles.collectionsGrid}>
-                {collections.map(col => (
-                  <div key={col.id} className={styles.collectionCard}>
-                    <div style={{ display: "flex" }}>
+    {activeTab === 'collections' && (
+      <div>
+        <button onClick={handleCreateCollection} className={styles.newBoardBtn}>
+          Создать подборку
+        </button>
+        
+        <CollectionGrid 
+          collections={collections} 
+          onCollectionClick={(collectionId) => navigate(`/collection/${collectionId}`)}
+        />
+      </div>
+    )}
 
-                    <img src={col.image} alt={col.title} className={styles.img1}/>
-
-                    <div className={styles.collectionLabelWrapper}>
-                      <div className={styles.collectionTitle}>{col.title}</div>
-                      <div className={styles.collectionLocation}>{col.location}</div>
-                      <div className={styles.collectionPinsCount}>
-                        {col.pinsCount} pins →
-                      </div>
-                    </div>
-                    </div>
-                    
-                    <div className={styles.pinAuthorWrapperBoard}>
-                      <img
-                        src={placeholder_1} // аватарка автора
-                        alt="Author Avatar"
-                        className={styles.pinAuthorAvatar}
-                      />
-                      <div className={styles.pinAuthor}>
-                        {"jane_anderson"}
-                      </div>
-                    </div>
-
-
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-
-          {activeTab === 'pins' && (
-            <div>
-              <button onClick={handleCreatePin} className={styles.newPinBtn}>Создать пин</button>
-
-              <div className={styles.pinsGrid}>
-                {pins.map(pin => (
-                  <div key={pin.id} className={styles.pin}>
-                    <div className={styles.pinImageWrapper}>
-                      <img src={pin.image} alt={pin.title} className={styles.pinImage} />
-
-                      {/* Верхний правый угол — локация */}
-                      <div className={styles.pinLocation}>
-                        {pin.location || "Paris"}
-                      </div>
-
-                      {/* Нижний центр — название */}
-                      <div className={styles.pinTitle}>
-                        {pin.title}
-                      </div>
-                    </div>
-
-                    {/* Имя автора под картинкой */}
-                    <div className={styles.pinAuthorWrapper}>
-                      <img
-                        src={pin.authorAvatar || placeholder_1} // аватарка автора
-                        alt="Author Avatar"
-                        className={styles.pinAuthorAvatar}
-                      />
-                      <div className={styles.pinAuthor}>
-                        {pin.author || "jane_nderson"}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+  {activeTab === 'pins' && (
+    <div>
+      <button onClick={handleCreatePin} className={styles.newPinBtn}>
+        Создать пин
+      </button>
+      
+      <PinGrid 
+        pins={pins} 
+        onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
+      />
+    </div>
+  )}
 
 
 

@@ -86,3 +86,23 @@
     padding: 13px 25px 0 35px;
 }
 
+.logoButton {
+    margin: -15px 50px 0 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.logoButton:hover {
+    opacity: 0.8;
+}
+
+.logoButton:active {
+    opacity: 0.6;
+}
+
