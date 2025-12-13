@@ -474,3 +474,55 @@ func (r *PinRepository) CountPinsByUser(ctx context.Context, userID uuid.UUID) (
 
 	return pinsNumber, nil
 }
+
+func (r *PinRepository) GetLikedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Pin, error) {
+	var pins []models.Pin
+
+	// Предполагается, что у тебя есть реакция с type = 'like'
+	var likeReaction models.Reaction
+	if err := r.db.WithContext(ctx).Where("type = ?", "like").First(&likeReaction).Error; err != nil {
+		return nil, fmt.Errorf("like reaction not found: %w", err)
+	}
+
+	tx := r.db.WithContext(ctx).
+		Select("pins.*").
+		Joins("JOIN reaction_pins ON pins.id = reaction_pins.pin_id").
+		Where("reaction_pins.reaction_id = ? AND reaction_pins.owner_id = ?", likeReaction.ID, userID).
+		Order("pins.saved_at DESC").
+		Limit(limit).
+		Offset(offset)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	if err := tx.Find(&pins).Error; err != nil {
+		return nil, err
+	}
+
+	return pins, nil
+}
+
+func (r *PinRepository) GetBookmarkedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Pin, error) {
+	var pins []models.Pin
+
+	tx := r.db.WithContext(ctx).
+		Select("pins.*").
+		Joins("JOIN bookmarks_pins ON pins.id = bookmarks_pins.pin_id").
+		Where("bookmarks_pins.user_id = ?", userID).
+		Order("pins.saved_at DESC").
+		Limit(limit).
+		Offset(offset)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	if err := tx.Find(&pins).Error; err != nil {
+		return nil, err
+	}
+
+	return pins, nil
+}
