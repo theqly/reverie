@@ -87,9 +87,21 @@ const HomePage = () => {
     // }
   };
 
-    const handleViewCollection = () => {
+  const handleViewCollection = () => {
     // Пока заглушка - всегда авторизован
     navigate('/collection/view');
+    
+    // Позже добавишь проверку:
+    // if (isAuthenticated) {
+    //   navigate('/collection/create');
+    // } else {
+    //   showAuthModal();
+    // }
+  };
+
+    const handleFeed = () => {
+    // Пока заглушка - всегда авторизован
+    navigate('/feed');
     
     // Позже добавишь проверку:
     // if (isAuthenticated) {
@@ -102,6 +114,9 @@ const HomePage = () => {
 
   return (
     <div className="home-page">
+      <button onClick={handleFeed}>
+        Feed
+      </button>
       <button onClick={handleCreateCollection}>
         Создать подборку
       </button>

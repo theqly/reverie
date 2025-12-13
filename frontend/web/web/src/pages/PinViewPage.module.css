@@ -249,6 +249,11 @@
     margin: 0;
 }
 
+
+
+
+/*комментарии*/
+
 .commentCard {
   display: flex;
   flex-direction: column;
@@ -297,6 +302,9 @@
     margin-left: 20px;
 }
 
+.commentWrapper p{
+  font-size: 25px;
+}
 
 
 

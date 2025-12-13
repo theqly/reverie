@@ -1,0 +1,22 @@
+.commentWrapper {
+  margin-left: 20px;
+}
+
+.commentWrapper p {
+  font-size: 25px;
+  margin-bottom: 16px;
+}
+
+.commentSection {
+  margin-top: 8px;
+}
+
+.noComments {
+  color: #999;
+  font-style: italic;
+  font-size: 14px;
+  padding: 20px;
+  text-align: center;
+  background: #f9f9f9;
+  border-radius: 8px;
+}

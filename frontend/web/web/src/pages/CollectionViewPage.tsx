@@ -14,6 +14,11 @@ import placeholder_8 from '../assets/placeholder8.jpg';
 import placeholder_9 from '../assets/placeholder9.jpg';
 import placeholder_10 from '../assets/placeholder10.jpg';
 
+import CommentSection from './CommentSection'
+import ReactionBlock from './ReactionBlock';
+
+
+
 
 interface CollectionViewPageProps {
   title?: string;
@@ -123,6 +128,27 @@ const CollectionViewPage = ({
     }
   ];
 
+    const comments = [
+    {
+      authorName: "jane_anderson",
+      authorAvatar: placeholder_1,
+      commentText: "Отличное фото! Очень красивое место.",
+      commentDate: "2 часа назад"
+    },
+    {
+      authorName: "alex_smith",
+      authorAvatar: placeholder_2,
+      commentText: "Был там прошлым летом, незабываемые впечатления!",
+      commentDate: "5 часов назад"
+    },
+    {
+      authorName: "travel_lover",
+      authorAvatar: placeholder_1,
+      commentText: "Спасибо за рекомендацию, обязательно посещу!",
+      commentDate: "1 день назад"
+    }
+  ];
+
   return (
     <div className={styles.pageWrapper}>
       <Header />
@@ -144,15 +170,13 @@ const CollectionViewPage = ({
             <p className={styles.pinCoords}>
               Координаты: {coords[0]}, {coords[1]}
             </p>
-            <div className={styles.reactionBlock}>
-              <div className={styles.likesWrapper}>
-                <button></button>
-                <p>226</p>
-              </div>
-              <div className={styles.bmWrapper}>
-                <button></button>
-              </div>
-            </div>
+            <ReactionBlock 
+              initialLikes={226}
+              initialLiked={false}
+              initialBookmarked={false}
+              onLike={(isLiked) => console.log('Лайк:', isLiked)}
+              onBookmark={(isBookmarked) => console.log('Закладка:', isBookmarked)}
+            />
           </div>
 
             <h3 className={styles.pinsTitle}>Места из этой подборки</h3>
@@ -193,25 +217,10 @@ const CollectionViewPage = ({
           </div>
 
 
-          <div className={styles.commentWrapper}>
-            <p>Комментарии</p>
-            <section className={styles.commentSection}>
-              <div className={styles.commentCard}>
-                <div className={styles.commentAuthorWrapper}>
-                  <img
-                    src={placeholder_1} // аватарка автора
-                    alt="Author Avatar"
-                    className={styles.commentAuthorAvatar}
-                  />
-                  <div className={styles.commentAuthorName}>jane_аanderson</div>
-                </div>
-                <div className={styles.commentText}>
-                  Это пример комментария. Здесь может быть длинный текст, и карточка будет автоматически расширяться.
-                </div>
-                <div className={styles.commentDate}>2 часа назад</div>
-              </div>
-            </section>
-          </div>
+          <CommentSection 
+            comments={comments}
+            title="Комментарии"
+          />
         </div>
 
         {/* Правая фиксированная карта */}
