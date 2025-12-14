@@ -47,12 +47,17 @@ export type AddImageInput = {
 export type Board = {
   __typename?: 'Board';
   accessLevel: AccessLevelType;
+  authorId: Scalars['UUID']['output'];
+  bookmarked?: Maybe<Scalars['Boolean']['output']>;
   createdAt: Scalars['Time']['output'];
+  description?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
   name: Scalars['String']['output'];
   ownerId: Scalars['UUID']['output'];
   ownerType: OwnerType;
   pins?: Maybe<Array<Pin>>;
+  reactionId?: Maybe<Scalars['UUID']['output']>;
+  savedAt: Scalars['Time']['output'];
 };
 
 export type CommentToBoard = {
@@ -75,6 +80,7 @@ export type CommentToPin = {
 
 export type CreateBoardInput = {
   accessLevel: AccessLevelType;
+  description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   ownerId: Scalars['UUID']['input'];
   ownerType: OwnerType;
@@ -114,7 +120,11 @@ export type Mutation = {
   addImageToPin: PinImage;
   addPinToBoard: Board;
   addUserToGroup: Scalars['Boolean']['output'];
+  bookmarkToBoard: Scalars['Boolean']['output'];
+  bookmarkToPin: Scalars['Boolean']['output'];
   changeAccessBookmarks: Scalars['Boolean']['output'];
+  copyBoard: Board;
+  copyPin: Pin;
   createBoard: Board;
   createGroup: Group;
   createPin: Pin;
@@ -172,8 +182,32 @@ export type MutationAddUserToGroupArgs = {
 };
 
 
+export type MutationBookmarkToBoardArgs = {
+  boardId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type MutationBookmarkToPinArgs = {
+  pinId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
 export type MutationChangeAccessBookmarksArgs = {
-  newStatus: Scalars['UUID']['input'];
+  newStatus: Scalars['Int']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type MutationCopyBoardArgs = {
+  boardId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type MutationCopyPinArgs = {
+  pinId: Scalars['UUID']['input'];
   userId: Scalars['UUID']['input'];
 };
 
@@ -310,6 +344,8 @@ export enum OwnerType {
 export type Pin = {
   __typename?: 'Pin';
   address?: Maybe<Scalars['String']['output']>;
+  author: User;
+  bookmarked?: Maybe<Scalars['Boolean']['output']>;
   createdAt: Scalars['Time']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
@@ -320,6 +356,8 @@ export type Pin = {
   owner: User;
   place?: Maybe<Place>;
   rating: Scalars['Float']['output'];
+  reactionId?: Maybe<Scalars['UUID']['output']>;
+  savedAt: Scalars['Time']['output'];
 };
 
 export type PinImage = {
@@ -346,12 +384,15 @@ export type Query = {
   board?: Maybe<Board>;
   boardByName?: Maybe<Array<Board>>;
   boardsByGroup?: Maybe<Array<Board>>;
+  bookmarkedBoardsByUser: Array<Board>;
+  bookmarkedPinsByUser: Array<Pin>;
   commentsByBoard: Array<Maybe<CommentToBoard>>;
   commentsByPin: Array<Maybe<CommentToPin>>;
   countAllReactionsToBoard: Scalars['Int']['output'];
   countAllReactionsToPin: Scalars['Int']['output'];
   countGroupBoardsByUser: Scalars['Int']['output'];
   countOwnBoardsByUser: Scalars['Int']['output'];
+  countPinsByUser: Scalars['Int']['output'];
   feed: Array<Pin>;
   followersCount: Scalars['Int']['output'];
   followersOf: Array<User>;
@@ -362,6 +403,8 @@ export type Query = {
   groupById?: Maybe<Group>;
   groupsOfUser: Array<Group>;
   isUserInGroup: Scalars['Boolean']['output'];
+  likedBoardsByUser: Array<Board>;
+  likedPinsByUser: Array<Pin>;
   ownBoardsByUser: Array<Board>;
   pin?: Maybe<Pin>;
   pinsByLocation?: Maybe<Array<Pin>>;
@@ -370,31 +413,57 @@ export type Query = {
   reactions: Array<Reaction>;
   userByEmail?: Maybe<User>;
   userById?: Maybe<User>;
-  userByNickname?: Maybe<User>;
+  userByNickname?: Maybe<Array<User>>;
+  userByTag?: Maybe<User>;
 };
 
 
 export type QueryBoardArgs = {
   id: Scalars['UUID']['input'];
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
 export type QueryBoardByNameArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
 export type QueryBoardsByGroupArgs = {
   groupId: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+export type QueryBookmarkedBoardsByUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  userID: Scalars['UUID']['input'];
+};
+
+
+export type QueryBookmarkedPinsByUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  userID: Scalars['UUID']['input'];
 };
 
 
 export type QueryCommentsByBoardArgs = {
   boardId: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
 export type QueryCommentsByPinArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   pinId: Scalars['UUID']['input'];
 };
 
@@ -415,6 +484,11 @@ export type QueryCountGroupBoardsByUserArgs = {
 
 
 export type QueryCountOwnBoardsByUserArgs = {
+  userId: Scalars['UUID']['input'];
+};
+
+
+export type QueryCountPinsByUserArgs = {
   userId: Scalars['UUID']['input'];
 };
 
@@ -440,6 +514,8 @@ export type QueryFollowingOfArgs = {
 
 
 export type QueryGroupBoardsByUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   userId: Scalars['UUID']['input'];
 };
 
@@ -450,6 +526,8 @@ export type QueryGroupByIdArgs = {
 
 
 export type QueryGroupsOfUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   userId: Scalars['UUID']['input'];
 };
 
@@ -460,28 +538,54 @@ export type QueryIsUserInGroupArgs = {
 };
 
 
+export type QueryLikedBoardsByUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  userID: Scalars['UUID']['input'];
+};
+
+
+export type QueryLikedPinsByUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  userID: Scalars['UUID']['input'];
+};
+
+
 export type QueryOwnBoardsByUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   userId: Scalars['UUID']['input'];
 };
 
 
 export type QueryPinArgs = {
   id: Scalars['UUID']['input'];
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
 export type QueryPinsByLocationArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
 export type QueryPinsByNameArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
 export type QueryPinsByUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   userId: Scalars['UUID']['input'];
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
@@ -499,9 +603,14 @@ export type QueryUserByNicknameArgs = {
   nickname: Scalars['String']['input'];
 };
 
+
+export type QueryUserByTagArgs = {
+  nickTag: Scalars['String']['input'];
+};
+
 export type Reaction = {
   __typename?: 'Reaction';
-  description: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
   type: Scalars['String']['output'];
 };
@@ -509,12 +618,13 @@ export type Reaction = {
 export type SettingsStatuses = {
   __typename?: 'SettingsStatuses';
   description?: Maybe<Scalars['String']['output']>;
-  id: Scalars['UUID']['output'];
+  id: Scalars['Int']['output'];
   type: Scalars['String']['output'];
 };
 
 export type UpdateBoardInput = {
   accessLevel?: InputMaybe<AccessLevelType>;
+  description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['UUID']['input'];
 };
@@ -531,7 +641,7 @@ export type UpdatePinInput = {
 export type UpdateUserInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
-  nick_tag: Scalars['String']['input'];
+  nick_tag?: InputMaybe<Scalars['String']['input']>;
   nickname?: InputMaybe<Scalars['String']['input']>;
   profilePicture?: InputMaybe<Scalars['String']['input']>;
 };
@@ -563,11 +673,11 @@ export type GetPinBasicByIdQueryVariables = Exact<{
 export type GetPinBasicByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
 
 export type GetUserByNickTagQueryVariables = Exact<{
-  nickname: Scalars['String']['input'];
+  nickTag: Scalars['String']['input'];
 }>;
 
 
-export type GetUserByNickTagQuery = { __typename?: 'Query', userByNickname?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } | null };
+export type GetUserByNickTagQuery = { __typename?: 'Query', userByTag?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } | null };
 
 export type GetUserByIdQueryVariables = Exact<{
   userId: Scalars['UUID']['input'];
@@ -576,12 +686,49 @@ export type GetUserByIdQueryVariables = Exact<{
 
 export type GetUserByIdQuery = { __typename?: 'Query', userById?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } | null };
 
-export type GetUserIdByNickTagQueryVariables = Exact<{
-  nickname: Scalars['String']['input'];
+export type GetPinsByUserIdQueryVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type GetUserIdByNickTagQuery = { __typename?: 'Query', userByNickname?: { __typename?: 'User', id: any } | null };
+export type GetPinsByUserIdQuery = { __typename?: 'Query', pinsByUser?: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null };
+
+export type GetLikedPinsByUserIdQueryVariables = Exact<{
+  userID: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetLikedPinsByUserIdQuery = { __typename?: 'Query', likedPinsByUser: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> };
+
+export type GetOwnBoardsByUserIdQueryVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetOwnBoardsByUserIdQuery = { __typename?: 'Query', ownBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
+
+export type GetLikedBoardsByUserIdQueryVariables = Exact<{
+  userID: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetLikedBoardsByUserIdQuery = { __typename?: 'Query', likedBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
+
+export type GetUserIdByNickTagQueryVariables = Exact<{
+  nickTag: Scalars['String']['input'];
+}>;
+
+
+export type GetUserIdByNickTagQuery = { __typename?: 'Query', userByTag?: { __typename?: 'User', id: any } | null };
 
 export type GetFollowersByIdQueryVariables = Exact<{
   userId: Scalars['UUID']['input'];
@@ -746,8 +893,8 @@ export type GetPinBasicByIdLazyQueryHookResult = ReturnType<typeof useGetPinBasi
 export type GetPinBasicByIdSuspenseQueryHookResult = ReturnType<typeof useGetPinBasicByIdSuspenseQuery>;
 export type GetPinBasicByIdQueryResult = Apollo.QueryResult<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>;
 export const GetUserByNickTagDocument = gql`
-    query GetUserByNickTag($nickname: String!) {
-  userByNickname(nickname: $nickname) {
+    query GetUserByNickTag($nickTag: String!) {
+  userByTag(nickTag: $nickTag) {
     id
     nickname
     email
@@ -780,7 +927,7 @@ export const GetUserByNickTagDocument = gql`
  * @example
  * const { data, loading, error } = useGetUserByNickTagQuery({
  *   variables: {
- *      nickname: // value for 'nickname'
+ *      nickTag: // value for 'nickTag'
  *   },
  * });
  */
@@ -855,9 +1002,258 @@ export type GetUserByIdQueryHookResult = ReturnType<typeof useGetUserByIdQuery>;
 export type GetUserByIdLazyQueryHookResult = ReturnType<typeof useGetUserByIdLazyQuery>;
 export type GetUserByIdSuspenseQueryHookResult = ReturnType<typeof useGetUserByIdSuspenseQuery>;
 export type GetUserByIdQueryResult = Apollo.QueryResult<GetUserByIdQuery, GetUserByIdQueryVariables>;
+export const GetPinsByUserIdDocument = gql`
+    query GetPinsByUserId($userId: UUID!, $viewerId: UUID, $limit: Int = 10, $offset: Int = 0) {
+  pinsByUser(userId: $userId, viewerId: $viewerId, limit: $limit, offset: $offset) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetPinsByUserIdQuery__
+ *
+ * To run a query within a React component, call `useGetPinsByUserIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPinsByUserIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPinsByUserIdQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *      viewerId: // value for 'viewerId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetPinsByUserIdQuery(baseOptions: Apollo.QueryHookOptions<GetPinsByUserIdQuery, GetPinsByUserIdQueryVariables> & ({ variables: GetPinsByUserIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPinsByUserIdQuery, GetPinsByUserIdQueryVariables>(GetPinsByUserIdDocument, options);
+      }
+export function useGetPinsByUserIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPinsByUserIdQuery, GetPinsByUserIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPinsByUserIdQuery, GetPinsByUserIdQueryVariables>(GetPinsByUserIdDocument, options);
+        }
+export function useGetPinsByUserIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPinsByUserIdQuery, GetPinsByUserIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPinsByUserIdQuery, GetPinsByUserIdQueryVariables>(GetPinsByUserIdDocument, options);
+        }
+export type GetPinsByUserIdQueryHookResult = ReturnType<typeof useGetPinsByUserIdQuery>;
+export type GetPinsByUserIdLazyQueryHookResult = ReturnType<typeof useGetPinsByUserIdLazyQuery>;
+export type GetPinsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetPinsByUserIdSuspenseQuery>;
+export type GetPinsByUserIdQueryResult = Apollo.QueryResult<GetPinsByUserIdQuery, GetPinsByUserIdQueryVariables>;
+export const GetLikedPinsByUserIdDocument = gql`
+    query GetLikedPinsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  likedPinsByUser(userID: $userID, limit: $limit, offset: $offset) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetLikedPinsByUserIdQuery__
+ *
+ * To run a query within a React component, call `useGetLikedPinsByUserIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLikedPinsByUserIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLikedPinsByUserIdQuery({
+ *   variables: {
+ *      userID: // value for 'userID'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetLikedPinsByUserIdQuery(baseOptions: Apollo.QueryHookOptions<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables> & ({ variables: GetLikedPinsByUserIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables>(GetLikedPinsByUserIdDocument, options);
+      }
+export function useGetLikedPinsByUserIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables>(GetLikedPinsByUserIdDocument, options);
+        }
+export function useGetLikedPinsByUserIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables>(GetLikedPinsByUserIdDocument, options);
+        }
+export type GetLikedPinsByUserIdQueryHookResult = ReturnType<typeof useGetLikedPinsByUserIdQuery>;
+export type GetLikedPinsByUserIdLazyQueryHookResult = ReturnType<typeof useGetLikedPinsByUserIdLazyQuery>;
+export type GetLikedPinsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetLikedPinsByUserIdSuspenseQuery>;
+export type GetLikedPinsByUserIdQueryResult = Apollo.QueryResult<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables>;
+export const GetOwnBoardsByUserIdDocument = gql`
+    query GetOwnBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  ownBoardsByUser(userId: $userId, limit: $limit, offset: $offset) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+    `;
+
+/**
+ * __useGetOwnBoardsByUserIdQuery__
+ *
+ * To run a query within a React component, call `useGetOwnBoardsByUserIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOwnBoardsByUserIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOwnBoardsByUserIdQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetOwnBoardsByUserIdQuery(baseOptions: Apollo.QueryHookOptions<GetOwnBoardsByUserIdQuery, GetOwnBoardsByUserIdQueryVariables> & ({ variables: GetOwnBoardsByUserIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOwnBoardsByUserIdQuery, GetOwnBoardsByUserIdQueryVariables>(GetOwnBoardsByUserIdDocument, options);
+      }
+export function useGetOwnBoardsByUserIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOwnBoardsByUserIdQuery, GetOwnBoardsByUserIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOwnBoardsByUserIdQuery, GetOwnBoardsByUserIdQueryVariables>(GetOwnBoardsByUserIdDocument, options);
+        }
+export function useGetOwnBoardsByUserIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetOwnBoardsByUserIdQuery, GetOwnBoardsByUserIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetOwnBoardsByUserIdQuery, GetOwnBoardsByUserIdQueryVariables>(GetOwnBoardsByUserIdDocument, options);
+        }
+export type GetOwnBoardsByUserIdQueryHookResult = ReturnType<typeof useGetOwnBoardsByUserIdQuery>;
+export type GetOwnBoardsByUserIdLazyQueryHookResult = ReturnType<typeof useGetOwnBoardsByUserIdLazyQuery>;
+export type GetOwnBoardsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetOwnBoardsByUserIdSuspenseQuery>;
+export type GetOwnBoardsByUserIdQueryResult = Apollo.QueryResult<GetOwnBoardsByUserIdQuery, GetOwnBoardsByUserIdQueryVariables>;
+export const GetLikedBoardsByUserIdDocument = gql`
+    query GetLikedBoardsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  likedBoardsByUser(userID: $userID, limit: $limit, offset: $offset) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+    `;
+
+/**
+ * __useGetLikedBoardsByUserIdQuery__
+ *
+ * To run a query within a React component, call `useGetLikedBoardsByUserIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLikedBoardsByUserIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLikedBoardsByUserIdQuery({
+ *   variables: {
+ *      userID: // value for 'userID'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetLikedBoardsByUserIdQuery(baseOptions: Apollo.QueryHookOptions<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables> & ({ variables: GetLikedBoardsByUserIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables>(GetLikedBoardsByUserIdDocument, options);
+      }
+export function useGetLikedBoardsByUserIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables>(GetLikedBoardsByUserIdDocument, options);
+        }
+export function useGetLikedBoardsByUserIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables>(GetLikedBoardsByUserIdDocument, options);
+        }
+export type GetLikedBoardsByUserIdQueryHookResult = ReturnType<typeof useGetLikedBoardsByUserIdQuery>;
+export type GetLikedBoardsByUserIdLazyQueryHookResult = ReturnType<typeof useGetLikedBoardsByUserIdLazyQuery>;
+export type GetLikedBoardsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetLikedBoardsByUserIdSuspenseQuery>;
+export type GetLikedBoardsByUserIdQueryResult = Apollo.QueryResult<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables>;
 export const GetUserIdByNickTagDocument = gql`
-    query GetUserIdByNickTag($nickname: String!) {
-  userByNickname(nickname: $nickname) {
+    query GetUserIdByNickTag($nickTag: String!) {
+  userByTag(nickTag: $nickTag) {
     id
   }
 }
@@ -875,7 +1271,7 @@ export const GetUserIdByNickTagDocument = gql`
  * @example
  * const { data, loading, error } = useGetUserIdByNickTagQuery({
  *   variables: {
- *      nickname: // value for 'nickname'
+ *      nickTag: // value for 'nickTag'
  *   },
  * });
  */

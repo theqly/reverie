@@ -15,8 +15,8 @@ query GetPinBasicById($id: UUID!) {
   }
 }
 
-query GetUserByNickTag($nickname: String!) {
-  userByNickname(nickname: $nickname) {
+query GetUserByNickTag($nickTag: String!) {
+  userByTag(nickTag: $nickTag) {
     id
     nickname
     email
@@ -57,8 +57,112 @@ query GetUserById($userId: UUID!) {
   }
 }
 
-query GetUserIdByNickTag($nickname: String!) {
-  userByNickname(nickname: $nickname) {
+query GetPinsByUserId($userId: UUID!, $viewerId: UUID, $limit: Int = 10, $offset: Int = 0) {
+  pinsByUser(userId: $userId, viewerId: $viewerId, limit: $limit, offset: $offset) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+
+query GetLikedPinsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  likedPinsByUser(userID: $userID, limit: $limit, offset: $offset) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+
+query GetOwnBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  ownBoardsByUser(userId: $userId, limit: $limit, offset: $offset) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+
+query GetLikedBoardsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  likedBoardsByUser(userID: $userID, limit: $limit, offset: $offset) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+
+query GetUserIdByNickTag($nickTag: String!) {
+  userByTag(nickTag: $nickTag) {
     id
   }
 }
