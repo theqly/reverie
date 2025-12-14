@@ -7,6 +7,8 @@ import placeholder_1 from '../assets/placeholder1.jpg';
 import CommentSection from './CommentSection';
 import ReactionBlock from './ReactionBlock';
 import PinGrid from './PinGrid';
+import { Link } from 'react-router-dom';
+
 import { 
   getCollectionById, 
   getCollectionPins 
@@ -104,8 +106,8 @@ const CollectionViewPage = () => {
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
-            <h2>Подборка</h2>
-            <button className={styles.settingsBtn}></button>
+            <h2>Подборка от <Link to={`/profile`} className={styles.authorA}>@{collection.author}</Link></h2>
+            <button className={styles.settingsBtn} onClick={() => navigate('/collection/edit')}></button>
 
           </div>
 
@@ -119,12 +121,7 @@ const CollectionViewPage = () => {
             <p className={styles.pinCoords}>
               Координаты: {collection.coords[0]}, {collection.coords[1]}
             </p>
-            
-            <div className={styles.collectionStats}>
-              <span>{collection.pinsCount} мест</span>
-              <span>•</span>
-              <span>Автор: {collection.author}</span>
-            </div>
+          
             
             <ReactionBlock 
               initialLikes={226}
