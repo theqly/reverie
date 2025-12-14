@@ -461,7 +461,74 @@ while (collectionsCopy.length > 0 || pinsCopy.length > 0) {
   )}
 
 
-          {activeTab === 'bookmarks' && <h3>🔖 Ваши закладки</h3>}
+          {activeTab === 'bookmarks' && 
+              <div className={styles.likesFeed}>
+      {/* ——— ФОРМИРОВАНИЕ ЛЕНТЫ (встроено прямо здесь — никаких внешних переменных) ——— */}
+      {(() => {
+        const COLLECTIONS_PER_BLOCK = 2;
+        const PINS_PER_BLOCK = 5;
+
+        const colls = [...collections];
+        const ps = [...pins];
+        const feed: { type: 'collections' | 'pins'; items: any[] }[] = [];
+
+        let next = 'collections' as 'collections' | 'pins';
+
+        while (colls.length > 0 || ps.length > 0) {
+          if (next === 'collections' && colls.length > 0) {
+            const batch = colls.splice(0, COLLECTIONS_PER_BLOCK);
+            feed.push({ type: 'collections', items: batch });
+            next = 'pins';
+          } else if (next === 'pins' && ps.length > 0) {
+            const batch = ps.splice(0, PINS_PER_BLOCK);
+            feed.push({ type: 'pins', items: batch });
+            next = 'collections';
+          } else {
+            next = colls.length > 0 ? 'collections' : 'pins';
+          }
+        }
+
+        return feed.map((block, idx) => (
+          <div key={idx} className={styles.feedBlock}>
+            {block.type === 'collections' && (
+              <div className={styles.collectionsRow}>
+                {block.items.map((col: any) => (
+                  <div key={col.id} className={styles.collectionCard}>
+                    
+                    <div style={{ display: "flex" }}>
+                      <img src={col.image} alt={col.title} className={styles.img1} />
+                      <div className={styles.collectionLabelWrapper}>
+                        <div className={styles.collectionTitle}>{col.title}</div>
+                        <div className={styles.collectionLocation}>{col.location}</div>
+                        <div className={styles.collectionPinsCount}>
+                          {col.pinsCount} pins →
+                        </div>
+                        
+                      </div>
+                    </div>
+                    <div className={styles.pinAuthorWrapperBoard}>
+                      <img
+                        src={placeholder_1}
+                        alt="Author Avatar"
+                        className={styles.pinAuthorAvatar}
+                      />
+                      <div className={styles.pinAuthor}>jane_anderson</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {block.type === 'pins' && (
+              <PinGrid 
+                pins={pins} 
+                onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
+              />
+            )}
+          </div>
+        ));
+      })()}
+    </div>}
         </div>
         <EditProfileModal
           isOpen={isModalOpen}

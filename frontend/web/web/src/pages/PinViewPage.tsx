@@ -7,6 +7,8 @@ import placeholder_1 from '../assets/placeholder1.jpg';
 import ReactionBlock from './ReactionBlock';
 import CommentSection from './CommentSection';
 import { getPinById } from '../utils/mockData'; // Импортируем функцию
+import { Link } from 'react-router-dom';
+
 import { mockPins } from '../utils/mockData'; // Импортируем массив (опционально)
 
 const PinViewPage = () => {
@@ -114,34 +116,38 @@ const PinViewPage = () => {
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
-            <h2>Пин</h2>
-            <button className={styles.settingsBtn}></button>
+            <h2>Пин от <Link to={`/profile`} className={styles.authorA}>@{pin.author}</Link></h2>
+            <button className={styles.settingsBtn} onClick={() => navigate('/pin/edit')}></button>
           </div>
 
-          <div className={styles.pinCard}>
-            <img src={pin.image} alt={pin.title} className={styles.img1} />
-            <h3 className={styles.pinTitle}>{pin.title}</h3>
-            <p className={styles.collectionLocation}>{pin.location}</p>
-            <p className={styles.pinDescription}>{pin.description}</p>
+          <div className={styles.pinCardWrapper}> 
+            <div className={styles.pinCard}>
+              <img src={pin.image} alt={pin.title} className={styles.img1} />
+              <h3 className={styles.pinTitle}>{pin.title}</h3>
+              <p className={styles.collectionLocation}>{pin.location}</p>
+              <p className={styles.pinDescription}>{pin.description}</p>
 
-            <p className={styles.pinCoords}>
-              Координаты: {pin.coords[0]}, {pin.coords[1]}
-            </p>
+              <p className={styles.pinCoords}>
+                Координаты: {pin.coords[0]}, {pin.coords[1]}
+              </p>
+              
+              <ReactionBlock 
+                initialLikes={226}
+                initialLiked={false}
+                initialBookmarked={false}
+                onLike={(isLiked) => console.log('Лайк:', isLiked)}
+                onBookmark={(isBookmarked) => console.log('Закладка:', isBookmarked)}
+              />
+            </div>
             
-            <ReactionBlock 
-              initialLikes={226}
-              initialLiked={false}
-              initialBookmarked={false}
-              onLike={(isLiked) => console.log('Лайк:', isLiked)}
-              onBookmark={(isBookmarked) => console.log('Закладка:', isBookmarked)}
+            <CommentSection 
+              comments={comments}
+              title="Комментарии"
             />
           </div>
-          
-          <CommentSection 
-            comments={comments}
-            title="Комментарии"
-          />
         </div>
+
+
 
         {/* Правая фиксированная карта */}
         <div className={styles.mapWrapperFixed}>
