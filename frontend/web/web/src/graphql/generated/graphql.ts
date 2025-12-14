@@ -705,6 +705,31 @@ export type GetLikedPinsByUserIdQueryVariables = Exact<{
 
 export type GetLikedPinsByUserIdQuery = { __typename?: 'Query', likedPinsByUser: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> };
 
+export type GetBookmarkedPinsByUserIdQueryVariables = Exact<{
+  userID: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetBookmarkedPinsByUserIdQuery = { __typename?: 'Query', bookmarkedPinsByUser: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> };
+
+export type UpdatePinMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  input: UpdatePinInput;
+}>;
+
+
+export type UpdatePinMutation = { __typename?: 'Mutation', updatePin: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } };
+
+export type UpdateBoardMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  input: UpdateBoardInput;
+}>;
+
+
+export type UpdateBoardMutation = { __typename?: 'Mutation', updateBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } };
+
 export type GetOwnBoardsByUserIdQueryVariables = Exact<{
   userId: Scalars['UUID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -722,6 +747,15 @@ export type GetLikedBoardsByUserIdQueryVariables = Exact<{
 
 
 export type GetLikedBoardsByUserIdQuery = { __typename?: 'Query', likedBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
+
+export type GetBookmarkedBoardsByUserIdQueryVariables = Exact<{
+  userID: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetBookmarkedBoardsByUserIdQuery = { __typename?: 'Query', bookmarkedBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
 
 export type GetUserIdByNickTagQueryVariables = Exact<{
   nickTag: Scalars['String']['input'];
@@ -764,14 +798,6 @@ export type CreatePinMutationVariables = Exact<{
 
 
 export type CreatePinMutation = { __typename?: 'Mutation', createPin: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } };
-
-export type UpdatePinMutationVariables = Exact<{
-  id: Scalars['UUID']['input'];
-  input: UpdatePinInput;
-}>;
-
-
-export type UpdatePinMutation = { __typename?: 'Mutation', updatePin: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any } };
 
 export type AddPinToBoardMutationVariables = Exact<{
   pinId: Scalars['UUID']['input'];
@@ -839,6 +865,30 @@ export type RemoveImageFromPinMutationVariables = Exact<{
 
 
 export type RemoveImageFromPinMutation = { __typename?: 'Mutation', removeImageFromPin: boolean };
+
+export type FollowUserMutationVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+  followerId: Scalars['UUID']['input'];
+}>;
+
+
+export type FollowUserMutation = { __typename?: 'Mutation', followUser: boolean };
+
+export type UnfollowUserMutationVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+  followerId: Scalars['UUID']['input'];
+}>;
+
+
+export type UnfollowUserMutation = { __typename?: 'Mutation', unfollowUser: boolean };
+
+export type UpdateUserMutationVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+  input: UpdateUserInput;
+}>;
+
+
+export type UpdateUserMutation = { __typename?: 'Mutation', updateUser: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } };
 
 
 export const GetPinBasicByIdDocument = gql`
@@ -1119,6 +1169,172 @@ export type GetLikedPinsByUserIdQueryHookResult = ReturnType<typeof useGetLikedP
 export type GetLikedPinsByUserIdLazyQueryHookResult = ReturnType<typeof useGetLikedPinsByUserIdLazyQuery>;
 export type GetLikedPinsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetLikedPinsByUserIdSuspenseQuery>;
 export type GetLikedPinsByUserIdQueryResult = Apollo.QueryResult<GetLikedPinsByUserIdQuery, GetLikedPinsByUserIdQueryVariables>;
+export const GetBookmarkedPinsByUserIdDocument = gql`
+    query GetBookmarkedPinsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  bookmarkedPinsByUser(userID: $userID, limit: $limit, offset: $offset) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetBookmarkedPinsByUserIdQuery__
+ *
+ * To run a query within a React component, call `useGetBookmarkedPinsByUserIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetBookmarkedPinsByUserIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetBookmarkedPinsByUserIdQuery({
+ *   variables: {
+ *      userID: // value for 'userID'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetBookmarkedPinsByUserIdQuery(baseOptions: Apollo.QueryHookOptions<GetBookmarkedPinsByUserIdQuery, GetBookmarkedPinsByUserIdQueryVariables> & ({ variables: GetBookmarkedPinsByUserIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetBookmarkedPinsByUserIdQuery, GetBookmarkedPinsByUserIdQueryVariables>(GetBookmarkedPinsByUserIdDocument, options);
+      }
+export function useGetBookmarkedPinsByUserIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetBookmarkedPinsByUserIdQuery, GetBookmarkedPinsByUserIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetBookmarkedPinsByUserIdQuery, GetBookmarkedPinsByUserIdQueryVariables>(GetBookmarkedPinsByUserIdDocument, options);
+        }
+export function useGetBookmarkedPinsByUserIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetBookmarkedPinsByUserIdQuery, GetBookmarkedPinsByUserIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetBookmarkedPinsByUserIdQuery, GetBookmarkedPinsByUserIdQueryVariables>(GetBookmarkedPinsByUserIdDocument, options);
+        }
+export type GetBookmarkedPinsByUserIdQueryHookResult = ReturnType<typeof useGetBookmarkedPinsByUserIdQuery>;
+export type GetBookmarkedPinsByUserIdLazyQueryHookResult = ReturnType<typeof useGetBookmarkedPinsByUserIdLazyQuery>;
+export type GetBookmarkedPinsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetBookmarkedPinsByUserIdSuspenseQuery>;
+export type GetBookmarkedPinsByUserIdQueryResult = Apollo.QueryResult<GetBookmarkedPinsByUserIdQuery, GetBookmarkedPinsByUserIdQueryVariables>;
+export const UpdatePinDocument = gql`
+    mutation UpdatePin($id: UUID!, $input: UpdatePinInput!) {
+  updatePin(id: $id, input: $input) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+  }
+}
+    `;
+export type UpdatePinMutationFn = Apollo.MutationFunction<UpdatePinMutation, UpdatePinMutationVariables>;
+
+/**
+ * __useUpdatePinMutation__
+ *
+ * To run a mutation, you first call `useUpdatePinMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdatePinMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updatePinMutation, { data, loading, error }] = useUpdatePinMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdatePinMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePinMutation, UpdatePinMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdatePinMutation, UpdatePinMutationVariables>(UpdatePinDocument, options);
+      }
+export type UpdatePinMutationHookResult = ReturnType<typeof useUpdatePinMutation>;
+export type UpdatePinMutationResult = Apollo.MutationResult<UpdatePinMutation>;
+export type UpdatePinMutationOptions = Apollo.BaseMutationOptions<UpdatePinMutation, UpdatePinMutationVariables>;
+export const UpdateBoardDocument = gql`
+    mutation UpdateBoard($id: UUID!, $input: UpdateBoardInput!) {
+  updateBoard(id: $id, input: $input) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+    `;
+export type UpdateBoardMutationFn = Apollo.MutationFunction<UpdateBoardMutation, UpdateBoardMutationVariables>;
+
+/**
+ * __useUpdateBoardMutation__
+ *
+ * To run a mutation, you first call `useUpdateBoardMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateBoardMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateBoardMutation, { data, loading, error }] = useUpdateBoardMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateBoardMutation(baseOptions?: Apollo.MutationHookOptions<UpdateBoardMutation, UpdateBoardMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateBoardMutation, UpdateBoardMutationVariables>(UpdateBoardDocument, options);
+      }
+export type UpdateBoardMutationHookResult = ReturnType<typeof useUpdateBoardMutation>;
+export type UpdateBoardMutationResult = Apollo.MutationResult<UpdateBoardMutation>;
+export type UpdateBoardMutationOptions = Apollo.BaseMutationOptions<UpdateBoardMutation, UpdateBoardMutationVariables>;
 export const GetOwnBoardsByUserIdDocument = gql`
     query GetOwnBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
   ownBoardsByUser(userId: $userId, limit: $limit, offset: $offset) {
@@ -1251,6 +1467,72 @@ export type GetLikedBoardsByUserIdQueryHookResult = ReturnType<typeof useGetLike
 export type GetLikedBoardsByUserIdLazyQueryHookResult = ReturnType<typeof useGetLikedBoardsByUserIdLazyQuery>;
 export type GetLikedBoardsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetLikedBoardsByUserIdSuspenseQuery>;
 export type GetLikedBoardsByUserIdQueryResult = Apollo.QueryResult<GetLikedBoardsByUserIdQuery, GetLikedBoardsByUserIdQueryVariables>;
+export const GetBookmarkedBoardsByUserIdDocument = gql`
+    query GetBookmarkedBoardsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  bookmarkedBoardsByUser(userID: $userID, limit: $limit, offset: $offset) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+    `;
+
+/**
+ * __useGetBookmarkedBoardsByUserIdQuery__
+ *
+ * To run a query within a React component, call `useGetBookmarkedBoardsByUserIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetBookmarkedBoardsByUserIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetBookmarkedBoardsByUserIdQuery({
+ *   variables: {
+ *      userID: // value for 'userID'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetBookmarkedBoardsByUserIdQuery(baseOptions: Apollo.QueryHookOptions<GetBookmarkedBoardsByUserIdQuery, GetBookmarkedBoardsByUserIdQueryVariables> & ({ variables: GetBookmarkedBoardsByUserIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetBookmarkedBoardsByUserIdQuery, GetBookmarkedBoardsByUserIdQueryVariables>(GetBookmarkedBoardsByUserIdDocument, options);
+      }
+export function useGetBookmarkedBoardsByUserIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetBookmarkedBoardsByUserIdQuery, GetBookmarkedBoardsByUserIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetBookmarkedBoardsByUserIdQuery, GetBookmarkedBoardsByUserIdQueryVariables>(GetBookmarkedBoardsByUserIdDocument, options);
+        }
+export function useGetBookmarkedBoardsByUserIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetBookmarkedBoardsByUserIdQuery, GetBookmarkedBoardsByUserIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetBookmarkedBoardsByUserIdQuery, GetBookmarkedBoardsByUserIdQueryVariables>(GetBookmarkedBoardsByUserIdDocument, options);
+        }
+export type GetBookmarkedBoardsByUserIdQueryHookResult = ReturnType<typeof useGetBookmarkedBoardsByUserIdQuery>;
+export type GetBookmarkedBoardsByUserIdLazyQueryHookResult = ReturnType<typeof useGetBookmarkedBoardsByUserIdLazyQuery>;
+export type GetBookmarkedBoardsByUserIdSuspenseQueryHookResult = ReturnType<typeof useGetBookmarkedBoardsByUserIdSuspenseQuery>;
+export type GetBookmarkedBoardsByUserIdQueryResult = Apollo.QueryResult<GetBookmarkedBoardsByUserIdQuery, GetBookmarkedBoardsByUserIdQueryVariables>;
 export const GetUserIdByNickTagDocument = gql`
     query GetUserIdByNickTag($nickTag: String!) {
   userByTag(nickTag: $nickTag) {
@@ -1515,46 +1797,6 @@ export function useCreatePinMutation(baseOptions?: Apollo.MutationHookOptions<Cr
 export type CreatePinMutationHookResult = ReturnType<typeof useCreatePinMutation>;
 export type CreatePinMutationResult = Apollo.MutationResult<CreatePinMutation>;
 export type CreatePinMutationOptions = Apollo.BaseMutationOptions<CreatePinMutation, CreatePinMutationVariables>;
-export const UpdatePinDocument = gql`
-    mutation UpdatePin($id: UUID!, $input: UpdatePinInput!) {
-  updatePin(id: $id, input: $input) {
-    id
-    name
-    latitude
-    longitude
-    description
-    rating
-    createdAt
-  }
-}
-    `;
-export type UpdatePinMutationFn = Apollo.MutationFunction<UpdatePinMutation, UpdatePinMutationVariables>;
-
-/**
- * __useUpdatePinMutation__
- *
- * To run a mutation, you first call `useUpdatePinMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdatePinMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [updatePinMutation, { data, loading, error }] = useUpdatePinMutation({
- *   variables: {
- *      id: // value for 'id'
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useUpdatePinMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePinMutation, UpdatePinMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdatePinMutation, UpdatePinMutationVariables>(UpdatePinDocument, options);
-      }
-export type UpdatePinMutationHookResult = ReturnType<typeof useUpdatePinMutation>;
-export type UpdatePinMutationResult = Apollo.MutationResult<UpdatePinMutation>;
-export type UpdatePinMutationOptions = Apollo.BaseMutationOptions<UpdatePinMutation, UpdatePinMutationVariables>;
 export const AddPinToBoardDocument = gql`
     mutation AddPinToBoard($pinId: UUID!, $boardId: UUID!) {
   addPinToBoard(pinId: $pinId, boardId: $boardId) {
@@ -1869,3 +2111,116 @@ export function useRemoveImageFromPinMutation(baseOptions?: Apollo.MutationHookO
 export type RemoveImageFromPinMutationHookResult = ReturnType<typeof useRemoveImageFromPinMutation>;
 export type RemoveImageFromPinMutationResult = Apollo.MutationResult<RemoveImageFromPinMutation>;
 export type RemoveImageFromPinMutationOptions = Apollo.BaseMutationOptions<RemoveImageFromPinMutation, RemoveImageFromPinMutationVariables>;
+export const FollowUserDocument = gql`
+    mutation FollowUser($userId: UUID!, $followerId: UUID!) {
+  followUser(userId: $userId, followerId: $followerId)
+}
+    `;
+export type FollowUserMutationFn = Apollo.MutationFunction<FollowUserMutation, FollowUserMutationVariables>;
+
+/**
+ * __useFollowUserMutation__
+ *
+ * To run a mutation, you first call `useFollowUserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useFollowUserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [followUserMutation, { data, loading, error }] = useFollowUserMutation({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *      followerId: // value for 'followerId'
+ *   },
+ * });
+ */
+export function useFollowUserMutation(baseOptions?: Apollo.MutationHookOptions<FollowUserMutation, FollowUserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<FollowUserMutation, FollowUserMutationVariables>(FollowUserDocument, options);
+      }
+export type FollowUserMutationHookResult = ReturnType<typeof useFollowUserMutation>;
+export type FollowUserMutationResult = Apollo.MutationResult<FollowUserMutation>;
+export type FollowUserMutationOptions = Apollo.BaseMutationOptions<FollowUserMutation, FollowUserMutationVariables>;
+export const UnfollowUserDocument = gql`
+    mutation UnfollowUser($userId: UUID!, $followerId: UUID!) {
+  unfollowUser(userId: $userId, followerId: $followerId)
+}
+    `;
+export type UnfollowUserMutationFn = Apollo.MutationFunction<UnfollowUserMutation, UnfollowUserMutationVariables>;
+
+/**
+ * __useUnfollowUserMutation__
+ *
+ * To run a mutation, you first call `useUnfollowUserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnfollowUserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unfollowUserMutation, { data, loading, error }] = useUnfollowUserMutation({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *      followerId: // value for 'followerId'
+ *   },
+ * });
+ */
+export function useUnfollowUserMutation(baseOptions?: Apollo.MutationHookOptions<UnfollowUserMutation, UnfollowUserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnfollowUserMutation, UnfollowUserMutationVariables>(UnfollowUserDocument, options);
+      }
+export type UnfollowUserMutationHookResult = ReturnType<typeof useUnfollowUserMutation>;
+export type UnfollowUserMutationResult = Apollo.MutationResult<UnfollowUserMutation>;
+export type UnfollowUserMutationOptions = Apollo.BaseMutationOptions<UnfollowUserMutation, UnfollowUserMutationVariables>;
+export const UpdateUserDocument = gql`
+    mutation UpdateUser($userId: UUID!, $input: UpdateUserInput!) {
+  updateUser(userId: $userId, input: $input) {
+    id
+    nickname
+    email
+    nickTag
+    profilePicture
+    description
+    status
+    userRating
+    followers {
+      id
+      nickname
+    }
+    following {
+      id
+      nickname
+    }
+  }
+}
+    `;
+export type UpdateUserMutationFn = Apollo.MutationFunction<UpdateUserMutation, UpdateUserMutationVariables>;
+
+/**
+ * __useUpdateUserMutation__
+ *
+ * To run a mutation, you first call `useUpdateUserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateUserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateUserMutation, { data, loading, error }] = useUpdateUserMutation({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateUserMutation(baseOptions?: Apollo.MutationHookOptions<UpdateUserMutation, UpdateUserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(UpdateUserDocument, options);
+      }
+export type UpdateUserMutationHookResult = ReturnType<typeof useUpdateUserMutation>;
+export type UpdateUserMutationResult = Apollo.MutationResult<UpdateUserMutation>;
+export type UpdateUserMutationOptions = Apollo.BaseMutationOptions<UpdateUserMutation, UpdateUserMutationVariables>;

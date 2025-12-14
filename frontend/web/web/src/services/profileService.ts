@@ -1,13 +1,13 @@
 import {apolloClient} from "@/api/apolloClient.ts";
 import {
-  type Board,
+  type Board, GetBookmarkedBoardsByUserIdDocument, GetBookmarkedPinsByUserIdDocument,
   GetLikedBoardsByUserIdDocument,
   GetLikedPinsByUserIdDocument,
   GetOwnBoardsByUserIdDocument,
   GetPinsByUserIdDocument,
   GetUserByIdDocument,
-  GetUserByNickTagDocument,
-  type Pin,
+  GetUserByNickTagDocument, type InputMaybe,
+  type Pin, type Scalars, UpdateUserDocument, type UpdateUserInput,
   type User,
 } from "@/graphql/generated/graphql.ts";
 
@@ -219,8 +219,6 @@ export async function getOwnBoardsByUser(
  * Возвращает два массива лайкнутых пинов и досок пользователя или null, если пользователь не найден.
  * Если userId и nickTag одновременно переданы или не переданы, также возвращает null
  *
- * @param {string, string } params — параметры для запроса
- *
  * @example const likes = await getLikesByUser({nickTag: "alice_777", pinsLimit: 10, pinsOffset = 0, boardsLimit = 10, boardsOffset = 0});
  */
 export async function getLikesByUser(
@@ -285,6 +283,114 @@ export async function getLikesByUser(
 
   } catch (error) {
     console.error('Failed to likes by user:', error);
+  }
+
+  return null;
+}
+
+
+/**
+ * Возвращает два массива добавленных в закладки пинов и досок пользователя или null, если пользователь не найден.
+ * Если userId и nickTag одновременно переданы или не переданы, также возвращает null
+ *
+ * @example const likes = await getBookmarksByUser({nickTag: "alice_777", pinsLimit: 10, pinsOffset = 0, boardsLimit = 10, boardsOffset = 0});
+ */
+export async function getBookmarksByUser(
+  params: {
+    userId?: string;
+    nickTag?: string;
+    pinsLimit?: number; // default = 10
+    pinsOffset?: number; // default = 0
+    boardsLimit?: number; // default = 10
+    boardsOffset?: number // default = 0
+  }
+): Promise< { pins: Pin[]; boards: Board[] } | null> {
+
+  const finalUserId = await resolveUserId({
+    userId: params.userId,
+    nickTag: params.nickTag
+  });
+
+  if (!finalUserId) {
+    return null;
+  }
+
+  try {
+
+    const pinsVariables: any = {
+      userId: finalUserId,
+    };
+
+    if (params.pinsLimit !== undefined) {
+      pinsVariables.pinsLimit = params.pinsLimit;
+    }
+
+    if (params.pinsOffset !== undefined) {
+      pinsVariables.pinsOffset = params.pinsOffset;
+    }
+
+    const boardsVariables: any = {
+      userId: finalUserId,
+    };
+    if (params.boardsLimit !== undefined) {
+      boardsVariables.boardsLimit = params.boardsLimit;
+    }
+
+    if (params.boardsOffset !== undefined) {
+      boardsVariables.boardsOffset = params.boardsOffset;
+    }
+
+    const bookmarkedPinsResult = await apolloClient.query({
+      query: GetBookmarkedPinsByUserIdDocument,
+      variables: pinsVariables
+    });
+
+    const bookmarkedBoardsResult = await apolloClient.query({
+      query: GetBookmarkedBoardsByUserIdDocument,
+      variables: boardsVariables
+    });
+
+    return {
+      pins: bookmarkedPinsResult.data?.likedPinsByUser ?? [],
+      boards: bookmarkedBoardsResult.data?.likedBoardsByUser ?? [],
+    };
+
+  } catch (error) {
+    console.error('Failed to likes by user:', error);
+  }
+
+  return null;
+}
+
+/**
+ * Обновляет пользователя с заданным ID
+ *
+ * @param {string} userId - ID обновляемого пользователя
+ * @param {UpdateUserInput} input - Данные пользователя, которые нужно установить.
+ *
+ * @example
+ * await updateUser(
+ * "00000000-0000-0000-0000-000000000002",
+ * {
+ *   nickname: "Крутой никнейм 2012",
+ *   description: "Описание пользователя",
+ *   nick_tag: "asd1",
+ *   email: "mail123@mail.ru"
+ * });
+ */
+export async function updateUser(userId: string, input: UpdateUserInput): Promise<User | null> {
+  try {
+    const userResult = await apolloClient.mutate({
+      mutation: UpdateUserDocument,
+      variables: {
+        userId: userId,
+        input: input
+      }
+    });
+
+    return userResult.data?.updateUser || null;
+  } catch (error) {
+    console.error('Failed to update user:', error);
   }
 
   return null;
