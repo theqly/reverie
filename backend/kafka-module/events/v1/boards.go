@@ -11,7 +11,9 @@ type BoardCreated struct {
 	AccessLevel    string    `json:"access_level"`
 	OwnerID        string    `json:"owner_id"`
 	OwnerType      string    `json:"owner_type"`
+	AuthorID       string    `json:"author_id"`
 	CreatedAt      time.Time `json:"created_at"`
+	SavedAt        time.Time `json:"saved_at"`
 	PinIDs         []string  `json:"pin_ids,omitempty"`
 	GroupMemberIDs []string  `json:"group_member_ids,omitempty"`
 }

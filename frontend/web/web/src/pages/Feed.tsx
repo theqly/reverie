@@ -223,7 +223,7 @@ const Feed = () => {
     navigate(`/pin/${pinId}`);
   };
 
-  const handleCollectionClick = (collectionId) => {
+  const handleCollectionClick = (collectionId) => { //тут это тоже есть
     navigate(`/collection/${collectionId}`);
   };
 

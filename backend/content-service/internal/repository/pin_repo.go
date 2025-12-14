@@ -45,12 +45,14 @@ func (r *PinRepository) Create(ctx context.Context, pin models.Pin) error {
 				PinID:       p.ID.String(),
 				Name:        p.Name,
 				OwnerID:     p.OwnerID.String(),
+				AuthorID:    p.AuthorID.String(),
 				Description: p.Description,
 				Latitude:    p.Latitude,
 				Longitude:   p.Longitude,
 				Address:     p.Address,
 				Rating:      p.Rating,
 				CreatedAt:   p.CreatedAt,
+				SavedAt:     p.SavedAt,
 				PlaceID:     "0",
 			}
 			if err := r.publisher.PublishPinCreated(context.Background(), event); err != nil {
@@ -473,4 +475,51 @@ func (r *PinRepository) CountPinsByUser(ctx context.Context, userID uuid.UUID) (
 	}
 
 	return pinsNumber, nil
+}
+
+func (r *PinRepository) GetLikedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Pin, error) {
+	var pins []models.Pin
+
+	tx := r.db.WithContext(ctx).
+		Select("pins.*").
+		Joins("JOIN reaction_pins ON pins.id = reaction_pins.pin_id").
+		Joins("JOIN reaction ON reaction.id = reaction_pins.reaction_id").
+		Where("reaction.type = ? AND reaction_pins.owner_id = ?", "like", userID).
+		Order("pins.saved_at DESC").
+		Limit(limit).
+		Offset(offset)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	if err := tx.Find(&pins).Error; err != nil {
+		return nil, err
+	}
+
+	return pins, nil
+}
+
+func (r *PinRepository) GetBookmarkedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Pin, error) {
+	var pins []models.Pin
+
+	tx := r.db.WithContext(ctx).
+		Select("pins.*").
+		Joins("JOIN bookmarks_pins ON pins.id = bookmarks_pins.pin_id").
+		Where("bookmarks_pins.user_id = ?", userID).
+		Order("pins.saved_at DESC").
+		Limit(limit).
+		Offset(offset)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	if err := tx.Find(&pins).Error; err != nil {
+		return nil, err
+	}
+
+	return pins, nil
 }

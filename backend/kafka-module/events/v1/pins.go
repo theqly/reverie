@@ -11,12 +11,14 @@ type PinCreated struct {
 	PinID            string    `json:"pin_id"`
 	Name             string    `json:"name"`
 	OwnerID          string    `json:"owner_id"`
+	AuthorID         string    `json:"author_id"`
 	Description      string    `json:"description"`
 	Latitude         float64   `json:"latitude"`
 	Longitude        float64   `json:"longitude"`
 	Address          string    `json:"address,omitempty"`
 	Rating           float64   `json:"rating"`
 	CreatedAt        time.Time `json:"created_at"`
+	SavedAt          time.Time `json:"saved_at"`
 	AccessLevel      string    `json:"access_level,omitempty"`
 	PlaceID          string    `json:"place_id"`
 	GisID            string    `json:"gis_id,omitempty"`

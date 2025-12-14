@@ -1,17 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreatePinPage.module.css'; // ← ИМПОРТ СТИЛЕЙ
 import logo from '../assets/Reverie.svg';
 import AddPinModal from "./AddPinModal";
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header'; 
-//import { createPin } from "../services/pinService";
-
+import { createPin } from "../services/pinService";
+import { useLocation } from 'react-router-dom';
+import MapModal from './MapModal';
 
 const CreatePinPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   
+
   // Состояния для полей формы
+  const [pinLatitude, setPinLatitude] = useState<number | null>(null);
+  const [pinLongitude, setPinLongitude] = useState<number | null>(null);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const [pinName, setPinName] = useState('');
   const [pinInfo, setPinInfo] = useState('');
   const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
@@ -21,8 +28,14 @@ const CreatePinPage = () => {
   const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [pinCount, setPinCount] = useState(0);
+    const [pinCount, setPinCount] = useState(0);
+
+  useEffect(() => {
+  if (location.state?.latitude && location.state?.longitude) {
+    setPinLatitude(location.state.latitude);
+    setPinLongitude(location.state.longitude);
+  }
+}, [location.state]);
 
   // Обработчики
 const handleBack = () => {
@@ -59,13 +72,6 @@ const handleBack = () => {
     console.log("Pin photo updated | pin_ID");
   };
 
-  const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setCoverImage(file);
-    }
-  };
-
   const handleAddPin = () => {
     setIsAddPinModalOpen(true);
     setPinCount(prev => prev + 1);
@@ -82,24 +88,34 @@ const handleBack = () => {
   };
 
 
-  const handleSavePin = () => {
+   const handleSavePin = async () => {
+    console.log('[CreatePin] Current coordinates:', {
+      latitude: pinLatitude,
+      longitude: pinLongitude
+    });
+  
+  if (pinLatitude === null || pinLongitude === null) {
+  alert('Выберите точку на карте');
+    return;
+  }
 
-    const payload = {
-      name: pinName,
-      info: pinInfo,
-      coverImage,
-      pinCount
-    };
+  const payload = {
+    name: pinName,
+    description: pinInfo,
+    latitude: pinLatitude,
+    longitude: pinLongitude,
+    ownerId: '00000000-0000-0000-0000-000000000001', // временно, заглушка
+    coverImages: images
+  };
 
-    //await createPin(payload);
-    console.log("createPin вызвана с payload:", payload);
+    await createPin(payload);
   };
 
   // Валидация для кнопки сохранения
   const isSaveEnabled = pinName.trim().length > 0 && 
                        pinName.length <= 50 && 
                        pinInfo.length <= 1000 &&
-                       coverImage !== null;
+                       images.length > 0;
   return (
 
     <div className={styles.createCollectionPage}>
@@ -261,7 +277,23 @@ const handleBack = () => {
                     className={styles.hiddenInput}
                 />
 
-                <button onClick={() => navigate('/map')} className={styles.mapButton}>Найти на карте</button>
+                <button
+  type="button"
+  onClick={() => setIsMapOpen(true)}
+  className={styles.mapButton}
+>
+  Найти на карте
+</button>
+{pinLatitude !== null && pinLongitude !== null && (
+  <div className={styles.coordsInfo}>
+    <div>
+      <strong>Широта:</strong> {pinLatitude.toFixed(6)}
+    </div>
+    <div>
+      <strong>Долгота:</strong> {pinLongitude.toFixed(6)}
+    </div>
+  </div>
+)}
             </section>
 
         </div>
@@ -286,6 +318,16 @@ const handleBack = () => {
 
 
       </main>
+      {isMapOpen && (
+      <MapModal
+        onClose={() => setIsMapOpen(false)}
+        onSelect={(lat, lng) => {
+          setPinLatitude(lat);
+          setPinLongitude(lng);
+        }}
+      />
+    )}
+
     </div>
   );
 };

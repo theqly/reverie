@@ -28,8 +28,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/feed" element={<Feed />} />
 
-        <Route path="/pin/view" element={<PinViewPage />} />
-        <Route path="/collection/view" element={<CollectionViewPage />} />
+        <Route path="/pin/:pinId" element={<PinViewPage />} />
+        <Route path="/collection/:collectionId" element={<CollectionViewPage />} />
         <Route path="/collection/edit" element={<EditCollectionPage />} />
 
         <Route path="/map" element={<MapPage />} />
