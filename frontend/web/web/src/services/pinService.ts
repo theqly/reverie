@@ -12,9 +12,11 @@ import {
 
 export interface CreatePinPayload {
   name: string;
-  info: string;
-  coverImage: File | null;
-  pinCount: number;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  ownerId: string; // UUID
+  coverImages: File[]; // массив изображений, пока вроде на бэке нету надо прибить гвоздями
 }
 
 /**
@@ -28,5 +30,11 @@ export interface CreatePinPayload {
  *   info: "Описание пина",
  *   coverImage: file,
  *   pinCount: 10
+ *   ownerId: "00000000-0000-0000-0000-000000000001"
+ *   coverImage: [file1, ..., file10]
  * });
  */
+
+export async function createPin(payload: CreatePinPayload) {
+
+}

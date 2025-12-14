@@ -357,3 +357,11 @@ h1 {
 .deleteButton:hover {
   background: rgba(0, 0, 0, 0.75);
 }
+
+.coordsInfo {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+  display: flex;
+  gap: 16px;
+}
