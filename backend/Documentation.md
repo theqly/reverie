@@ -217,6 +217,11 @@ CREATE INDEX idx_pins_owner_saved_at ON pins(owner_id, saved_at DESC);
 
 CREATE INDEX idx_board_pins_pin_id ON board_pins(pin_id);
 CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
+
+CREATE INDEX idx_reaction_pins_owner_reaction ON reaction_pins(owner_id, reaction_id);
+CREATE INDEX idx_reaction_boards_owner_reaction ON reaction_boards(owner_id, reaction_id);
+CREATE INDEX idx_bookmarks_pins_user ON bookmarks_pins(user_id);
+CREATE INDEX idx_bookmarks_boards_user ON bookmarks_boards(user_id);
 ```
 
 
@@ -447,6 +452,11 @@ type Reaction {
 
   bookmarkToPin(pinId: UUID!, userId: UUID!): Boolean!
   bookmarkToBoard(boardId: UUID!, userId: UUID!): Boolean!
+
+  likedPinsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]!
+  likedBoardsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  bookmarkedPinsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]!
+  bookmarkedBoardsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
 
 ##### Необходимо реализовать:
 - copyPin(pinId: UUID!, userId: UUID!, boardId: UUID!): Pin! (возвращаем id нового пина, возможно хватит возвращать UUID!)

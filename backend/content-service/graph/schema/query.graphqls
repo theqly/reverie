@@ -25,4 +25,9 @@ type Query {
   reactions: [Reaction!]!
   countAllReactionsToPin(pinId: UUID!): Int!
   countAllReactionsToBoard(boardId: UUID!): Int!
+
+  likedPinsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]!
+  likedBoardsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
+  bookmarkedPinsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]!
+  bookmarkedBoardsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Board!]!
 }

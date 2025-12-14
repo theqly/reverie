@@ -630,3 +630,40 @@ func (r *BoardRepository) CountGroupBoardsByUser(ctx context.Context, userID uui
 	return boardsNumber, nil
 
 }
+
+func (r *BoardRepository) GetLikedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Board, error) {
+	var boards []models.Board
+
+	tx := r.db.WithContext(ctx).
+		Select("boards.*").
+		Joins("JOIN reaction_boards ON boards.id = reaction_boards.board_id").
+		Joins("JOIN reaction ON reaction.id = reaction_boards.reaction_id").
+		Where("reaction.type = ? AND reaction_boards.owner_id = ?", "like", userID).
+		Order("boards.saved_at DESC").
+		Limit(limit).
+		Offset(offset)
+
+	if err := tx.Find(&boards).Error; err != nil {
+		return nil, err
+	}
+
+	return boards, nil
+}
+
+func (r *BoardRepository) GetBookmarkedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Board, error) {
+	var boards []models.Board
+
+	tx := r.db.WithContext(ctx).
+		Select("boards.*").
+		Joins("JOIN bookmarks_boards ON boards.id = bookmarks_boards.board_id").
+		Where("bookmarks_boards.user_id = ?", userID).
+		Order("boards.saved_at DESC").
+		Limit(limit).
+		Offset(offset)
+
+	if err := tx.Find(&boards).Error; err != nil {
+		return nil, err
+	}
+
+	return boards, nil
+}

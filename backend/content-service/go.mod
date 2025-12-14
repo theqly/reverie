@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.11
 
 require (
-	github.com/99designs/gqlgen v0.17.84
+	github.com/99designs/gqlgen v0.17.73
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208034302-d9c7cd41ae78

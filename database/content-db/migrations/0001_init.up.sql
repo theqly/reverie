@@ -196,3 +196,7 @@ CREATE INDEX idx_pins_owner_saved_at ON pins(owner_id, saved_at DESC);
 CREATE INDEX idx_board_pins_pin_id ON board_pins(pin_id);
 CREATE INDEX idx_pin_images_pin_id ON pin_images(pin_id);
 
+CREATE INDEX idx_reaction_pins_owner_reaction ON reaction_pins(owner_id, reaction_id);
+CREATE INDEX idx_reaction_boards_owner_reaction ON reaction_boards(owner_id, reaction_id);
+CREATE INDEX idx_bookmarks_pins_user ON bookmarks_pins(user_id);
+CREATE INDEX idx_bookmarks_boards_user ON bookmarks_boards(user_id);
