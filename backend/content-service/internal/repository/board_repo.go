@@ -632,15 +632,11 @@ func (r *BoardRepository) CountGroupBoardsByUser(ctx context.Context, userID uui
 func (r *BoardRepository) GetLikedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Board, error) {
 	var boards []models.Board
 
-	var likeReaction models.Reaction
-	if err := r.db.WithContext(ctx).Where("type = ?", "like").First(&likeReaction).Error; err != nil {
-		return nil, fmt.Errorf("like reaction not found: %w", err)
-	}
-
 	tx := r.db.WithContext(ctx).
 		Select("boards.*").
 		Joins("JOIN reaction_boards ON boards.id = reaction_boards.board_id").
-		Where("reaction_boards.reaction_id = ? AND reaction_boards.owner_id = ?", likeReaction.ID, userID).
+		Joins("JOIN reaction ON reaction.id = reaction_boards.reaction_id").
+		Where("reaction.type = ? AND reaction_boards.owner_id = ?", "like", userID).
 		Order("boards.saved_at DESC").
 		Limit(limit).
 		Offset(offset)

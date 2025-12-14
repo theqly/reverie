@@ -478,16 +478,11 @@ func (r *PinRepository) CountPinsByUser(ctx context.Context, userID uuid.UUID) (
 func (r *PinRepository) GetLikedByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 
-	// Предполагается, что у тебя есть реакция с type = 'like'
-	var likeReaction models.Reaction
-	if err := r.db.WithContext(ctx).Where("type = ?", "like").First(&likeReaction).Error; err != nil {
-		return nil, fmt.Errorf("like reaction not found: %w", err)
-	}
-
 	tx := r.db.WithContext(ctx).
 		Select("pins.*").
 		Joins("JOIN reaction_pins ON pins.id = reaction_pins.pin_id").
-		Where("reaction_pins.reaction_id = ? AND reaction_pins.owner_id = ?", likeReaction.ID, userID).
+		Joins("JOIN reaction ON reaction.id = reaction_pins.reaction_id").
+		Where("reaction.type = ? AND reaction_pins.owner_id = ?", "like", userID).
 		Order("pins.saved_at DESC").
 		Limit(limit).
 		Offset(offset)
