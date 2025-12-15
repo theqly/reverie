@@ -1,5 +1,3 @@
-// services/pinService.ts
-
 import {apolloClient} from "@/api/apolloClient.ts";
 import {
   CreatePinDocument,

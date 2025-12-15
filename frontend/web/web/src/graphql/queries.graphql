@@ -507,3 +507,35 @@ mutation UpdateBoardComment($id: UUID!, $message: String!) {
 mutation DeleteBoardComment($id: UUID!) {
   deleteCommentToBoard(id: $id)
 }
+
+query GetAvailableReactions {
+  reactions {
+    id
+    type
+    description
+  }
+}
+
+query CountAllReactionsToPin($pinId: UUID!) {
+  countAllReactionsToPin(pinId: $pinId)
+}
+
+query CountAllReactionsToBoard($boardId: UUID!) {
+  countAllReactionsToBoard(boardId: $boardId)
+}
+
+mutation ReactionToPin($pinId: UUID!, $reactionId: UUID!, $userId: UUID!) {
+  reactionToPin(pinId: $pinId, reactionId: $reactionId, userId: $userId)
+}
+
+mutation ReactionToBoard($boardId: UUID!, $reactionId: UUID!, $userId: UUID!) {
+  reactionToBoard(boardId: $boardId, reactionId: $reactionId, userId: $userId)
+}
+
+mutation BookmarkToPin($pinId: UUID!, $userId: UUID!) {
+  bookmarkToPin(pinId: $pinId, userId: $userId)
+}
+
+mutation BookmarkToBoard($boardId: UUID!, $userId: UUID!) {
+  bookmarkToBoard(boardId: $boardId, userId: $userId)
+}

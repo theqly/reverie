@@ -945,6 +945,59 @@ export type DeleteBoardCommentMutationVariables = Exact<{
 
 export type DeleteBoardCommentMutation = { __typename?: 'Mutation', deleteCommentToBoard: boolean };
 
+export type GetAvailableReactionsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAvailableReactionsQuery = { __typename?: 'Query', reactions: Array<{ __typename?: 'Reaction', id: any, type: string, description?: string | null }> };
+
+export type CountAllReactionsToPinQueryVariables = Exact<{
+  pinId: Scalars['UUID']['input'];
+}>;
+
+
+export type CountAllReactionsToPinQuery = { __typename?: 'Query', countAllReactionsToPin: number };
+
+export type CountAllReactionsToBoardQueryVariables = Exact<{
+  boardId: Scalars['UUID']['input'];
+}>;
+
+
+export type CountAllReactionsToBoardQuery = { __typename?: 'Query', countAllReactionsToBoard: number };
+
+export type ReactionToPinMutationVariables = Exact<{
+  pinId: Scalars['UUID']['input'];
+  reactionId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+}>;
+
+
+export type ReactionToPinMutation = { __typename?: 'Mutation', reactionToPin: boolean };
+
+export type ReactionToBoardMutationVariables = Exact<{
+  boardId: Scalars['UUID']['input'];
+  reactionId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+}>;
+
+
+export type ReactionToBoardMutation = { __typename?: 'Mutation', reactionToBoard: boolean };
+
+export type BookmarkToPinMutationVariables = Exact<{
+  pinId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+}>;
+
+
+export type BookmarkToPinMutation = { __typename?: 'Mutation', bookmarkToPin: boolean };
+
+export type BookmarkToBoardMutationVariables = Exact<{
+  boardId: Scalars['UUID']['input'];
+  userId: Scalars['UUID']['input'];
+}>;
+
+
+export type BookmarkToBoardMutation = { __typename?: 'Mutation', bookmarkToBoard: boolean };
+
 
 export const GetPinBasicByIdDocument = gql`
     query GetPinBasicById($id: UUID!) {
@@ -2553,3 +2606,250 @@ export function useDeleteBoardCommentMutation(baseOptions?: Apollo.MutationHookO
 export type DeleteBoardCommentMutationHookResult = ReturnType<typeof useDeleteBoardCommentMutation>;
 export type DeleteBoardCommentMutationResult = Apollo.MutationResult<DeleteBoardCommentMutation>;
 export type DeleteBoardCommentMutationOptions = Apollo.BaseMutationOptions<DeleteBoardCommentMutation, DeleteBoardCommentMutationVariables>;
+export const GetAvailableReactionsDocument = gql`
+    query GetAvailableReactions {
+  reactions {
+    id
+    type
+    description
+  }
+}
+    `;
+
+/**
+ * __useGetAvailableReactionsQuery__
+ *
+ * To run a query within a React component, call `useGetAvailableReactionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAvailableReactionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAvailableReactionsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAvailableReactionsQuery(baseOptions?: Apollo.QueryHookOptions<GetAvailableReactionsQuery, GetAvailableReactionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAvailableReactionsQuery, GetAvailableReactionsQueryVariables>(GetAvailableReactionsDocument, options);
+      }
+export function useGetAvailableReactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAvailableReactionsQuery, GetAvailableReactionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAvailableReactionsQuery, GetAvailableReactionsQueryVariables>(GetAvailableReactionsDocument, options);
+        }
+export function useGetAvailableReactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAvailableReactionsQuery, GetAvailableReactionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAvailableReactionsQuery, GetAvailableReactionsQueryVariables>(GetAvailableReactionsDocument, options);
+        }
+export type GetAvailableReactionsQueryHookResult = ReturnType<typeof useGetAvailableReactionsQuery>;
+export type GetAvailableReactionsLazyQueryHookResult = ReturnType<typeof useGetAvailableReactionsLazyQuery>;
+export type GetAvailableReactionsSuspenseQueryHookResult = ReturnType<typeof useGetAvailableReactionsSuspenseQuery>;
+export type GetAvailableReactionsQueryResult = Apollo.QueryResult<GetAvailableReactionsQuery, GetAvailableReactionsQueryVariables>;
+export const CountAllReactionsToPinDocument = gql`
+    query CountAllReactionsToPin($pinId: UUID!) {
+  countAllReactionsToPin(pinId: $pinId)
+}
+    `;
+
+/**
+ * __useCountAllReactionsToPinQuery__
+ *
+ * To run a query within a React component, call `useCountAllReactionsToPinQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCountAllReactionsToPinQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCountAllReactionsToPinQuery({
+ *   variables: {
+ *      pinId: // value for 'pinId'
+ *   },
+ * });
+ */
+export function useCountAllReactionsToPinQuery(baseOptions: Apollo.QueryHookOptions<CountAllReactionsToPinQuery, CountAllReactionsToPinQueryVariables> & ({ variables: CountAllReactionsToPinQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CountAllReactionsToPinQuery, CountAllReactionsToPinQueryVariables>(CountAllReactionsToPinDocument, options);
+      }
+export function useCountAllReactionsToPinLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CountAllReactionsToPinQuery, CountAllReactionsToPinQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CountAllReactionsToPinQuery, CountAllReactionsToPinQueryVariables>(CountAllReactionsToPinDocument, options);
+        }
+export function useCountAllReactionsToPinSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CountAllReactionsToPinQuery, CountAllReactionsToPinQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CountAllReactionsToPinQuery, CountAllReactionsToPinQueryVariables>(CountAllReactionsToPinDocument, options);
+        }
+export type CountAllReactionsToPinQueryHookResult = ReturnType<typeof useCountAllReactionsToPinQuery>;
+export type CountAllReactionsToPinLazyQueryHookResult = ReturnType<typeof useCountAllReactionsToPinLazyQuery>;
+export type CountAllReactionsToPinSuspenseQueryHookResult = ReturnType<typeof useCountAllReactionsToPinSuspenseQuery>;
+export type CountAllReactionsToPinQueryResult = Apollo.QueryResult<CountAllReactionsToPinQuery, CountAllReactionsToPinQueryVariables>;
+export const CountAllReactionsToBoardDocument = gql`
+    query CountAllReactionsToBoard($boardId: UUID!) {
+  countAllReactionsToBoard(boardId: $boardId)
+}
+    `;
+
+/**
+ * __useCountAllReactionsToBoardQuery__
+ *
+ * To run a query within a React component, call `useCountAllReactionsToBoardQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCountAllReactionsToBoardQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCountAllReactionsToBoardQuery({
+ *   variables: {
+ *      boardId: // value for 'boardId'
+ *   },
+ * });
+ */
+export function useCountAllReactionsToBoardQuery(baseOptions: Apollo.QueryHookOptions<CountAllReactionsToBoardQuery, CountAllReactionsToBoardQueryVariables> & ({ variables: CountAllReactionsToBoardQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CountAllReactionsToBoardQuery, CountAllReactionsToBoardQueryVariables>(CountAllReactionsToBoardDocument, options);
+      }
+export function useCountAllReactionsToBoardLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CountAllReactionsToBoardQuery, CountAllReactionsToBoardQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CountAllReactionsToBoardQuery, CountAllReactionsToBoardQueryVariables>(CountAllReactionsToBoardDocument, options);
+        }
+export function useCountAllReactionsToBoardSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CountAllReactionsToBoardQuery, CountAllReactionsToBoardQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CountAllReactionsToBoardQuery, CountAllReactionsToBoardQueryVariables>(CountAllReactionsToBoardDocument, options);
+        }
+export type CountAllReactionsToBoardQueryHookResult = ReturnType<typeof useCountAllReactionsToBoardQuery>;
+export type CountAllReactionsToBoardLazyQueryHookResult = ReturnType<typeof useCountAllReactionsToBoardLazyQuery>;
+export type CountAllReactionsToBoardSuspenseQueryHookResult = ReturnType<typeof useCountAllReactionsToBoardSuspenseQuery>;
+export type CountAllReactionsToBoardQueryResult = Apollo.QueryResult<CountAllReactionsToBoardQuery, CountAllReactionsToBoardQueryVariables>;
+export const ReactionToPinDocument = gql`
+    mutation ReactionToPin($pinId: UUID!, $reactionId: UUID!, $userId: UUID!) {
+  reactionToPin(pinId: $pinId, reactionId: $reactionId, userId: $userId)
+}
+    `;
+export type ReactionToPinMutationFn = Apollo.MutationFunction<ReactionToPinMutation, ReactionToPinMutationVariables>;
+
+/**
+ * __useReactionToPinMutation__
+ *
+ * To run a mutation, you first call `useReactionToPinMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useReactionToPinMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [reactionToPinMutation, { data, loading, error }] = useReactionToPinMutation({
+ *   variables: {
+ *      pinId: // value for 'pinId'
+ *      reactionId: // value for 'reactionId'
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useReactionToPinMutation(baseOptions?: Apollo.MutationHookOptions<ReactionToPinMutation, ReactionToPinMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ReactionToPinMutation, ReactionToPinMutationVariables>(ReactionToPinDocument, options);
+      }
+export type ReactionToPinMutationHookResult = ReturnType<typeof useReactionToPinMutation>;
+export type ReactionToPinMutationResult = Apollo.MutationResult<ReactionToPinMutation>;
+export type ReactionToPinMutationOptions = Apollo.BaseMutationOptions<ReactionToPinMutation, ReactionToPinMutationVariables>;
+export const ReactionToBoardDocument = gql`
+    mutation ReactionToBoard($boardId: UUID!, $reactionId: UUID!, $userId: UUID!) {
+  reactionToBoard(boardId: $boardId, reactionId: $reactionId, userId: $userId)
+}
+    `;
+export type ReactionToBoardMutationFn = Apollo.MutationFunction<ReactionToBoardMutation, ReactionToBoardMutationVariables>;
+
+/**
+ * __useReactionToBoardMutation__
+ *
+ * To run a mutation, you first call `useReactionToBoardMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useReactionToBoardMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [reactionToBoardMutation, { data, loading, error }] = useReactionToBoardMutation({
+ *   variables: {
+ *      boardId: // value for 'boardId'
+ *      reactionId: // value for 'reactionId'
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useReactionToBoardMutation(baseOptions?: Apollo.MutationHookOptions<ReactionToBoardMutation, ReactionToBoardMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ReactionToBoardMutation, ReactionToBoardMutationVariables>(ReactionToBoardDocument, options);
+      }
+export type ReactionToBoardMutationHookResult = ReturnType<typeof useReactionToBoardMutation>;
+export type ReactionToBoardMutationResult = Apollo.MutationResult<ReactionToBoardMutation>;
+export type ReactionToBoardMutationOptions = Apollo.BaseMutationOptions<ReactionToBoardMutation, ReactionToBoardMutationVariables>;
+export const BookmarkToPinDocument = gql`
+    mutation BookmarkToPin($pinId: UUID!, $userId: UUID!) {
+  bookmarkToPin(pinId: $pinId, userId: $userId)
+}
+    `;
+export type BookmarkToPinMutationFn = Apollo.MutationFunction<BookmarkToPinMutation, BookmarkToPinMutationVariables>;
+
+/**
+ * __useBookmarkToPinMutation__
+ *
+ * To run a mutation, you first call `useBookmarkToPinMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBookmarkToPinMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bookmarkToPinMutation, { data, loading, error }] = useBookmarkToPinMutation({
+ *   variables: {
+ *      pinId: // value for 'pinId'
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useBookmarkToPinMutation(baseOptions?: Apollo.MutationHookOptions<BookmarkToPinMutation, BookmarkToPinMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<BookmarkToPinMutation, BookmarkToPinMutationVariables>(BookmarkToPinDocument, options);
+      }
+export type BookmarkToPinMutationHookResult = ReturnType<typeof useBookmarkToPinMutation>;
+export type BookmarkToPinMutationResult = Apollo.MutationResult<BookmarkToPinMutation>;
+export type BookmarkToPinMutationOptions = Apollo.BaseMutationOptions<BookmarkToPinMutation, BookmarkToPinMutationVariables>;
+export const BookmarkToBoardDocument = gql`
+    mutation BookmarkToBoard($boardId: UUID!, $userId: UUID!) {
+  bookmarkToBoard(boardId: $boardId, userId: $userId)
+}
+    `;
+export type BookmarkToBoardMutationFn = Apollo.MutationFunction<BookmarkToBoardMutation, BookmarkToBoardMutationVariables>;
+
+/**
+ * __useBookmarkToBoardMutation__
+ *
+ * To run a mutation, you first call `useBookmarkToBoardMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBookmarkToBoardMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bookmarkToBoardMutation, { data, loading, error }] = useBookmarkToBoardMutation({
+ *   variables: {
+ *      boardId: // value for 'boardId'
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useBookmarkToBoardMutation(baseOptions?: Apollo.MutationHookOptions<BookmarkToBoardMutation, BookmarkToBoardMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<BookmarkToBoardMutation, BookmarkToBoardMutationVariables>(BookmarkToBoardDocument, options);
+      }
+export type BookmarkToBoardMutationHookResult = ReturnType<typeof useBookmarkToBoardMutation>;
+export type BookmarkToBoardMutationResult = Apollo.MutationResult<BookmarkToBoardMutation>;
+export type BookmarkToBoardMutationOptions = Apollo.BaseMutationOptions<BookmarkToBoardMutation, BookmarkToBoardMutationVariables>;
