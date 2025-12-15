@@ -8,7 +8,7 @@ require (
 	github.com/99designs/gqlgen v0.17.73
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
-	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251208034302-d9c7cd41ae78
+	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251214165402-2221959840d8
 	github.com/vektah/gqlparser/v2 v2.5.31
 	go.uber.org/zap v1.27.1
 	gorm.io/driver/postgres v1.5.11
