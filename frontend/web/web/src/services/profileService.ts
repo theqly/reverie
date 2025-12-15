@@ -6,8 +6,10 @@ import {
   GetOwnBoardsByUserIdDocument,
   GetPinsByUserIdDocument,
   GetUserByIdDocument,
-  GetUserByNickTagDocument, type InputMaybe,
-  type Pin, type Scalars, UpdateUserDocument, type UpdateUserInput,
+  GetUserByNickTagDocument,
+  type Pin,
+  UpdateUserDocument,
+  type UpdateUserInput,
   type User,
 } from "@/graphql/generated/graphql.ts";
 

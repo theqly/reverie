@@ -369,19 +369,6 @@ mutation RemovePinFromBoard($pinId: UUID!, $boardId: UUID!) {
   }
 }
 
-mutation AddCommentToPin($input: AddCommentToPinInput!) {
-  addCommentToPin(input: $input) {
-    id
-    message
-    createdAt
-    owner {
-      id
-      nickname
-      nickTag
-    }
-  }
-}
-
 mutation updateCommentToPin($id: UUID!, $message: String!) {
   updateCommentToPin(id: UUID, message: $message) {
       message
@@ -441,4 +428,82 @@ mutation UpdateUser($userId: UUID!, $input: UpdateUserInput!) {
       nickname
     }
   }
+}
+
+query GetCommentsByPinId($pinId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  commentsByPin(pinId: $pinId, limit: $limit, offset: $offset) {
+    id
+    pinId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+  }
+}
+
+mutation AddCommentToPin($input: AddCommentToPinInput!) {
+  addCommentToPin(input: $input) {
+    id
+    pinId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+    }
+  }
+}
+
+mutation UpdatePinComment($id: UUID!, $message: String!) {
+  updateCommentToPin(id: $id, message: $message) {
+    id
+    message
+    createdAt
+  }
+}
+
+mutation DeletePinComment($id: UUID!) {
+  deleteCommentToPin(id: $id)
+}
+
+query GetCommentsByBoardId($boardId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  commentsByBoard(boardId: $boardId, limit: $limit, offset: $offset) {
+    id
+    boardId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+  }
+}
+
+mutation AddCommentToBoard($input: AddCommentToBoardInput!) {
+  addCommentToBoard(input: $input) {
+    id
+    boardId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+    }
+  }
+}
+
+mutation UpdateBoardComment($id: UUID!, $message: String!) {
+  updateCommentToBoard(id: $id, message: $message) {
+    id
+    message
+    createdAt
+  }
+}
+
+mutation DeleteBoardComment($id: UUID!) {
+  deleteCommentToBoard(id: $id)
 }

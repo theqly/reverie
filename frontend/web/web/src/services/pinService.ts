@@ -1,19 +1,12 @@
 // services/pinService.ts
 
-// services/pinsService.ts
-
 import {apolloClient} from "@/api/apolloClient.ts";
 import {
   CreatePinDocument,
   type CreatePinInput,
-  AccessLevelType,
-  OwnerType,
-  type UpdateBoardInput,
-  type Board,
-  UpdateBoardDocument,
-  type CreateBoardInput,
   type UpdatePinInput,
-  UpdatePinDocument, type Pin, type InputMaybe, type Scalars
+  UpdatePinDocument,
+  type Pin,
 } from "@/graphql/generated/graphql.ts";
 
 export interface CreatePinPayload {

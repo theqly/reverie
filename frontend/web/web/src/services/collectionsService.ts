@@ -1,13 +1,14 @@
-// services/collectionsService.ts
-
 import {apolloClient} from "@/api/apolloClient.ts";
 import {
-  AccessLevelType, type Board,
+  AccessLevelType,
+  type Board,
   CreateBoardDocument,
   type CreateBoardInput,
   CreateGroupDocument,
   type CreateGroupInput,
-  OwnerType, UpdateBoardDocument, type UpdateBoardInput
+  OwnerType,
+  UpdateBoardDocument,
+  type UpdateBoardInput
 } from "@/graphql/generated/graphql.ts";
 
 export interface CreateCollectionPayload {

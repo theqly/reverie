@@ -815,13 +815,6 @@ export type RemovePinFromBoardMutationVariables = Exact<{
 
 export type RemovePinFromBoardMutation = { __typename?: 'Mutation', removePinFromBoard: { __typename?: 'Board', id: any, name: string, pins?: Array<{ __typename?: 'Pin', id: any, name: string }> | null } };
 
-export type AddCommentToPinMutationVariables = Exact<{
-  input: AddCommentToPinInput;
-}>;
-
-
-export type AddCommentToPinMutation = { __typename?: 'Mutation', addCommentToPin: { __typename?: 'CommentToPin', id: any, message: string, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, nickTag: string } } };
-
 export type UpdateCommentToPinMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
   message: Scalars['String']['input'];
@@ -889,6 +882,68 @@ export type UpdateUserMutationVariables = Exact<{
 
 
 export type UpdateUserMutation = { __typename?: 'Mutation', updateUser: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } };
+
+export type GetCommentsByPinIdQueryVariables = Exact<{
+  pinId: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetCommentsByPinIdQuery = { __typename?: 'Query', commentsByPin: Array<{ __typename?: 'CommentToPin', id: any, pinId: any, message: string, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null } } | null> };
+
+export type AddCommentToPinMutationVariables = Exact<{
+  input: AddCommentToPinInput;
+}>;
+
+
+export type AddCommentToPinMutation = { __typename?: 'Mutation', addCommentToPin: { __typename?: 'CommentToPin', id: any, pinId: any, message: string, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string } } };
+
+export type UpdatePinCommentMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  message: Scalars['String']['input'];
+}>;
+
+
+export type UpdatePinCommentMutation = { __typename?: 'Mutation', updateCommentToPin: { __typename?: 'CommentToPin', id: any, message: string, createdAt: any } };
+
+export type DeletePinCommentMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+
+export type DeletePinCommentMutation = { __typename?: 'Mutation', deleteCommentToPin: boolean };
+
+export type GetCommentsByBoardIdQueryVariables = Exact<{
+  boardId: Scalars['UUID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetCommentsByBoardIdQuery = { __typename?: 'Query', commentsByBoard: Array<{ __typename?: 'CommentToBoard', id: any, boardId: any, message: string, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null } } | null> };
+
+export type AddCommentToBoardMutationVariables = Exact<{
+  input: AddCommentToBoardInput;
+}>;
+
+
+export type AddCommentToBoardMutation = { __typename?: 'Mutation', addCommentToBoard: { __typename?: 'CommentToBoard', id: any, boardId: any, message: string, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string } } };
+
+export type UpdateBoardCommentMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+  message: Scalars['String']['input'];
+}>;
+
+
+export type UpdateBoardCommentMutation = { __typename?: 'Mutation', updateCommentToBoard: { __typename?: 'CommentToBoard', id: any, message: string, createdAt: any } };
+
+export type DeleteBoardCommentMutationVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+
+export type DeleteBoardCommentMutation = { __typename?: 'Mutation', deleteCommentToBoard: boolean };
 
 
 export const GetPinBasicByIdDocument = gql`
@@ -1875,46 +1930,6 @@ export function useRemovePinFromBoardMutation(baseOptions?: Apollo.MutationHookO
 export type RemovePinFromBoardMutationHookResult = ReturnType<typeof useRemovePinFromBoardMutation>;
 export type RemovePinFromBoardMutationResult = Apollo.MutationResult<RemovePinFromBoardMutation>;
 export type RemovePinFromBoardMutationOptions = Apollo.BaseMutationOptions<RemovePinFromBoardMutation, RemovePinFromBoardMutationVariables>;
-export const AddCommentToPinDocument = gql`
-    mutation AddCommentToPin($input: AddCommentToPinInput!) {
-  addCommentToPin(input: $input) {
-    id
-    message
-    createdAt
-    owner {
-      id
-      nickname
-      nickTag
-    }
-  }
-}
-    `;
-export type AddCommentToPinMutationFn = Apollo.MutationFunction<AddCommentToPinMutation, AddCommentToPinMutationVariables>;
-
-/**
- * __useAddCommentToPinMutation__
- *
- * To run a mutation, you first call `useAddCommentToPinMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddCommentToPinMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [addCommentToPinMutation, { data, loading, error }] = useAddCommentToPinMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useAddCommentToPinMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentToPinMutation, AddCommentToPinMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddCommentToPinMutation, AddCommentToPinMutationVariables>(AddCommentToPinDocument, options);
-      }
-export type AddCommentToPinMutationHookResult = ReturnType<typeof useAddCommentToPinMutation>;
-export type AddCommentToPinMutationResult = Apollo.MutationResult<AddCommentToPinMutation>;
-export type AddCommentToPinMutationOptions = Apollo.BaseMutationOptions<AddCommentToPinMutation, AddCommentToPinMutationVariables>;
 export const UpdateCommentToPinDocument = gql`
     mutation updateCommentToPin($id: UUID!, $message: String!) {
   updateCommentToPin(id: UUID, message: $message) {
@@ -2224,3 +2239,317 @@ export function useUpdateUserMutation(baseOptions?: Apollo.MutationHookOptions<U
 export type UpdateUserMutationHookResult = ReturnType<typeof useUpdateUserMutation>;
 export type UpdateUserMutationResult = Apollo.MutationResult<UpdateUserMutation>;
 export type UpdateUserMutationOptions = Apollo.BaseMutationOptions<UpdateUserMutation, UpdateUserMutationVariables>;
+export const GetCommentsByPinIdDocument = gql`
+    query GetCommentsByPinId($pinId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  commentsByPin(pinId: $pinId, limit: $limit, offset: $offset) {
+    id
+    pinId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetCommentsByPinIdQuery__
+ *
+ * To run a query within a React component, call `useGetCommentsByPinIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCommentsByPinIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCommentsByPinIdQuery({
+ *   variables: {
+ *      pinId: // value for 'pinId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetCommentsByPinIdQuery(baseOptions: Apollo.QueryHookOptions<GetCommentsByPinIdQuery, GetCommentsByPinIdQueryVariables> & ({ variables: GetCommentsByPinIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetCommentsByPinIdQuery, GetCommentsByPinIdQueryVariables>(GetCommentsByPinIdDocument, options);
+      }
+export function useGetCommentsByPinIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCommentsByPinIdQuery, GetCommentsByPinIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetCommentsByPinIdQuery, GetCommentsByPinIdQueryVariables>(GetCommentsByPinIdDocument, options);
+        }
+export function useGetCommentsByPinIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCommentsByPinIdQuery, GetCommentsByPinIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetCommentsByPinIdQuery, GetCommentsByPinIdQueryVariables>(GetCommentsByPinIdDocument, options);
+        }
+export type GetCommentsByPinIdQueryHookResult = ReturnType<typeof useGetCommentsByPinIdQuery>;
+export type GetCommentsByPinIdLazyQueryHookResult = ReturnType<typeof useGetCommentsByPinIdLazyQuery>;
+export type GetCommentsByPinIdSuspenseQueryHookResult = ReturnType<typeof useGetCommentsByPinIdSuspenseQuery>;
+export type GetCommentsByPinIdQueryResult = Apollo.QueryResult<GetCommentsByPinIdQuery, GetCommentsByPinIdQueryVariables>;
+export const AddCommentToPinDocument = gql`
+    mutation AddCommentToPin($input: AddCommentToPinInput!) {
+  addCommentToPin(input: $input) {
+    id
+    pinId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+    }
+  }
+}
+    `;
+export type AddCommentToPinMutationFn = Apollo.MutationFunction<AddCommentToPinMutation, AddCommentToPinMutationVariables>;
+
+/**
+ * __useAddCommentToPinMutation__
+ *
+ * To run a mutation, you first call `useAddCommentToPinMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddCommentToPinMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addCommentToPinMutation, { data, loading, error }] = useAddCommentToPinMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddCommentToPinMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentToPinMutation, AddCommentToPinMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddCommentToPinMutation, AddCommentToPinMutationVariables>(AddCommentToPinDocument, options);
+      }
+export type AddCommentToPinMutationHookResult = ReturnType<typeof useAddCommentToPinMutation>;
+export type AddCommentToPinMutationResult = Apollo.MutationResult<AddCommentToPinMutation>;
+export type AddCommentToPinMutationOptions = Apollo.BaseMutationOptions<AddCommentToPinMutation, AddCommentToPinMutationVariables>;
+export const UpdatePinCommentDocument = gql`
+    mutation UpdatePinComment($id: UUID!, $message: String!) {
+  updateCommentToPin(id: $id, message: $message) {
+    id
+    message
+    createdAt
+  }
+}
+    `;
+export type UpdatePinCommentMutationFn = Apollo.MutationFunction<UpdatePinCommentMutation, UpdatePinCommentMutationVariables>;
+
+/**
+ * __useUpdatePinCommentMutation__
+ *
+ * To run a mutation, you first call `useUpdatePinCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdatePinCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updatePinCommentMutation, { data, loading, error }] = useUpdatePinCommentMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useUpdatePinCommentMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePinCommentMutation, UpdatePinCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdatePinCommentMutation, UpdatePinCommentMutationVariables>(UpdatePinCommentDocument, options);
+      }
+export type UpdatePinCommentMutationHookResult = ReturnType<typeof useUpdatePinCommentMutation>;
+export type UpdatePinCommentMutationResult = Apollo.MutationResult<UpdatePinCommentMutation>;
+export type UpdatePinCommentMutationOptions = Apollo.BaseMutationOptions<UpdatePinCommentMutation, UpdatePinCommentMutationVariables>;
+export const DeletePinCommentDocument = gql`
+    mutation DeletePinComment($id: UUID!) {
+  deleteCommentToPin(id: $id)
+}
+    `;
+export type DeletePinCommentMutationFn = Apollo.MutationFunction<DeletePinCommentMutation, DeletePinCommentMutationVariables>;
+
+/**
+ * __useDeletePinCommentMutation__
+ *
+ * To run a mutation, you first call `useDeletePinCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeletePinCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deletePinCommentMutation, { data, loading, error }] = useDeletePinCommentMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeletePinCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeletePinCommentMutation, DeletePinCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeletePinCommentMutation, DeletePinCommentMutationVariables>(DeletePinCommentDocument, options);
+      }
+export type DeletePinCommentMutationHookResult = ReturnType<typeof useDeletePinCommentMutation>;
+export type DeletePinCommentMutationResult = Apollo.MutationResult<DeletePinCommentMutation>;
+export type DeletePinCommentMutationOptions = Apollo.BaseMutationOptions<DeletePinCommentMutation, DeletePinCommentMutationVariables>;
+export const GetCommentsByBoardIdDocument = gql`
+    query GetCommentsByBoardId($boardId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  commentsByBoard(boardId: $boardId, limit: $limit, offset: $offset) {
+    id
+    boardId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetCommentsByBoardIdQuery__
+ *
+ * To run a query within a React component, call `useGetCommentsByBoardIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCommentsByBoardIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCommentsByBoardIdQuery({
+ *   variables: {
+ *      boardId: // value for 'boardId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetCommentsByBoardIdQuery(baseOptions: Apollo.QueryHookOptions<GetCommentsByBoardIdQuery, GetCommentsByBoardIdQueryVariables> & ({ variables: GetCommentsByBoardIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetCommentsByBoardIdQuery, GetCommentsByBoardIdQueryVariables>(GetCommentsByBoardIdDocument, options);
+      }
+export function useGetCommentsByBoardIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCommentsByBoardIdQuery, GetCommentsByBoardIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetCommentsByBoardIdQuery, GetCommentsByBoardIdQueryVariables>(GetCommentsByBoardIdDocument, options);
+        }
+export function useGetCommentsByBoardIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCommentsByBoardIdQuery, GetCommentsByBoardIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetCommentsByBoardIdQuery, GetCommentsByBoardIdQueryVariables>(GetCommentsByBoardIdDocument, options);
+        }
+export type GetCommentsByBoardIdQueryHookResult = ReturnType<typeof useGetCommentsByBoardIdQuery>;
+export type GetCommentsByBoardIdLazyQueryHookResult = ReturnType<typeof useGetCommentsByBoardIdLazyQuery>;
+export type GetCommentsByBoardIdSuspenseQueryHookResult = ReturnType<typeof useGetCommentsByBoardIdSuspenseQuery>;
+export type GetCommentsByBoardIdQueryResult = Apollo.QueryResult<GetCommentsByBoardIdQuery, GetCommentsByBoardIdQueryVariables>;
+export const AddCommentToBoardDocument = gql`
+    mutation AddCommentToBoard($input: AddCommentToBoardInput!) {
+  addCommentToBoard(input: $input) {
+    id
+    boardId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+    }
+  }
+}
+    `;
+export type AddCommentToBoardMutationFn = Apollo.MutationFunction<AddCommentToBoardMutation, AddCommentToBoardMutationVariables>;
+
+/**
+ * __useAddCommentToBoardMutation__
+ *
+ * To run a mutation, you first call `useAddCommentToBoardMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddCommentToBoardMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addCommentToBoardMutation, { data, loading, error }] = useAddCommentToBoardMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddCommentToBoardMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentToBoardMutation, AddCommentToBoardMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddCommentToBoardMutation, AddCommentToBoardMutationVariables>(AddCommentToBoardDocument, options);
+      }
+export type AddCommentToBoardMutationHookResult = ReturnType<typeof useAddCommentToBoardMutation>;
+export type AddCommentToBoardMutationResult = Apollo.MutationResult<AddCommentToBoardMutation>;
+export type AddCommentToBoardMutationOptions = Apollo.BaseMutationOptions<AddCommentToBoardMutation, AddCommentToBoardMutationVariables>;
+export const UpdateBoardCommentDocument = gql`
+    mutation UpdateBoardComment($id: UUID!, $message: String!) {
+  updateCommentToBoard(id: $id, message: $message) {
+    id
+    message
+    createdAt
+  }
+}
+    `;
+export type UpdateBoardCommentMutationFn = Apollo.MutationFunction<UpdateBoardCommentMutation, UpdateBoardCommentMutationVariables>;
+
+/**
+ * __useUpdateBoardCommentMutation__
+ *
+ * To run a mutation, you first call `useUpdateBoardCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateBoardCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateBoardCommentMutation, { data, loading, error }] = useUpdateBoardCommentMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useUpdateBoardCommentMutation(baseOptions?: Apollo.MutationHookOptions<UpdateBoardCommentMutation, UpdateBoardCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateBoardCommentMutation, UpdateBoardCommentMutationVariables>(UpdateBoardCommentDocument, options);
+      }
+export type UpdateBoardCommentMutationHookResult = ReturnType<typeof useUpdateBoardCommentMutation>;
+export type UpdateBoardCommentMutationResult = Apollo.MutationResult<UpdateBoardCommentMutation>;
+export type UpdateBoardCommentMutationOptions = Apollo.BaseMutationOptions<UpdateBoardCommentMutation, UpdateBoardCommentMutationVariables>;
+export const DeleteBoardCommentDocument = gql`
+    mutation DeleteBoardComment($id: UUID!) {
+  deleteCommentToBoard(id: $id)
+}
+    `;
+export type DeleteBoardCommentMutationFn = Apollo.MutationFunction<DeleteBoardCommentMutation, DeleteBoardCommentMutationVariables>;
+
+/**
+ * __useDeleteBoardCommentMutation__
+ *
+ * To run a mutation, you first call `useDeleteBoardCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteBoardCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteBoardCommentMutation, { data, loading, error }] = useDeleteBoardCommentMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteBoardCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeleteBoardCommentMutation, DeleteBoardCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteBoardCommentMutation, DeleteBoardCommentMutationVariables>(DeleteBoardCommentDocument, options);
+      }
+export type DeleteBoardCommentMutationHookResult = ReturnType<typeof useDeleteBoardCommentMutation>;
+export type DeleteBoardCommentMutationResult = Apollo.MutationResult<DeleteBoardCommentMutation>;
+export type DeleteBoardCommentMutationOptions = Apollo.BaseMutationOptions<DeleteBoardCommentMutation, DeleteBoardCommentMutationVariables>;
