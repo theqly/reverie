@@ -107,7 +107,7 @@ const CollectionViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
             <h2>Подборка от <Link to={`/profile`} className={styles.authorA}>@{collection.author}</Link></h2>
-            <button className={styles.settingsBtn} onClick={() => navigate('/collection/edit')}></button>
+            <button className={styles.settingsBtn} onClick={() => navigate(`/collection/edit/${collectionId}`)}></button>
 
           </div>
 
