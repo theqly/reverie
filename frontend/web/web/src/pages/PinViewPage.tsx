@@ -117,7 +117,7 @@ const PinViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
             <h2>Пин от <Link to={`/profile`} className={styles.authorA}>@{pin.author}</Link></h2>
-            <button className={styles.settingsBtn} onClick={() => navigate('/pin/edit')}></button>
+            <button className={styles.settingsBtn} onClick={() => navigate(`/pin/edit/${pinId}}`)}></button>
           </div>
 
           <div className={styles.pinCardWrapper}> 
