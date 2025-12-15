@@ -4,7 +4,7 @@ import {
   type CreatePinInput,
   type UpdatePinInput,
   UpdatePinDocument,
-  type Pin,
+  type Pin, GetPinByIdDocument,
 } from "@/graphql/generated/graphql.ts";
 
 export interface CreatePinPayload {
@@ -112,4 +112,20 @@ export async function updatePin(pinId: string, input: UpdatePinInput) : Promise<
   });
 
   return updatedPinResult.data?.updatePin || null;
+}
+
+/**
+ * Получает пин по его ID
+ * @returns Pin или null
+ */
+export async function getPinById(): Promise<Pin | null> {
+  try {
+    const result = await apolloClient.query({
+      query: GetPinByIdDocument,
+    });
+    return result.data?.pin ?? null;
+  } catch (error) {
+    console.error('Failed to fetch pin:', error);
+    return null;
+  }
 }

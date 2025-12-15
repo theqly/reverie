@@ -5,7 +5,7 @@ import {
   CreateBoardDocument,
   type CreateBoardInput,
   CreateGroupDocument,
-  type CreateGroupInput,
+  type CreateGroupInput, GetBoardByIdDocument,
   OwnerType,
   UpdateBoardDocument,
   type UpdateBoardInput
@@ -152,4 +152,18 @@ export async function updateCollection(collectionId: string, input: UpdateBoardI
   return updatedBoardResult.data?.updateBoard || null;
 }
 
-
+/**
+ * Получает подборку по её ID
+ * @returns Board или null
+ */
+export async function getPinById(): Promise<Board | null> {
+  try {
+    const result = await apolloClient.query({
+      query: GetBoardByIdDocument,
+    });
+    return result.data?.board?? null;
+  } catch (error) {
+    console.error('Failed to fetch board:', error);
+    return null;
+  }
+}

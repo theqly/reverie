@@ -665,13 +665,6 @@ export enum UserStatus {
   Deleted = 'deleted'
 }
 
-export type GetPinBasicByIdQueryVariables = Exact<{
-  id: Scalars['UUID']['input'];
-}>;
-
-
-export type GetPinBasicByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
-
 export type GetUserByNickTagQueryVariables = Exact<{
   nickTag: Scalars['String']['input'];
 }>;
@@ -783,21 +776,28 @@ export type CreateBoardMutationVariables = Exact<{
 }>;
 
 
-export type CreateBoardMutation = { __typename?: 'Mutation', createBoard: { __typename?: 'Board', id: any } };
+export type CreateBoardMutation = { __typename?: 'Mutation', createBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } };
 
-export type GetPinFullByIdQueryVariables = Exact<{
+export type GetPinByIdQueryVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
 
 
-export type GetPinFullByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
+export type GetPinByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
+
+export type GetBoardByIdQueryVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+
+export type GetBoardByIdQuery = { __typename?: 'Query', board?: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } | null };
 
 export type CreatePinMutationVariables = Exact<{
   input: CreatePinInput;
 }>;
 
 
-export type CreatePinMutation = { __typename?: 'Mutation', createPin: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } };
+export type CreatePinMutation = { __typename?: 'Mutation', createPin: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, createdAt: any, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } };
 
 export type AddPinToBoardMutationVariables = Exact<{
   pinId: Scalars['UUID']['input'];
@@ -999,57 +999,6 @@ export type BookmarkToBoardMutationVariables = Exact<{
 export type BookmarkToBoardMutation = { __typename?: 'Mutation', bookmarkToBoard: boolean };
 
 
-export const GetPinBasicByIdDocument = gql`
-    query GetPinBasicById($id: UUID!) {
-  pin(id: $id) {
-    id
-    name
-    owner {
-      id
-      nickname
-      profilePicture
-    }
-    images {
-      id
-      orderNumber
-      imageUrl
-    }
-  }
-}
-    `;
-
-/**
- * __useGetPinBasicByIdQuery__
- *
- * To run a query within a React component, call `useGetPinBasicByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetPinBasicByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetPinBasicByIdQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useGetPinBasicByIdQuery(baseOptions: Apollo.QueryHookOptions<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables> & ({ variables: GetPinBasicByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>(GetPinBasicByIdDocument, options);
-      }
-export function useGetPinBasicByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>(GetPinBasicByIdDocument, options);
-        }
-export function useGetPinBasicByIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>(GetPinBasicByIdDocument, options);
-        }
-export type GetPinBasicByIdQueryHookResult = ReturnType<typeof useGetPinBasicByIdQuery>;
-export type GetPinBasicByIdLazyQueryHookResult = ReturnType<typeof useGetPinBasicByIdLazyQuery>;
-export type GetPinBasicByIdSuspenseQueryHookResult = ReturnType<typeof useGetPinBasicByIdSuspenseQuery>;
-export type GetPinBasicByIdQueryResult = Apollo.QueryResult<GetPinBasicByIdQuery, GetPinBasicByIdQueryVariables>;
 export const GetUserByNickTagDocument = gql`
     query GetUserByNickTag($nickTag: String!) {
   userByTag(nickTag: $nickTag) {
@@ -1776,6 +1725,30 @@ export const CreateBoardDocument = gql`
     mutation CreateBoard($input: CreateBoardInput!) {
   createBoard(input: $input) {
     id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
   }
 }
     `;
@@ -1805,8 +1778,8 @@ export function useCreateBoardMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateBoardMutationHookResult = ReturnType<typeof useCreateBoardMutation>;
 export type CreateBoardMutationResult = Apollo.MutationResult<CreateBoardMutation>;
 export type CreateBoardMutationOptions = Apollo.BaseMutationOptions<CreateBoardMutation, CreateBoardMutationVariables>;
-export const GetPinFullByIdDocument = gql`
-    query GetPinFullById($id: UUID!) {
+export const GetPinByIdDocument = gql`
+    query GetPinById($id: UUID!) {
   pin(id: $id) {
     id
     name
@@ -1830,37 +1803,101 @@ export const GetPinFullByIdDocument = gql`
     `;
 
 /**
- * __useGetPinFullByIdQuery__
+ * __useGetPinByIdQuery__
  *
- * To run a query within a React component, call `useGetPinFullByIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetPinFullByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetPinByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPinByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetPinFullByIdQuery({
+ * const { data, loading, error } = useGetPinByIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetPinFullByIdQuery(baseOptions: Apollo.QueryHookOptions<GetPinFullByIdQuery, GetPinFullByIdQueryVariables> & ({ variables: GetPinFullByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useGetPinByIdQuery(baseOptions: Apollo.QueryHookOptions<GetPinByIdQuery, GetPinByIdQueryVariables> & ({ variables: GetPinByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetPinFullByIdQuery, GetPinFullByIdQueryVariables>(GetPinFullByIdDocument, options);
+        return Apollo.useQuery<GetPinByIdQuery, GetPinByIdQueryVariables>(GetPinByIdDocument, options);
       }
-export function useGetPinFullByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPinFullByIdQuery, GetPinFullByIdQueryVariables>) {
+export function useGetPinByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPinByIdQuery, GetPinByIdQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetPinFullByIdQuery, GetPinFullByIdQueryVariables>(GetPinFullByIdDocument, options);
+          return Apollo.useLazyQuery<GetPinByIdQuery, GetPinByIdQueryVariables>(GetPinByIdDocument, options);
         }
-export function useGetPinFullByIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPinFullByIdQuery, GetPinFullByIdQueryVariables>) {
+export function useGetPinByIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPinByIdQuery, GetPinByIdQueryVariables>) {
           const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetPinFullByIdQuery, GetPinFullByIdQueryVariables>(GetPinFullByIdDocument, options);
+          return Apollo.useSuspenseQuery<GetPinByIdQuery, GetPinByIdQueryVariables>(GetPinByIdDocument, options);
         }
-export type GetPinFullByIdQueryHookResult = ReturnType<typeof useGetPinFullByIdQuery>;
-export type GetPinFullByIdLazyQueryHookResult = ReturnType<typeof useGetPinFullByIdLazyQuery>;
-export type GetPinFullByIdSuspenseQueryHookResult = ReturnType<typeof useGetPinFullByIdSuspenseQuery>;
-export type GetPinFullByIdQueryResult = Apollo.QueryResult<GetPinFullByIdQuery, GetPinFullByIdQueryVariables>;
+export type GetPinByIdQueryHookResult = ReturnType<typeof useGetPinByIdQuery>;
+export type GetPinByIdLazyQueryHookResult = ReturnType<typeof useGetPinByIdLazyQuery>;
+export type GetPinByIdSuspenseQueryHookResult = ReturnType<typeof useGetPinByIdSuspenseQuery>;
+export type GetPinByIdQueryResult = Apollo.QueryResult<GetPinByIdQuery, GetPinByIdQueryVariables>;
+export const GetBoardByIdDocument = gql`
+    query GetBoardById($id: UUID!) {
+  board(id: $id) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+    `;
+
+/**
+ * __useGetBoardByIdQuery__
+ *
+ * To run a query within a React component, call `useGetBoardByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetBoardByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetBoardByIdQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetBoardByIdQuery(baseOptions: Apollo.QueryHookOptions<GetBoardByIdQuery, GetBoardByIdQueryVariables> & ({ variables: GetBoardByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetBoardByIdQuery, GetBoardByIdQueryVariables>(GetBoardByIdDocument, options);
+      }
+export function useGetBoardByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetBoardByIdQuery, GetBoardByIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetBoardByIdQuery, GetBoardByIdQueryVariables>(GetBoardByIdDocument, options);
+        }
+export function useGetBoardByIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetBoardByIdQuery, GetBoardByIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetBoardByIdQuery, GetBoardByIdQueryVariables>(GetBoardByIdDocument, options);
+        }
+export type GetBoardByIdQueryHookResult = ReturnType<typeof useGetBoardByIdQuery>;
+export type GetBoardByIdLazyQueryHookResult = ReturnType<typeof useGetBoardByIdLazyQuery>;
+export type GetBoardByIdSuspenseQueryHookResult = ReturnType<typeof useGetBoardByIdSuspenseQuery>;
+export type GetBoardByIdQueryResult = Apollo.QueryResult<GetBoardByIdQuery, GetBoardByIdQueryVariables>;
 export const CreatePinDocument = gql`
     mutation CreatePin($input: CreatePinInput!) {
   createPin(input: $input) {
@@ -1871,6 +1908,11 @@ export const CreatePinDocument = gql`
     description
     rating
     createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
     images {
       id
       orderNumber
