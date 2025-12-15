@@ -165,14 +165,15 @@ export const mockCollections = [
   {
     id: 1,
     image: placeholder_9,
-    title: "Подборочка номер тридцать два три часа дня и тд и тп",
+    title: "Подборочка номер тридцать два часа дня и тд и тп",
     description: "Лучшие кафе Парижа для работы и отдыха. Проверенные места с отличным кофе и атмосферой.",
     pinsCount: 23,
     location: "Paris, France",
     author: "jane_anderson",
     authorAvatar: placeholder_1,
     coords: [48.8566, 2.3522],
-    pins: [3, 10, 15] // IDs пинов из этой подборки
+    pins: [3, 10, 15],
+    collaborators: ["alice_cooper", "bob_marley", "charlie_chaplin"] // ← ДОБАВЬ ЭТО
   },
   {
     id: 2,
@@ -184,7 +185,8 @@ export const mockCollections = [
     author: "hana_tanaka",
     authorAvatar: placeholder_7,
     coords: [35.0116, 135.7681],
-    pins: [4, 14]
+    pins: [4, 14],
+    collaborators: ["david_bowie"] // ← ДОБАВЬ ЭТО
   },
   {
     id: 3,
@@ -196,7 +198,8 @@ export const mockCollections = [
     author: "michael_lee",
     authorAvatar: placeholder_3,
     coords: [40.7128, -74.0060],
-    pins: [4, 14]
+    pins: [4, 14],
+    collaborators: ["ella_fitzgerald", "frank_sinatra"] // ← ДОБАВЬ ЭТО
   },
   {
     id: 4,
@@ -208,7 +211,8 @@ export const mockCollections = [
     author: "peter_novak",
     authorAvatar: placeholder_8,
     coords: [50.0755, 14.4378],
-    pins: [8, 8, 8]
+    pins: [8, 8, 8],
+    collaborators: [] // ← ДОБАВЬ ЭТО (пустой массив)
   }
 ];
 
