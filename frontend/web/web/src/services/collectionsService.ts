@@ -1,13 +1,14 @@
-// services/collectionsService.ts
-
 import {apolloClient} from "@/api/apolloClient.ts";
 import {
-  AccessLevelType, type Board,
+  AccessLevelType,
+  type Board,
   CreateBoardDocument,
   type CreateBoardInput,
   CreateGroupDocument,
-  type CreateGroupInput,
-  OwnerType, UpdateBoardDocument, type UpdateBoardInput
+  type CreateGroupInput, GetBoardByIdDocument,
+  OwnerType,
+  UpdateBoardDocument,
+  type UpdateBoardInput
 } from "@/graphql/generated/graphql.ts";
 
 export interface CreateCollectionPayload {
@@ -151,4 +152,18 @@ export async function updateCollection(collectionId: string, input: UpdateBoardI
   return updatedBoardResult.data?.updateBoard || null;
 }
 
-
+/**
+ * Получает подборку по её ID
+ * @returns Board или null
+ */
+export async function getPinById(): Promise<Board | null> {
+  try {
+    const result = await apolloClient.query({
+      query: GetBoardByIdDocument,
+    });
+    return result.data?.board?? null;
+  } catch (error) {
+    console.error('Failed to fetch board:', error);
+    return null;
+  }
+}

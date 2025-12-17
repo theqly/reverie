@@ -1,20 +1,3 @@
-query GetPinBasicById($id: UUID!) {
-  pin(id: $id) {
-    id
-    name
-    owner {
-      id
-      nickname
-      profilePicture
-    }
-    images {
-      id
-      orderNumber
-      imageUrl
-    }
-  }
-}
-
 query GetUserByNickTag($nickTag: String!) {
   userByTag(nickTag: $nickTag) {
     id
@@ -305,10 +288,34 @@ mutation CreateGroup($input: CreateGroupInput!){
 mutation CreateBoard($input: CreateBoardInput!){
   createBoard(input: $input) {
     id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
   }
 }
 
-query GetPinFullById($id: UUID!) {
+query GetPinById($id: UUID!) {
   pin(id: $id) {
     id
     name
@@ -330,6 +337,36 @@ query GetPinFullById($id: UUID!) {
   }
 }
 
+query GetBoardById($id: UUID!) {
+  board(id: $id) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    authorId
+    ownerType
+    createdAt
+    savedAt
+    pins {
+      id
+      name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+
 mutation CreatePin($input: CreatePinInput!) {
   createPin(input: $input) {
     id
@@ -339,6 +376,11 @@ mutation CreatePin($input: CreatePinInput!) {
     description
     rating
     createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
     images {
       id
       orderNumber
@@ -365,19 +407,6 @@ mutation RemovePinFromBoard($pinId: UUID!, $boardId: UUID!) {
     pins {
       id
       name
-    }
-  }
-}
-
-mutation AddCommentToPin($input: AddCommentToPinInput!) {
-  addCommentToPin(input: $input) {
-    id
-    message
-    createdAt
-    owner {
-      id
-      nickname
-      nickTag
     }
   }
 }
@@ -441,4 +470,114 @@ mutation UpdateUser($userId: UUID!, $input: UpdateUserInput!) {
       nickname
     }
   }
+}
+
+query GetCommentsByPinId($pinId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  commentsByPin(pinId: $pinId, limit: $limit, offset: $offset) {
+    id
+    pinId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+  }
+}
+
+mutation AddCommentToPin($input: AddCommentToPinInput!) {
+  addCommentToPin(input: $input) {
+    id
+    pinId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+    }
+  }
+}
+
+mutation UpdatePinComment($id: UUID!, $message: String!) {
+  updateCommentToPin(id: $id, message: $message) {
+    id
+    message
+    createdAt
+  }
+}
+
+mutation DeletePinComment($id: UUID!) {
+  deleteCommentToPin(id: $id)
+}
+
+query GetCommentsByBoardId($boardId: UUID!, $limit: Int = 10, $offset: Int = 0) {
+  commentsByBoard(boardId: $boardId, limit: $limit, offset: $offset) {
+    id
+    boardId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
+  }
+}
+
+mutation AddCommentToBoard($input: AddCommentToBoardInput!) {
+  addCommentToBoard(input: $input) {
+    id
+    boardId
+    message
+    createdAt
+    owner {
+      id
+      nickname
+    }
+  }
+}
+
+mutation UpdateBoardComment($id: UUID!, $message: String!) {
+  updateCommentToBoard(id: $id, message: $message) {
+    id
+    message
+    createdAt
+  }
+}
+
+mutation DeleteBoardComment($id: UUID!) {
+  deleteCommentToBoard(id: $id)
+}
+
+query GetAvailableReactions {
+  reactions {
+    id
+    type
+    description
+  }
+}
+
+query CountAllReactionsToPin($pinId: UUID!) {
+  countAllReactionsToPin(pinId: $pinId)
+}
+
+query CountAllReactionsToBoard($boardId: UUID!) {
+  countAllReactionsToBoard(boardId: $boardId)
+}
+
+mutation ReactionToPin($pinId: UUID!, $reactionId: UUID!, $userId: UUID!) {
+  reactionToPin(pinId: $pinId, reactionId: $reactionId, userId: $userId)
+}
+
+mutation ReactionToBoard($boardId: UUID!, $reactionId: UUID!, $userId: UUID!) {
+  reactionToBoard(boardId: $boardId, reactionId: $reactionId, userId: $userId)
+}
+
+mutation BookmarkToPin($pinId: UUID!, $userId: UUID!) {
+  bookmarkToPin(pinId: $pinId, userId: $userId)
+}
+
+mutation BookmarkToBoard($boardId: UUID!, $userId: UUID!) {
+  bookmarkToBoard(boardId: $boardId, userId: $userId)
 }
