@@ -235,6 +235,9 @@ const EditCollectionPage = () => {
             <label htmlFor="cover-input" className={styles.uploadButton}>
               {coverImage || originalCollection?.image ? "Изменить фото" : "Загрузить фото"}
             </label>
+            {originalCollection?.image && !coverImage && (
+              <p className={styles.currentCoverNote}>Используется текущая обложка</p>
+            )}
           </section>
         </div>
         
