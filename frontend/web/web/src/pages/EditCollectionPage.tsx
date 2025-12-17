@@ -45,7 +45,21 @@ const EditCollectionPage = () => {
   }, [id, navigate]);
 
   const handleBack = () => {
-    navigate(-1);
+    // Пробуем взять from из URL
+    const searchParams = new URLSearchParams(location.search);
+    const from = searchParams.get('from');
+    
+    if (from) {
+      // Если есть параметр from - используем его
+      navigate(`/${from}`);
+    } else if (document.referrer && document.referrer.includes(window.location.origin)) {
+      // Если есть реферер и он с нашего сайта - используем его
+      const referrerPath = new URL(document.referrer).pathname;
+      navigate(referrerPath);
+    } else {
+      // Иначе возвращаемся в историю или на фид по умолчанию
+      navigate(-1);
+    }
   };
 
   const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
