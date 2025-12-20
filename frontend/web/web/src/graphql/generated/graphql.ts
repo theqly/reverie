@@ -1729,10 +1729,7 @@ export const CreateBoardDocument = gql`
     description
     accessLevel
     ownerId
-    authorId
     ownerType
-    createdAt
-    savedAt
     pins {
       id
       name
@@ -1908,11 +1905,6 @@ export const CreatePinDocument = gql`
     description
     rating
     createdAt
-    owner {
-      id
-      nickname
-      profilePicture
-    }
     images {
       id
       orderNumber
