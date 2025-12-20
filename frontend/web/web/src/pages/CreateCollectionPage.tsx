@@ -54,14 +54,13 @@ const handleBack = () => {
 
   
   const handleSaveCollection = async () => {
-    // const currentUser = "some_owner"; 
-    const currentUser = "3f6c1f52-8c1a-4e4e-b9b3-9f84e0f1a123";
+    const currentUser = "00000000-0000-0000-0000-000000000001"; 
 
     const payload = {
       name: collectionName,
       info: collectionInfo,
       coverImage,
-      collaborators: [currentUser, ...collaborators]
+      collaborators: [currentUser]
     };
 
     await createCollection(payload);
