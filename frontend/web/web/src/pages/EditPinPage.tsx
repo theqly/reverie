@@ -6,6 +6,10 @@ import AddPinModal from "./AddPinModal";
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import MapModal from './MapModal';
 import { getPinById } from '../utils/mockData';
+import { useToast } from './ToastProvider';
+import { updatePin } from "../services/pinService";
+
+
 
 const EditPinPage = () => {
   const navigate = useNavigate();
@@ -24,6 +28,48 @@ const EditPinPage = () => {
   const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [pinCount, setPinCount] = useState(0);
+  const { showToast } = useToast();
+
+
+  
+  // Аналогично созданию, но с ID
+ const handleSavePin = async () => {
+    console.log('[EditPin] Current coordinates:', {
+      latitude: pinLatitude,
+      longitude: pinLongitude
+    });
+    if (pinLatitude === null || pinLongitude === null) {
+      alert('Выберите точку на карте');
+      return;
+    }
+    const payload = {
+      id: parseInt(id!),
+      name: pinName,
+      description: pinInfo,
+      latitude: pinLatitude,
+      longitude: pinLongitude,
+      ownerId: '00000000-0000-0000-0000-000000000001', // заглушка, как у тебя
+      coverImages: images
+    };
+    
+    try {
+      const updatedPin = await updatePin(payload);
+
+      if (updatedPin) {
+        console.log("Пин успешно обновлён:", updatedPin);
+        showToast("Успешное сохранение!");
+        handleBack();
+      } else {
+        console.warn("Пин не был обновлён. Вернулся null");
+        showToast("Ошибка при сохранении", true);
+      }
+    } catch (error: any) {
+      console.error("Ошибка при обновлении пина:", error.message);
+      showToast("Ошибка при сохранении", true);
+    }
+  };
+
+
 
   // Загрузка данных пина по ID
   useEffect(() => {
@@ -52,7 +98,6 @@ const EditPinPage = () => {
     }
   }, [location.state]);
 
-  // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
   const handleBack = () => {
     // Пробуем взять from из URL
     const searchParams = new URLSearchParams(location.search);
@@ -98,35 +143,6 @@ const EditPinPage = () => {
   const handleAddCollaborator = () => {
     const newCollaborator = `Collaborator ${collaborators.length + 1}`;
     setCollaborators(prev => [...prev, newCollaborator]);
-  };
-
-  // Аналогично созданию, но с ID
-  const handleSavePin = async () => {
-    console.log('[EditPin] Current coordinates:', {
-      latitude: pinLatitude,
-      longitude: pinLongitude
-    });
-  
-    if (pinLatitude === null || pinLongitude === null) {
-      alert('Выберите точку на карте');
-      return;
-    }
-
-    const payload = {
-      id: parseInt(id),
-      name: pinName,
-      description: pinInfo,
-      latitude: pinLatitude,
-      longitude: pinLongitude,
-      ownerId: '00000000-0000-0000-0000-000000000001',
-      coverImages: images
-    };
-
-    console.log("Сохранение пина:", payload);
-    // await updatePin(payload); // API вызов
-    
-    // После сохранения возвращаемся на страницу пина
-    navigate(`/pin/${id}`);
   };
 
   // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ

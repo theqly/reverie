@@ -13,8 +13,6 @@ const CreatePinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  
-
   // Состояния для полей формы
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
   const [pinLongitude, setPinLongitude] = useState<number | null>(null);
@@ -28,7 +26,7 @@ const CreatePinPage = () => {
   const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-    const [pinCount, setPinCount] = useState(0);
+  const [pinCount, setPinCount] = useState(0);
 
   useEffect(() => {
   if (location.state?.latitude && location.state?.longitude) {

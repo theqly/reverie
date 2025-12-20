@@ -6,53 +6,82 @@ import styles from "./PinViewPage.module.css";
 import placeholder_1 from '../assets/placeholder1.jpg';
 import ReactionBlock from './ReactionBlock';
 import CommentSection from './CommentSection';
-import { getPinById } from '../utils/mockData'; // Импортируем функцию
 import { Link } from 'react-router-dom';
 
-import { mockPins } from '../utils/mockData'; // Импортируем массив (опционально)
+// Импортируем функции из mockData и сервиса
+import { getPinById as getMockPinById } from '../utils/mockData';
+import { getPinById as getBackendPinById } from '../services/collectionsService';
 
 const PinViewPage = () => {
   const navigate = useNavigate();
-  const { pinId } = useParams(); // Получаем ID из URL
+  const { pinId } = useParams();
   const [pin, setPin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Загружаем данные пина при монтировании или изменении pinId
   useEffect(() => {
-    if (pinId) {
-      const foundPin = getPinById(pinId);
-      
-      if (foundPin) {
-        setPin(foundPin);
-        setError(null);
-      } else {
-        setError(`Пин с ID ${pinId} не найден`);
+    const loadPin = async () => {
+      if (!pinId) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // 1. Пытаемся получить с бэка
+        const backendPin = await getBackendPinById(pinId);
+
+        if (backendPin) {
+          setPin(backendPin);
+          return;
+        }
+
+        // 2. Фолбек на моки
+        console.log("Используем моки для пина");
+        const mockPin = getMockPinById(pinId);
+
+        if (mockPin) {
+          setPin(mockPin);
+        } else {
+          setError(`Пин с ID ${pinId} не найден`);
+        }
+
+      } catch (e) {
+        console.error(e);
+
+        // 3. Фолбек на моки при ошибке
+        console.log("Ошибка при загрузке, используем моки");
+        const mockPin = getMockPinById(pinId);
+
+        if (mockPin) {
+          setPin(mockPin);
+        } else {
+          setError('Не удалось загрузить пин');
+        }
+
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
-    }
+    };
+
+    loadPin();
   }, [pinId]);
 
-const handleBack = () => {
-  // Пробуем взять from из URL
-  const searchParams = new URLSearchParams(location.search);
-  const from = searchParams.get('from');
-  
-  if (from) {
-    // Если есть параметр from - используем его
-    navigate(`/${from}`);
-  } else if (document.referrer && document.referrer.includes(window.location.origin)) {
-    // Если есть реферер и он с нашего сайта - используем его
-    const referrerPath = new URL(document.referrer).pathname;
-    navigate(referrerPath);
-  } else {
-    // Иначе возвращаемся в историю или на фид по умолчанию
-    navigate(-1);
-  }
-};
+  const handleBack = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const from = searchParams.get('from');
+    
+    if (from) {
+      navigate(`/${from}`);
+    } else if (document.referrer && document.referrer.includes(window.location.origin)) {
+      const referrerPath = new URL(document.referrer).pathname;
+      navigate(referrerPath);
+    } else {
+      navigate(-1);
+    }
+  };
 
-  // Моковые комментарии (можно потом вынести в mockData)
+  // Комментарии (временно моковые, можно будет заменить на данные с бэка)
   const comments = [
     {
       authorName: pin?.author || "jane_anderson",
@@ -85,28 +114,13 @@ const handleBack = () => {
   }
 
   // Показываем ошибку
-  if (error) {
-    return (
-      <div className={styles.pageWrapper}>
-        <Header />
-        <div className={styles.errorContainer}>
-          <h2>Ошибка</h2>
-          <p>{error}</p>
-          <button onClick={() => navigate('/feed')} className={styles.backButton}>
-            Вернуться на главную
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Если пин не найден (защита на случай undefined)
-  if (!pin) {
+  if (error || !pin) {
     return (
       <div className={styles.pageWrapper}>
         <Header />
         <div className={styles.errorContainer}>
           <h2>Пин не найден</h2>
+          <p>{error || "Не удалось загрузить данные пина"}</p>
           <button onClick={() => navigate('/feed')} className={styles.backButton}>
             Вернуться на главную
           </button>
@@ -126,7 +140,7 @@ const handleBack = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
             <h2>Пин от <Link to={`/profile`} className={styles.authorA}>@{pin.author}</Link></h2>
-            <button className={styles.settingsBtn} onClick={() => navigate(`/pin/edit/${pinId}}`)}></button>
+            <button className={styles.settingsBtn} onClick={() => navigate(`/pin/edit/${pinId}`)}></button>
           </div>
 
           <div className={styles.pinCardWrapper}> 
@@ -141,9 +155,9 @@ const handleBack = () => {
               </p>
               
               <ReactionBlock 
-                initialLikes={226}
-                initialLiked={false}
-                initialBookmarked={false}
+                initialLikes={pin.likes || 226}
+                initialLiked={pin.isLiked || false}
+                initialBookmarked={pin.isBookmarked || false}
                 onLike={(isLiked) => console.log('Лайк:', isLiked)}
                 onBookmark={(isBookmarked) => console.log('Закладка:', isBookmarked)}
               />
@@ -155,8 +169,6 @@ const handleBack = () => {
             />
           </div>
         </div>
-
-
 
         {/* Правая фиксированная карта */}
         <div className={styles.mapWrapperFixed}>
