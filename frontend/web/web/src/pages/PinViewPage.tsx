@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 
 // Импортируем функции из mockData и сервиса
 import { getPinById as getMockPinById } from '../utils/mockData';
-import { getPinById as getBackendPinById } from '../services/collectionsService';
+import { getPinById as getBackendPinById } from '../services/pinService';
 
 const PinViewPage = () => {
   const navigate = useNavigate();
