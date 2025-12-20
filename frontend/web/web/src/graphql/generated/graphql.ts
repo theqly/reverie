@@ -1771,12 +1771,6 @@ export const GetPinByIdDocument = gql`
     longitude
     description
     rating
-    createdAt
-    owner {
-      id
-      nickname
-      profilePicture
-    }
     images {
       id
       orderNumber
@@ -1826,18 +1820,10 @@ export const GetBoardByIdDocument = gql`
     description
     accessLevel
     ownerId
-    authorId
     ownerType
-    createdAt
-    savedAt
     pins {
       id
       name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
       images {
         id
         orderNumber

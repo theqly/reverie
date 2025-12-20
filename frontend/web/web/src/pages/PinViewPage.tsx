@@ -150,9 +150,11 @@ const PinViewPage = () => {
               <p className={styles.collectionLocation}>{pin.location}</p>
               <p className={styles.pinDescription}>{pin.description}</p>
 
-              <p className={styles.pinCoords}>
-                Координаты: {pin.coords[0]}, {pin.coords[1]}
-              </p>
+              {pin.latitude != null && pin.longitude != null && (
+                <p className={styles.pinCoords}>
+                  Координаты: {pin.latitude.toFixed(6)}, {pin.longitude.toFixed(6)}
+                </p>
+              )}
               
               <ReactionBlock 
                 initialLikes={pin.likes || 226}
@@ -172,11 +174,13 @@ const PinViewPage = () => {
 
         {/* Правая фиксированная карта */}
         <div className={styles.mapWrapperFixed}>
-          <MapPicker 
-            onSelect={() => {}} 
-            initialCoords={pin.coords} 
-            readOnly 
-          />
+          {pin.latitude != null && pin.longitude != null && (
+            <MapPicker 
+              onSelect={() => {}} 
+              initialCoords={[pin.latitude, pin.longitude]} 
+              readOnly 
+            />
+          )}
         </div>
       </div>
     </div>

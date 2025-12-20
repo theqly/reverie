@@ -156,10 +156,11 @@ export async function updateCollection(collectionId: string, input: UpdateBoardI
  * Получает подборку по её ID
  * @returns Board или null
  */
-export async function getPinById(): Promise<Board | null> {
+export async function getPinById(id: string): Promise<Board | null> {
   try {
     const result = await apolloClient.query({
       query: GetBoardByIdDocument,
+       variables: { id },
     });
     return result.data?.board?? null;
   } catch (error) {

@@ -118,10 +118,11 @@ export async function updatePin(pinId: string, input: UpdatePinInput) : Promise<
  * Получает пин по его ID
  * @returns Pin или null
  */
-export async function getPinById(): Promise<Pin | null> {
+export async function getPinById(id: string): Promise<Pin | null> {
   try {
     const result = await apolloClient.query({
       query: GetPinByIdDocument,
+      variables: { id },
     });
     return result.data?.pin ?? null;
   } catch (error) {
