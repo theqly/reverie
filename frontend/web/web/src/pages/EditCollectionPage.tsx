@@ -3,7 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styles from './CreateCollectionPage.module.css';
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header';
+import { useToast } from './ToastProvider';
+
 import { getCollectionById, mockCollections } from '../utils/mockData';
+import { updateCollection } from "../services/collectionsService";
+
+import { UpdateBoardDocument, type UpdateBoardInput } from "@/graphql/generated/graphql.ts";
+import { AccessLevelType } from "@/graphql/generated/graphql.ts";
+
+
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
@@ -17,6 +25,42 @@ const EditCollectionPage = () => {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [originalCollection, setOriginalCollection] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  const handleSaveCollection = async () => {
+    if (!id) {
+      console.error("ID коллекции не указан");
+      return;
+    }
+
+    const payload: UpdateBoardInput = {
+      userId: originalCollection?.ownerId ?? "",
+      name: collectionName,                     
+      description: collectionInfo,              
+      accessLevel: AccessLevelType.Public,
+    };
+
+    try {
+      const updatedBoard = await updateCollection(id, payload);
+
+      if (updatedBoard) {
+        console.log("Коллекция успешно обновлена:", updatedBoard);
+        handleBack();
+        showToast("Успешное сохранение!");
+
+      } else {
+        console.warn("Коллекция не была обновлена. Вернулась null");
+        showToast("Ошибка при сохранении", true);
+      }
+    } catch (error: any) {
+      console.error("Ошибка при обновлении коллекции:", error.message);
+      showToast("Ошибка при сохранении", true);
+    }
+  };
+
+
+
+
 
   // Загрузка данных коллекции из mockData
   useEffect(() => {
@@ -67,28 +111,6 @@ const EditCollectionPage = () => {
     if (file) {
       setCoverImage(file);
     }
-  };
-
-  const handleSaveCollection = async () => {
-    const payload = {
-      id: parseInt(id),
-      title: collectionName,
-      description: collectionInfo,
-      coverImage,
-      collaborators,
-      // Сохраняем остальные поля из оригинальной коллекции
-      ...originalCollection,
-      image: coverImage ? URL.createObjectURL(coverImage) : originalCollection?.image,
-      updatedAt: new Date().toISOString()
-    };
-
-    console.log("Сохранение коллекции:", payload);
-
-    // Здесь бы вызывался API для сохранения
-    // await updateCollection(payload);
-    
-    // После сохранения возвращаемся на страницу коллекции
-    navigate(`/collection/${id}`);
   };
 
   const isSaveEnabled = collectionName.trim().length > 0 &&

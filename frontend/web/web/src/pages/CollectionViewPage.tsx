@@ -14,6 +14,8 @@ import {
   getCollectionPins 
 } from '../utils/mockData';
 
+import {getPinById} from '../services/collectionsService'
+
 const CollectionViewPage = () => {
   const navigate = useNavigate();
   const { collectionId } = useParams(); // Получаем ID коллекции из URL
@@ -24,22 +26,57 @@ const CollectionViewPage = () => {
 
   // Загружаем данные коллекции при монтировании или изменении collectionId
   useEffect(() => {
-    if (collectionId) {
-      const foundCollection = getCollectionById(collectionId);
-      
-      if (foundCollection) {
-        setCollection(foundCollection);
-        // Получаем пины этой коллекции
-        const pins = getCollectionPins(collectionId);
-        setCollectionPins(pins);
-        setError(null);
+  const loadCollection = async () => {
+    if (!collectionId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Пытаемся получить с бэка
+      const board = await getPinById(collectionId);
+
+      if (board) {
+        setCollection(board);
+        setCollectionPins(board.pins ?? []);
+        return;
+      }
+
+      console.log("moki");
+
+      // 2. Фолбек на моки
+      const mockCollection = getCollectionById(collectionId);
+
+      if (mockCollection) {
+        setCollection(mockCollection);
+        setCollectionPins(getCollectionPins(collectionId));
       } else {
         setError(`Подборка с ID ${collectionId} не найдена`);
       }
-      
+
+    } catch (e) {
+      console.error(e);
+
+      // 3. Фолбек на моки при ошибке
+      console.log("moki");
+
+      const mockCollection = getCollectionById(collectionId);
+
+      if (mockCollection) {
+        setCollection(mockCollection);
+        setCollectionPins(getCollectionPins(collectionId));
+      } else {
+        setError('Не удалось загрузить подборку');
+      }
+
+    } finally {
       setLoading(false);
     }
-  }, [collectionId]);
+  };
+
+  loadCollection();
+}, [collectionId]);
+
 
   const handleBack = () => {
     // Пробуем взять from из URL

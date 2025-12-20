@@ -1,96 +1,201 @@
-import { useState } from 'react';
-import styles from './Feed.module.css';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import styles from './Feed.module.css';
 import Header from './Header';
 import PinGrid from './PinGrid';
 import CollectionGrid from './CollectionGrid';
+
 import { mockPins, mockCollections } from '../utils/mockData';
+import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
 
 const Feed = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('pins'); // 'pins' или 'collections'
+
+  const [activeTab, setActiveTab] = useState<'pins' | 'collections'>('pins');
   const [onlySubscriptions, setOnlySubscriptions] = useState(false);
 
-  // Обработчик клика по кнопке +
+  const [pins, setPins] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /* =======================
+     Навигация
+  ======================= */
+
   const handlePlusClick = () => {
     if (activeTab === 'pins') {
       navigate('/pin/create');
-    } else if (activeTab === 'collections') {
+    } else {
       navigate('/collection/create');
     }
   };
 
-  // Получаем текст для title кнопки
-  const getPlusButtonTitle = () => {
-    return activeTab === 'pins' 
-      ? 'Создать новый пин' 
+  const getPlusButtonTitle = () =>
+    activeTab === 'pins'
+      ? 'Создать новый пин'
       : 'Создать новую подборку';
-  };
 
-  // Используем данные из mockData
-  const pins = mockPins;
-  const collections = mockCollections;
-
-  // Фильтрация по подпискам (если включено)
-  const filteredPins = onlySubscriptions 
-    ? pins.filter(pin => ['jane_anderson', 'alex_smith'].includes(pin.author))
-    : pins;
-  
-  const filteredCollections = onlySubscriptions
-    ? collections.filter(col => ['jane_anderson', 'hana_tanaka'].includes(col.author))
-    : collections;
-
-  const handlePinClick = (pinId) => {
+  const handlePinClick = (pinId: string) => {
     navigate(`/pin/${pinId}`);
   };
 
-  const handleCollectionClick = (collectionId) => {
+  const handleCollectionClick = (collectionId: string) => {
     navigate(`/collection/${collectionId}`);
   };
+
+  /* =======================
+     Загрузка данных
+  ======================= */
+
+  const handleGetPins = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getPinsByUser({
+        viewerId: '000', // временно
+        userId: '000', // временно
+
+        limit: 20,
+        offset: 0,
+      });
+
+      if (response && response.length > 0) {
+        setPins(response);
+      } else {
+        console.log("Использовали моки");
+        setPins(mockPins);
+      }
+    } catch (err) {
+      console.error('[Feed] getPins error:', err);
+      setPins(mockPins);
+      setError('Не удалось загрузить пины');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGetCollections = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getOwnBoardsByUser({
+        userId: '000', // временно
+        limit: 20,
+        offset: 0,
+      });
+
+      if (response && response.length > 0) {
+        setCollections(response);
+      } else {
+        console.log("Использовали моки");
+
+        setCollections(mockCollections);
+      }
+    } catch (err) {
+      console.error('[Feed] getCollections error:', err);
+      setCollections(mockCollections);
+      setError('Не удалось загрузить подборки');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =======================
+     Эффекты
+  ======================= */
+
+  useEffect(() => {
+    if (activeTab === 'pins') {
+      handleGetPins();
+    }
+
+    if (activeTab === 'collections') {
+      handleGetCollections();
+    }
+  }, [activeTab]);
+
+  /* =======================
+     Фильтрация
+  ======================= */
+
+  const filteredPins = onlySubscriptions
+    ? pins.filter(pin =>
+        ['jane_anderson', 'alex_smith'].includes(pin.author)
+      )
+    : pins;
+
+  const filteredCollections = onlySubscriptions
+    ? collections.filter(col =>
+        ['jane_anderson', 'hana_tanaka'].includes(col.author)
+      )
+    : collections;
+
+  /* =======================
+     Render
+  ======================= */
 
   return (
     <div>
       <Header />
+
       <main className={styles.collectionContent}>
         <section className={styles.container}>
           <h2 className={styles.h_header}>Рекомендации</h2>
-          
+
           <div className={styles.centerPanel}>
-            <button 
+            <button
               className={styles.floatingPlusBtn}
               onClick={handlePlusClick}
               aria-label="Создать"
               title={getPlusButtonTitle()}
             >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 5V19M5 12H19"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
 
             <div className={styles.tabSwitcher}>
-              <button 
-                className={`${styles.tabButton} ${activeTab === 'pins' ? styles.active : ''}`}
+              <button
+                className={`${styles.tabButton} ${
+                  activeTab === 'pins' ? styles.active : ''
+                }`}
                 onClick={() => setActiveTab('pins')}
               >
                 Пины
               </button>
-              <button 
-                className={`${styles.tabButton} ${activeTab === 'collections' ? styles.active : ''}`}
+
+              <button
+                className={`${styles.tabButton} ${
+                  activeTab === 'collections' ? styles.active : ''
+                }`}
                 onClick={() => setActiveTab('collections')}
               >
                 Подборки
               </button>
-              <div className={styles.tabIndicator} data-active={activeTab} />
+
+              <div
+                className={styles.tabIndicator}
+                data-active={activeTab}
+              />
             </div>
           </div>
-            
-          {/* Чекбокс "только подписки" */}
+
           <div className={styles.checkboxContainer}>
             <label className={styles.checkboxLabel}>
-              <input 
+              <input
                 type="checkbox"
                 checked={onlySubscriptions}
-                onChange={(e) => setOnlySubscriptions(e.target.checked)}
+                onChange={e => setOnlySubscriptions(e.target.checked)}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
@@ -100,26 +205,26 @@ const Feed = () => {
                   </svg>
                 )}
               </span>
-              <span className={styles.checkboxText}>Только подписки</span>
+              <span className={styles.checkboxText}>
+                Только подписки
+              </span>
             </label>
           </div>
         </section>
-        
-        {/* Контент вкладки "Пины" */}
+
+        {loading && <p className={styles.loading}>Загрузка…</p>}
+        {error && <p className={styles.error}>{error}</p>}
+
         {activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
-            <PinGrid 
-              pins={filteredPins} 
-              onPinClick={handlePinClick}
-            />
+            <PinGrid pins={filteredPins} onPinClick={handlePinClick} />
           </div>
         )}
-        
-        {/* Контент вкладки "Подборки" */}
+
         {activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
-            <CollectionGrid 
-              collections={filteredCollections} 
+            <CollectionGrid
+              collections={filteredCollections}
               onCollectionClick={handleCollectionClick}
             />
           </div>

@@ -101,3 +101,34 @@
     opacity: 0.6;
 }
 
+.toastNotification {
+  position: fixed; /* фиксированная позиция относительно окна */
+  top: 60px;       /* отступ от верха, равный высоте хедера */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #38a169;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, top 0.3s ease;
+  z-index: 50;
+}
+
+.toastNotification.show {
+  opacity: 1;
+  top: 70px; /* чуть ниже хедера */
+  pointer-events: auto;
+}
+
+/* Зеленая плашка для успеха */
+.success {
+  background-color: #38a169; /* зеленый */
+}
+
+/* Красная плашка для ошибки */
+.error {
+  background-color: #e53e3e; /* красный */
+}
