@@ -5,13 +5,18 @@ import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header';
 import { useToast } from './ToastProvider';
 
-import { getCollectionById, mockCollections } from '../utils/mockData';
-import { updateCollection } from "../services/collectionsService";
+import { 
+  getCollectionById as getMockCollectionById, 
+  getCollectionPins 
+} from '../utils/mockData';
+
+import { 
+  updateCollection,
+  getPinById as getBackendCollectionById 
+} from "../services/collectionsService";
 
 import { UpdateBoardDocument, type UpdateBoardInput } from "@/graphql/generated/graphql.ts";
 import { AccessLevelType } from "@/graphql/generated/graphql.ts";
-
-
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
@@ -25,7 +30,68 @@ const EditCollectionPage = () => {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [originalCollection, setOriginalCollection] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { showToast } = useToast();
+
+  // Загрузка данных коллекции с бэкенда
+  useEffect(() => {
+    const loadCollection = async () => {
+      if (!id) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // 1. Пытаемся получить с бэка
+        const board = await getBackendCollectionById(id);
+
+        if (board) {
+          setOriginalCollection(board);
+          setCollectionName(board.title || board.name || '');
+          setCollectionInfo(board.description || '');
+          
+          // Если в API есть данные о соавторах
+          setCollaborators(board.collaborators || []);
+          
+          return;
+        }
+
+        // 2. Фолбек на моки
+        console.log("Используем моки для загрузки данных  коллекции");
+        const mockCollection = getMockCollectionById(parseInt(id));
+
+        if (mockCollection) {
+          setOriginalCollection(mockCollection);
+          setCollectionName(mockCollection.title || '');
+          setCollectionInfo(mockCollection.description || '');
+          setCollaborators(mockCollection.collaborators || []);
+        } else {
+          setError(`Подборка с ID ${id} не найдена`);
+        }
+
+      } catch (e) {
+        console.error("Ошибка при загрузке коллекции:", e);
+
+        // 3. Фолбек на моки при ошибке
+        console.log("Ошибка при загрузке, используем моки");
+        const mockCollection = getMockCollectionById(parseInt(id));
+
+        if (mockCollection) {
+          setOriginalCollection(mockCollection);
+          setCollectionName(mockCollection.title || '');
+          setCollectionInfo(mockCollection.description || '');
+          setCollaborators(mockCollection.collaborators || []);
+        } else {
+          setError('Не удалось загрузить подборку');
+        }
+
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCollection();
+  }, [id]);
 
   const handleSaveCollection = async () => {
     if (!id) {
@@ -47,7 +113,6 @@ const EditCollectionPage = () => {
         console.log("Коллекция успешно обновлена:", updatedBoard);
         handleBack();
         showToast("Успешное сохранение!");
-
       } else {
         console.warn("Коллекция не была обновлена. Вернулась null");
         showToast("Ошибка при сохранении", true);
@@ -57,36 +122,6 @@ const EditCollectionPage = () => {
       showToast("Ошибка при сохранении", true);
     }
   };
-
-
-
-
-
-  // Загрузка данных коллекции из mockData
-  useEffect(() => {
-    if (id) {
-      const collectionId = parseInt(id);
-      const foundCollection = getCollectionById(collectionId);
-      
-      if (foundCollection) {
-        setOriginalCollection(foundCollection);
-        setCollectionName(foundCollection.title || '');
-        setCollectionInfo(foundCollection.description || '');
-        // В моках нет данных о соавторах, можно оставить пустой массив
-        // или добавить в mockData поле collaborators
-        setCollaborators(foundCollection.collaborators || []);
-        
-        // Если в коллекции есть изображение, можно попробовать создать файл
-        // Но для простоты оставим как есть - пользователь может загрузить новое
-      } else {
-        console.error(`Коллекция с ID ${id} не найдена`);
-        // Можно перенаправить на 404 или показать ошибку
-        navigate('/not-found');
-      }
-      
-      setLoading(false);
-    }
-  }, [id, navigate]);
 
   const handleBack = () => {
     // Пробуем взять from из URL
@@ -123,21 +158,23 @@ const EditCollectionPage = () => {
       <div className={styles.createCollectionPage}>
         <Header />
         <main className={styles.collectionContent}>
-          <div className={styles.loading}>Загрузка данных коллекции...</div>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loading}>Загрузка данных коллекции...</div>
+          </div>
         </main>
       </div>
     );
   }
 
-  // Если коллекция не найдена
-  if (!originalCollection) {
+  // Показываем ошибку
+  if (error || !originalCollection) {
     return (
       <div className={styles.createCollectionPage}>
         <Header />
         <main className={styles.collectionContent}>
           <div className={styles.errorContainer}>
             <h2>Коллекция не найдена</h2>
-            <p>Коллекция с ID {id} не существует.</p>
+            <p>{error || `Коллекция с ID ${id} не существует.`}</p>
             <button 
               onClick={() => navigate('/feed')}
               className={styles.backButton}
@@ -161,25 +198,25 @@ const EditCollectionPage = () => {
         </div>
 
         <div className={styles.gridWrapper}>
-<label htmlFor="collection-name" className={styles.name_label}>Название:</label> 
-            <div className={styles.name_input_block}>
-                <input
-                  id="collection-name"
-                  type="text"
-                  value={collectionName}
-                  onChange={(e) => setCollectionName(e.target.value)}
-                  maxLength={50}
-                  className={collectionName.length > 50 ? styles.error : styles.name_input}
-                />
-                <div className={styles.characterCounter}>
-                  {collectionName.length}/50
-                </div>
-                {collectionName.length > 50 && (
-                  <div className={styles.errorMessage}>
-                      Collection name must be 50 characters or less
-                  </div>
-                )}
+          <label htmlFor="collection-name" className={styles.name_label}>Название:</label> 
+          <div className={styles.name_input_block}>
+            <input
+              id="collection-name"
+              type="text"
+              value={collectionName}
+              onChange={(e) => setCollectionName(e.target.value)}
+              maxLength={50}
+              className={collectionName.length > 50 ? styles.error : styles.name_input}
+            />
+            <div className={styles.characterCounter}>
+              {collectionName.length}/50
             </div>
+            {collectionName.length > 50 && (
+              <div className={styles.errorMessage}>
+                Collection name must be 50 characters or less
+              </div>
+            )}
+          </div>
 
           <label htmlFor="collection-info" className={styles.discr_label}>Описание:</label>
           <div className={styles.discr_input_block}>

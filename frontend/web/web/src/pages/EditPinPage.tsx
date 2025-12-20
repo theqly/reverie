@@ -5,18 +5,16 @@ import Header from './Header';
 import AddPinModal from "./AddPinModal";
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import MapModal from './MapModal';
-import { getPinById } from '../utils/mockData';
+import { getPinById as getMockPinById } from '../utils/mockData';
 import { useToast } from './ToastProvider';
-import { updatePin } from "../services/pinService";
-
-
+import { updatePin, getPinById as getBackendPinById } from "../services/pinService";
 
 const EditPinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
 
-  // Состояния - ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
+  // Состояния
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
   const [pinLongitude, setPinLongitude] = useState<number | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -29,26 +27,112 @@ const EditPinPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [pinCount, setPinCount] = useState(0);
   const { showToast } = useToast();
-
-
   
-  // Аналогично созданию, но с ID
- const handleSavePin = async () => {
+  // Новые состояния для загрузки
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Загрузка данных пина по ID
+  useEffect(() => {
+    const loadPin = async () => {
+      if (!id) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // 1. Пытаемся получить с бэка
+        const backendPin = await getBackendPinById(id);
+
+        if (backendPin) {
+          // Заполняем форму данными с бэкенда
+          setPinName(backendPin.title || '');
+          setPinInfo(backendPin.description || '');
+          
+          // Устанавливаем координаты из данных бэкенда
+          if (backendPin.coords && backendPin.coords.length === 2) {
+            setPinLatitude(backendPin.coords[0]);
+            setPinLongitude(backendPin.coords[1]);
+          } else if (backendPin.latitude && backendPin.longitude) {
+            // Альтернативный формат координат
+            setPinLatitude(backendPin.latitude);
+            setPinLongitude(backendPin.longitude);
+          }
+          
+          // Загрузка изображений (если есть в API)
+          // TODO: Добавить загрузку изображений с бэкенда
+          return;
+        }
+
+        // 2. Фолбек на моки
+        console.log("Используем моки для загрузки данных пина");
+        const mockPin = getMockPinById(parseInt(id));
+
+        if (mockPin) {
+          setPinName(mockPin.title || '');
+          setPinInfo(mockPin.description || '');
+          
+          if (mockPin.coords && mockPin.coords.length === 2) {
+            setPinLatitude(mockPin.coords[0]);
+            setPinLongitude(mockPin.coords[1]);
+          }
+        } else {
+          setError(`Пин с ID ${id} не найден`);
+        }
+
+      } catch (e) {
+        console.error("Ошибка при загрузке пина:", e);
+
+        // 3. Фолбек на моки при ошибке
+        console.log("Ошибка при загрузке, используем моки");
+        const mockPin = getMockPinById(parseInt(id));
+
+        if (mockPin) {
+          setPinName(mockPin.title || '');
+          setPinInfo(mockPin.description || '');
+          
+          if (mockPin.coords && mockPin.coords.length === 2) {
+            setPinLatitude(mockPin.coords[0]);
+            setPinLongitude(mockPin.coords[1]);
+          }
+        } else {
+          setError('Не удалось загрузить пин');
+        }
+
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPin();
+  }, [id]);
+
+  // Если данные пришли из состояния навигации (например, с карты)
+  useEffect(() => {
+    if (location.state?.latitude && location.state?.longitude) {
+      setPinLatitude(location.state.latitude);
+      setPinLongitude(location.state.longitude);
+    }
+  }, [location.state]);
+
+  const handleSavePin = async () => {
     console.log('[EditPin] Current coordinates:', {
       latitude: pinLatitude,
       longitude: pinLongitude
     });
+    
     if (pinLatitude === null || pinLongitude === null) {
       alert('Выберите точку на карте');
       return;
     }
+    
     const payload = {
       id: parseInt(id!),
       name: pinName,
       description: pinInfo,
       latitude: pinLatitude,
       longitude: pinLongitude,
-      ownerId: '00000000-0000-0000-0000-000000000001', // заглушка, как у тебя
+      ownerId: '00000000-0000-0000-0000-000000000001', // TODO: взять из контекста/авторизации
       coverImages: images
     };
     
@@ -69,54 +153,21 @@ const EditPinPage = () => {
     }
   };
 
-
-
-  // Загрузка данных пина по ID
-  useEffect(() => {
-    if (!id) return;
-
-    const pinId = parseInt(id);
-    const foundPin = getPinById(pinId);
-    
-    if (foundPin) {
-      setPinName(foundPin.title || '');
-      setPinInfo(foundPin.description || '');
-      
-      // Устанавливаем координаты из моковых данных
-      if (foundPin.coords && foundPin.coords.length === 2) {
-        setPinLatitude(foundPin.coords[0]);
-        setPinLongitude(foundPin.coords[1]);
-      }
-    }
-  }, [id]);
-
-  // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
-  useEffect(() => {
-    if (location.state?.latitude && location.state?.longitude) {
-      setPinLatitude(location.state.latitude);
-      setPinLongitude(location.state.longitude);
-    }
-  }, [location.state]);
-
   const handleBack = () => {
-    // Пробуем взять from из URL
     const searchParams = new URLSearchParams(location.search);
     const from = searchParams.get('from');
     
     if (from) {
-      // Если есть параметр from - используем его
       navigate(`/${from}`);
     } else if (document.referrer && document.referrer.includes(window.location.origin)) {
-      // Если есть реферер и он с нашего сайта - используем его
       const referrerPath = new URL(document.referrer).pathname;
       navigate(referrerPath);
     } else {
-      // Иначе возвращаемся в историю или на фид по умолчанию
       navigate(-1);
     }
   };
 
-  // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
+  // Остальные функции остаются без изменений
   const handleAddImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -128,41 +179,63 @@ const EditPinPage = () => {
     setCurrentIndex(newImages.length - 1);
   };
 
-  // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
   const handleAddPin = () => {
     setIsAddPinModalOpen(true);
     setPinCount(prev => prev + 1);
   };
 
-  // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
   const handleInviteCollaborator = () => {
     setIsInviteModalOpen(true);
   };
 
-  // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
   const handleAddCollaborator = () => {
     const newCollaborator = `Collaborator ${collaborators.length + 1}`;
     setCollaborators(prev => [...prev, newCollaborator]);
   };
 
-  // ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ
   const isSaveEnabled = pinName.trim().length > 0 && 
                        pinName.length <= 50 && 
                        pinInfo.length <= 1000 &&
                        images.length > 0;
+
+  // Показываем загрузку
+  if (loading) {
+    return (
+      <div className={styles.createCollectionPage}>
+        <Header />
+        <div className={styles.loadingContainer}>
+          <div className={styles.loading}>Загрузка...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Показываем ошибку
+  if (error) {
+    return (
+      <div className={styles.createCollectionPage}>
+        <Header />
+        <div className={styles.errorContainer}>
+          <h2>Ошибка загрузки</h2>
+          <p>{error}</p>
+          <button onClick={handleBack} className={styles.backButton}>
+            Вернуться назад
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.createCollectionPage}>
       <Header />
 
       <main className={styles.collectionContent}>
-        {/* ТОЧНО ТАК ЖЕ, ТОЛЬКО ЗАГОЛОВОК ИЗМЕНЕН */}
         <div className={styles.h_container}>
           <button onClick={handleBack} className={styles.back_btn}></button>
           <h1>Редактирование пина</h1>
         </div>
 
-        {/* ТОЧНАЯ КОПИЯ ВЕРСТКИ ИЗ СОЗДАНИЯ */}
         <div className={styles.gridWrapper}>
           <label htmlFor="collection-name" className={styles.name_label}>Название:</label> 
 
@@ -314,7 +387,6 @@ const EditPinPage = () => {
           </section>
         </div>
         
-        {/* ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ */}
         <button 
           type="button" 
           onClick={handleSavePin}
@@ -333,7 +405,6 @@ const EditPinPage = () => {
         )}
       </main>
       
-      {/* ТОЧНО ТАК ЖЕ КАК В СОЗДАНИИ */}
       {isMapOpen && (
         <MapModal
           onClose={() => setIsMapOpen(false)}
