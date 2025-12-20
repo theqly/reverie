@@ -9,7 +9,7 @@ require (
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/segmentio/kafka-go v0.4.49
-	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251214152314-6f7c921d1463
+	github.com/theqly/reverie/backend/kafka-module v0.0.0-20251217051506-7bc26363e6fa
 	go.uber.org/zap v1.27.1
 )
 

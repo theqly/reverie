@@ -11,7 +11,6 @@ type Config struct {
 	ServerAddress string
 
 	KafkaBrokers []string
-	KafkaTopic   string
 	KafkaGroup   string
 
 	OpenSearchURL string
@@ -53,14 +52,13 @@ func LoadConfig() error {
 	CFG = &Config{
 		ServerAddress: ":" + port,
 		KafkaBrokers:  brokers,
-		KafkaTopic:    os.Getenv("KAFKA_TOPIC"),
 		KafkaGroup:    os.Getenv("KAFKA_GROUP"),
 		OpenSearchURL: os.Getenv("OPENSEARCH_URL"),
 		LogLevel:      lvl,
 	}
 
-	if CFG.KafkaTopic == "" || CFG.KafkaGroup == "" || CFG.OpenSearchURL == "" {
-		return fmt.Errorf("env vars KAFKA_TOPIC KAFKA_GROUP OPENSEARCH_URL required")
+	if CFG.KafkaGroup == "" || CFG.OpenSearchURL == "" {
+		return fmt.Errorf("env vars KAFKA_GROUP OPENSEARCH_URL required")
 	}
 
 	return nil

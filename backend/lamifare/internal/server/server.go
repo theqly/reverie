@@ -14,15 +14,18 @@ type Server struct {
 	addr   string
 	engine *gin.Engine
 	log    *zap.Logger
+	sdFn   context.CancelFunc
+	done   chan struct{}
 }
 
-func New(addr string, logger *zap.Logger) *Server {
+func New(addr string, logger *zap.Logger, sdFn context.CancelFunc) *Server {
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.New()
 
 	r.Use(gin.Recovery())
-	r.Use(loggerHandler(logger))
+	r.Use(loggerMiddleware(logger))
+	r.Use(corsMiddleware())
 
 	r.GET("/healthz", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
@@ -34,11 +37,19 @@ func New(addr string, logger *zap.Logger) *Server {
 
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	return &Server{
+	r.POST("/shutdown", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "shutting_down"}) // fake lol
+	})
+
+	s := &Server{
 		addr:   addr,
 		engine: r,
 		log:    logger,
+		sdFn:   sdFn,
+		done:   make(chan struct{}),
 	}
+
+	return s
 }
 
 func (s *Server) Run(ctx context.Context) {
@@ -46,7 +57,7 @@ func (s *Server) Run(ctx context.Context) {
 	s.engine.Run(s.addr)
 }
 
-func loggerHandler(logger *zap.Logger) gin.HandlerFunc {
+func loggerMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 
@@ -68,5 +79,21 @@ func loggerHandler(logger *zap.Logger) gin.HandlerFunc {
 			zap.String("client_ip", c.ClientIP()),
 			zap.String("user_agent", c.Request.UserAgent()),
 		)
+	}
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "X-User-Role, X-User-ID")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		c.Next()
 	}
 }

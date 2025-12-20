@@ -185,6 +185,33 @@ services:
     #  retries: 10
     #  start_period: 5s
 
+  lamifare:
+    build:
+      context: ../backend/lamifare
+      dockerfile: Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: lamifare
+    restart: unless-stopped
+    environment:
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_GROUP: ${KAFKA_GROUP}
+      OPENSEARCH_URL: ${OPENSEARCH_HOSTS}
+      PORT: ${INNER_SERVICE_PORT}
+    ports:
+      - "${LAMIFARE_PORT}:${INNER_SERVICE_PORT}"
+    depends_on:
+      - kafka
+      - opensearch
+    networks:
+      - reverie-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:${INNER_SERVICE_PORT}/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
   # Infra
 
   # kafka
@@ -285,7 +312,9 @@ services:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    #  - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -303,30 +332,11 @@ services:
     container_name: opensearch-dashboards
     environment:
       - OPENSEARCH_HOSTS=["${OPENSEARCH_HOSTS}"]
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
     ports:
       - "${OPENSEARCH_DASHBOARD_PORT}:${OPENSEARCH_DASHBOARD_PORT}"
     depends_on:
       - opensearch
-    networks:
-      - reverie-network
-
-  data-prepper:
-    image: opensearchproject/data-prepper:2.5.0
-    container_name: data-prepper
-    depends_on:
-      - opensearch
-      - kafka
-    environment:
-      OPENSEARCH_HOSTS: '["${OPENSEARCH_HOSTS}"]'
-      OPENSEARCH_USERNAME: admin
-      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
-      OPENSEARCH_SSL: "true"
-      OPENSEARCH_SSL_CERTIFICATE_VERIFICATION: "false"
-    volumes:
-      - ./opensearch/pipelines.yaml:/usr/share/data-prepper/pipelines/pipelines.yaml
-      - ./opensearch/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml
-    ports:
-      - "${DATA_PREPPER_PORT}:${DATA_PREPPER_PORT}"
     networks:
       - reverie-network
 

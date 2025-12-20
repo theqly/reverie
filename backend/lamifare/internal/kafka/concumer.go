@@ -14,12 +14,12 @@ type Consumer struct {
 	log    *zap.Logger
 }
 
-func NewConsumer(log *zap.Logger) *Consumer {
+func NewConsumer(kafkaTopic string, kafkaGroup string, log *zap.Logger) *Consumer {
 	return &Consumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  config.CFG.KafkaBrokers,
-			Topic:    config.CFG.KafkaTopic,
-			GroupID:  config.CFG.KafkaGroup,
+			Topic:    kafkaTopic,
+			GroupID:  kafkaGroup,
 			MinBytes: 10e3,
 			MaxBytes: 10e6,
 		}),

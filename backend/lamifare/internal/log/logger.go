@@ -1,16 +1,12 @@
 package log
 
 import (
-	"github.com/theqly/reverie/backend/lamifare/internal/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 func New() (*zap.Logger, error) {
-	var lvl zapcore.Level
-	if err := lvl.UnmarshalText([]byte(config.CFG.LogLevel)); err != nil {
-		lvl = zapcore.InfoLevel
-	}
+	lvl := zapcore.InfoLevel
 
 	cfg := zap.Config{
 		Level:       zap.NewAtomicLevelAt(lvl),
@@ -28,6 +24,7 @@ func New() (*zap.Logger, error) {
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 			EncodeLevel:    zapcore.LowercaseLevelEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
 		},
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
