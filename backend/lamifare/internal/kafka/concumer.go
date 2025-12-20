@@ -28,13 +28,26 @@ func NewConsumer(kafkaTopic string, kafkaGroup string, log *zap.Logger) *Consume
 }
 
 func (c *Consumer) FetchMessage(ctx context.Context) (kafka.Message, error) {
-	return c.reader.FetchMessage(ctx)
+	msg, err := c.reader.FetchMessage(ctx)
+	if err != nil {
+		c.log.Error("fetch message failed", zap.String("key", string(msg.Key)), zap.String("value", string(msg.Value)), zap.Error(err))
+	} else {
+		c.log.Info("fetched message", zap.String("key", string(msg.Key)), zap.String("value", string(msg.Value)))
+	}
+	return msg, err
 }
 
-func (c *Consumer) CommitMessage(ctx context.Context, m kafka.Message) error {
-	return c.reader.CommitMessages(ctx, m)
+func (c *Consumer) CommitMessage(ctx context.Context, msg kafka.Message) error {
+	err := c.reader.CommitMessages(ctx, msg)
+	if err != nil {
+		c.log.Error("commit message failed", zap.String("key", string(msg.Key)), zap.String("value", string(msg.Value)), zap.Error(err))
+	} else {
+		c.log.Info("commited message", zap.String("key", string(msg.Key)), zap.String("value", string(msg.Value)))
+	}
+	return err
 }
 
 func (c *Consumer) Close() error {
+	c.log.Info("closing consumer", zap.String("topic", c.reader.Config().Topic))
 	return c.reader.Close()
 }

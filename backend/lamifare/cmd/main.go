@@ -57,18 +57,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if logger == nil {
-		panic("log.New returned nil logger")
-	}
 	defer logger.Sync()
-
-	logger.Info("logger started")
 
 	metrics.Init()
 
 	osClient, err := opensearch.New(logger)
 	if err != nil {
-		logger.Fatal("es new", zap.Error(err))
+		logger.Fatal("opensearch.New failed", zap.Error(err))
 	}
 
 	dlqProducer := kafka.NewProducer(logger)
@@ -89,25 +84,20 @@ func main() {
 			for {
 				msg, err := consumer.FetchMessage(ctx)
 
-				logger.Info("fetched message", zap.String("topic", topic))
-
 				if err != nil {
 					if ctx.Err() != nil {
+						logger.Info("stoping reader", zap.String("topic", topic), zap.Error(ctx.Err()))
 						return
 					}
-					logger.Error("fetch failed", zap.Error(err), zap.String("topic", topic))
 					time.Sleep(200 * time.Millisecond)
 					continue
 				}
 
 				if err := proc.Process(ctx, topic, msg.Key, msg.Value); err != nil {
-					logger.Error("processor error", zap.Error(err), zap.String("topic", topic))
+					logger.Error("process failed", zap.Error(err), zap.String("topic", topic))
 				}
 
-				logger.Info("processed message", zap.String("topic", topic))
-
 				_ = consumer.CommitMessage(ctx, msg)
-				logger.Info("commited message", zap.String("topic", topic))
 			}
 		}(topic)
 	}

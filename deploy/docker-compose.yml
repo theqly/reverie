@@ -17,10 +17,9 @@ services:
       - reverie-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PROFILE_POSTGRES_USER} -d ${PROFILE_POSTGRES_DB} -h localhost || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 25
-      start_period: 5s
 
   content-db:
     image: postgres:15
@@ -37,10 +36,9 @@ services:
       - reverie-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${CONTENT_POSTGRES_USER} -d ${CONTENT_POSTGRES_DB} -h localhost || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 25
-      start_period: 5s
 
   feed-db:
     image: postgres:15
@@ -57,10 +55,9 @@ services:
       - reverie-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${FEED_POSTGRES_USER} -d ${FEED_POSTGRES_DB} -h localhost || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 25
-      start_period: 5s
 
   # DB migrators runners
 
@@ -201,8 +198,10 @@ services:
     ports:
       - "${LAMIFARE_PORT}:${INNER_SERVICE_PORT}"
     depends_on:
-      - kafka
-      - opensearch
+      kafka:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
     networks:
       - reverie-network
     healthcheck:
@@ -210,7 +209,6 @@ services:
       interval: 30s
       timeout: 5s
       retries: 10
-      start_period: 5s
 
   # Infra
 
@@ -326,6 +324,11 @@ services:
       - "${OPENSEARCH_PA_PORT}:${OPENSEARCH_PA_PORT}"
     networks:
       - reverie-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${OPENSEARCH_HTTP_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:3
@@ -336,7 +339,8 @@ services:
     ports:
       - "${OPENSEARCH_DASHBOARD_PORT}:${OPENSEARCH_DASHBOARD_PORT}"
     depends_on:
-      - opensearch
+      opensearch:
+        condition: service_healthy
     networks:
       - reverie-network
 

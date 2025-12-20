@@ -45,9 +45,17 @@ func (p *Producer) PublishDLQ(ctx context.Context, topic string, key, value []by
 		Time:  time.Now(),
 	}
 
-	return p.writer.WriteMessages(ctx, msg)
+	e := p.writer.WriteMessages(ctx, msg)
+	if e != nil {
+		p.log.Error("write message failed", zap.String("key", string(key)), zap.String("value", string(b)), zap.Error(e))
+	} else {
+		p.log.Info("written message", zap.String("key", string(key)), zap.String("value", string(b)))
+	}
+
+	return e
 }
 
 func (p *Producer) Close() error {
+	p.log.Info("closing dlq producer")
 	return p.writer.Close()
 }
