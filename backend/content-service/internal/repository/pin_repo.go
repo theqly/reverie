@@ -182,7 +182,7 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, viewerI
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Order("saved_at DESC").Limit(limit).Offset(offset).Find(&pins, "owner_id = ?", userID).Error
+	err := tx.Order("pins.saved_at DESC").Limit(limit).Offset(offset).Where("pins.owner_id = ?", userID).Find(&pins).Error
 	return pins, err
 }
 
