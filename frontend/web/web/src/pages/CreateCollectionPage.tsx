@@ -54,7 +54,8 @@ const handleBack = () => {
 
   
   const handleSaveCollection = async () => {
-    const currentUser = "some_owner"; 
+    // const currentUser = "some_owner"; 
+    const currentUser = "3f6c1f52-8c1a-4e4e-b9b3-9f84e0f1a123";
 
     const payload = {
       name: collectionName,

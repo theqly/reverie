@@ -33,7 +33,7 @@ export interface CreatePinPayload {
  */
 export async function createPin(payload: CreatePinPayload) {
   const createInput: any = {
-    userId: payload.ownerId,
+    ownerId: payload.ownerId,
   };
 
   if (payload.description !== undefined) {
