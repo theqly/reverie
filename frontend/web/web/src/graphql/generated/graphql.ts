@@ -1119,11 +1119,6 @@ export const GetPinsByUserIdDocument = gql`
     description
     rating
     createdAt
-    owner {
-      id
-      nickname
-      profilePicture
-    }
     images {
       id
       orderNumber
@@ -1400,18 +1395,10 @@ export const GetOwnBoardsByUserIdDocument = gql`
     description
     accessLevel
     ownerId
-    authorId
     ownerType
-    createdAt
-    savedAt
     pins {
       id
       name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
       images {
         id
         orderNumber

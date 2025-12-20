@@ -56,8 +56,8 @@ const Feed = () => {
 
     try {
       const response = await getPinsByUser({
-        viewerId: '000', // временно
-        userId: '000', // временно
+        viewerId: '00000000-0000-0000-0000-000000000001', // временно
+        userId: '00000000-0000-0000-0000-000000000001', // временно
 
         limit: 20,
         offset: 0,
@@ -84,7 +84,7 @@ const Feed = () => {
 
     try {
       const response = await getOwnBoardsByUser({
-        userId: '000', // временно
+        userId: '00000000-0000-0000-0000-000000000001', // временно
         limit: 20,
         offset: 0,
       });
