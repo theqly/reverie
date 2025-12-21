@@ -185,11 +185,6 @@ func (p *Processor) handleBoardCommented(ctx context.Context, e *events.BoardCom
 	return p.osClient.UpdateCounter(ctx, p.boardsIndex, e.BoardID, "comments_count", 1)
 }
 
-func (p *Processor) handleBoardCommentUpdated(ctx context.Context, e *events.BoardCommentUpdated) error {
-	p.log.Info("handling board comment updated event")
-	return nil
-}
-
 func (p *Processor) handleBoardCommentDeleted(ctx context.Context, e *events.BoardCommentDeleted) error {
 	p.log.Info("handling board comment deleted event")
 	return nil //TODO p.osClient.UpdateCounter(ctx, p.boardsIndex, e.boardID, "comments_count", -1)
@@ -358,11 +353,6 @@ func (p *Processor) handlePinCommented(ctx context.Context, e *events.PinComment
 	}
 
 	return p.osClient.UpdateCounter(ctx, p.pinsIndex, e.PinID, "comments_count", 1)
-}
-
-func (p *Processor) handlePinCommentUpdated(ctx context.Context, e *events.PinCommentUpdated) error {
-	p.log.Info("handling pin comment updated event")
-	return nil
 }
 
 func (p *Processor) handlePinCommentDeleted(ctx context.Context, e *events.PinCommentDeleted) error {

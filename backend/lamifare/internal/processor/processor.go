@@ -154,14 +154,6 @@ func (p *Processor) dispatch(ctx context.Context, topic string, key []byte, valu
 		}
 		return p.handleBoardCommented(ctx, &e)
 
-	case "board.comment.updated":
-		var e events.BoardCommentUpdated
-		if err := json.Unmarshal(value, &e); err != nil {
-			p.log.Error("board.comment.updated: unmarshal failed", zap.Error(err))
-			return errMalformed
-		}
-		return p.handleBoardCommentUpdated(ctx, &e)
-
 	case "board.comment.deleted":
 		var e events.BoardCommentDeleted
 		if err := json.Unmarshal(value, &e); err != nil {
@@ -258,14 +250,6 @@ func (p *Processor) dispatch(ctx context.Context, topic string, key []byte, valu
 			return errMalformed
 		}
 		return p.handlePinCommented(ctx, &e)
-
-	case "pin.comment.updated":
-		var e events.PinCommentUpdated
-		if err := json.Unmarshal(value, &e); err != nil {
-			p.log.Error("pin.comment.updated: unmarshal failed", zap.Error(err))
-			return errMalformed
-		}
-		return p.handlePinCommentUpdated(ctx, &e)
 
 	case "pin.comment.deleted":
 		var e events.PinCommentDeleted
