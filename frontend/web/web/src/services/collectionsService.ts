@@ -5,11 +5,12 @@ import {
   CreateBoardDocument,
   type CreateBoardInput,
   CreateGroupDocument,
-  type CreateGroupInput, GetBoardByIdDocument,
+  type CreateGroupInput, GetBoardByIdDocument, IsBoardBookmarkedDocument, IsBoardLikedDocument,
   OwnerType,
   UpdateBoardDocument,
   type UpdateBoardInput
 } from "@/graphql/generated/graphql.ts";
+import {getAvailableReactions} from "@/services/reactionsService.ts";
 
 export interface CreateCollectionPayload {
   name: string;
@@ -166,5 +167,44 @@ export async function getPinById(id: string): Promise<Board | null> {
   } catch (error) {
     console.error('Failed to fetch board:', error);
     return null;
+  }
+}
+
+/**
+ * Получает статус лайка на подборке (лайкнута/не лайкнута)
+ * @returns true - лайкнута, false - нет или в случае ошибки
+ */
+export async function isBoardLiked(id: string): Promise<boolean> {
+  try {
+    const result = await apolloClient.query({
+      query: IsBoardLikedDocument,
+      variables: { id },
+    });
+    const reactionId = result.data?.board.reactionId ?? false;
+    const reactions = await getAvailableReactions();
+    for (const reaction of reactions) {
+      if (reaction.type === "like" && reaction.id === reactionId) return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Failed to fetch pin:', error);
+    return false;
+  }
+}
+
+/**
+ * Получает статус букмарка на подборке (добавлена/не добавлена)
+ * @returns true - добавлена, false - нет или в случае ошибки
+ */
+export async function isBoardBookmarked(id: string): Promise<boolean> {
+  try {
+    const result = await apolloClient.query({
+      query: IsBoardBookmarkedDocument,
+      variables: { id },
+    });
+    return result.data?.board.bookmarked ?? false;
+  } catch (error) {
+    console.error('Failed to fetch pin:', error);
+    return false;
   }
 }
