@@ -26,7 +26,6 @@ var topics = []string{
 	"board.pins.added",
 	"board.pins.deleted",
 	"board.commented",
-	"board.comment.updated",
 	"board.comment.deleted",
 	"board.reaction.added",
 	"board.reaction.deleted",
@@ -39,7 +38,6 @@ var topics = []string{
 	"pin.updated",
 	"pin.deleted",
 	"pin.commented",
-	"pin.comment.updated",
 	"pin.comment.deleted",
 	"pin.reaction.added",
 	"pin.reaction.deleted",
@@ -86,9 +84,10 @@ func main() {
 
 				if err != nil {
 					if ctx.Err() != nil {
-						logger.Info("stoping reader", zap.String("topic", topic), zap.Error(ctx.Err()))
+						logger.Info("stopping reader", zap.String("topic", topic), zap.Error(ctx.Err()))
 						return
 					}
+					logger.Info("sleeping after err", zap.String("topic", topic), zap.Error(ctx.Err()))
 					time.Sleep(200 * time.Millisecond)
 					continue
 				}
