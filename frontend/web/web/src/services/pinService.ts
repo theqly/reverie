@@ -142,12 +142,7 @@ export async function isPinLiked(id: string): Promise<boolean> {
       query: GetPinReactionIdDocument,
       variables: { id },
     });
-    const reactionId = result.data?.pin.reactionId ?? false;
-    const reactions = await getAvailableReactions();
-    for (const reaction of reactions) {
-      if (reaction.type === "like" && reaction.id === reactionId) return true;
-    }
-    return false;
+    return result.data?.pin.reactionId == "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
   } catch (error) {
     console.error('Failed to fetch pin:', error);
     return false;
