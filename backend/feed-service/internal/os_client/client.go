@@ -16,7 +16,7 @@ type Client struct {
 
 func NewClient() *Client {
 	cfg := opensearch.Config{
-		Addresses: []string{"http://localhost:9200"},
+		Addresses: []string{"http://opensearch:9200"},
 	}
 	client, err := opensearch.NewClient(cfg)
 	if err != nil {
