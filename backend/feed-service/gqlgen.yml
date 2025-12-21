@@ -1,5 +1,5 @@
 schema:
-  - graph/schema/pin.graphqls
+  - graph/schema/feed.graphqls
 
 exec:
   filename: graph/generated/generated.go
@@ -13,6 +13,15 @@ resolver:
   layout: follow-schema
   dir: graph/resolver
   package: resolver
+
+models:
+  UUID:
+    model:
+      - github.com/99designs/gqlgen/graphql.UUID
+
+  DateTime:
+    model:
+      - time.Time
 
 federation:
   filename: graph/generated/federation.go
