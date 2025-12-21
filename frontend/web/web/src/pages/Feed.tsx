@@ -8,6 +8,7 @@ import CollectionGrid from './CollectionGrid';
 
 import { mockPins, mockCollections } from '../utils/mockData';
 import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
+import placeholder_1 from '../assets/placeholder1.jpg';
 
 const Feed = () => {
   const navigate = useNavigate();
@@ -20,10 +21,6 @@ const Feed = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  /* =======================
-     Навигация
-  ======================= */
 
   const handlePlusClick = () => {
     if (activeTab === 'pins') {
@@ -46,19 +43,14 @@ const Feed = () => {
     navigate(`/collection/${collectionId}`);
   };
 
-  /* =======================
-     Загрузка данных
-  ======================= */
-
   const handleGetPins = async () => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await getPinsByUser({
-        viewerId: '00000000-0000-0000-0000-000000000001', // временно
-        userId: '00000000-0000-0000-0000-000000000001', // временно
-
+        viewerId: '00000000-0000-0000-0000-000000000001',
+        userId: '00000000-0000-0000-0000-000000000001',
         limit: 20,
         offset: 0,
       });
@@ -84,7 +76,7 @@ const Feed = () => {
 
     try {
       const response = await getOwnBoardsByUser({
-        userId: '00000000-0000-0000-0000-000000000001', // временно
+        userId: '00000000-0000-0000-0000-000000000001',
         limit: 20,
         offset: 0,
       });
@@ -93,7 +85,6 @@ const Feed = () => {
         setCollections(response);
       } else {
         console.log("Использовали моки");
-
         setCollections(mockCollections);
       }
     } catch (err) {
@@ -105,10 +96,6 @@ const Feed = () => {
     }
   };
 
-  /* =======================
-     Эффекты
-  ======================= */
-
   useEffect(() => {
     if (activeTab === 'pins') {
       handleGetPins();
@@ -118,10 +105,6 @@ const Feed = () => {
       handleGetCollections();
     }
   }, [activeTab]);
-
-  /* =======================
-     Фильтрация
-  ======================= */
 
   const filteredPins = onlySubscriptions
     ? pins.filter(pin =>
@@ -134,10 +117,6 @@ const Feed = () => {
         ['jane_anderson', 'hana_tanaka'].includes(col.author)
       )
     : collections;
-
-  /* =======================
-     Render
-  ======================= */
 
   return (
     <div>
@@ -217,16 +196,30 @@ const Feed = () => {
 
         {activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
-            <PinGrid pins={filteredPins} onPinClick={handlePinClick} />
+            <PinGrid
+              pins={filteredPins.map(pin => ({
+                ...pin,
+                image: placeholder_1,  // поменяли imageUrl на image
+                title: pin.name,        // название сразу в title
+                location: pin.latitude,
+              }))}
+              onPinClick={handlePinClick}
+            />
+
           </div>
         )}
 
         {activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
-            <CollectionGrid
-              collections={filteredCollections}
-              onCollectionClick={handleCollectionClick}
-            />
+          <CollectionGrid
+            collections={filteredCollections.map(col => ({
+              ...col,
+              image: placeholder_1, // вместо imageUrl
+              title: col.name,       // название сразу в title
+              pinsCount: 0
+            }))}
+            onCollectionClick={handleCollectionClick}
+          />
           </div>
         )}
       </main>

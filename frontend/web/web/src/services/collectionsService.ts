@@ -63,6 +63,7 @@ export async function createCollection(payload: CreateCollectionPayload) {
             accessLevel: AccessLevelType.Group,
             ownerId: newGroupId,
             ownerType: OwnerType.Group,
+            description: payload.info
           } as CreateBoardInput
         },
         // refetchQueries: ['ownBoardsByUser', 'groupBoardsByUser']
@@ -88,6 +89,7 @@ export async function createCollection(payload: CreateCollectionPayload) {
             accessLevel: AccessLevelType.Public,
             ownerId: payload.collaborators[0],
             ownerType: OwnerType.User,
+            description: payload.info
           } as CreateBoardInput
         },
       });

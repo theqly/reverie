@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "./Header";
 import styles from "./PinViewPage.module.css";
@@ -51,28 +51,55 @@ const CollectionViewPage = () => {
         const board = await getBoardById(collectionId);
 
         if (board) {
-          setCollection(board);
-          setCollectionPins(Array.isArray(board.pins) ? board.pins : []);
-          // Установка likesCount из данных коллекции (как в PinViewPage)
+          setCollection({
+            ...board,
+            image: placeholder_1 // заглушка для картинки самой подборки
+          });
+          setCollectionPins(
+            Array.isArray(board.pins)
+              ? board.pins.map(pin => ({
+                  ...pin,
+                  image: placeholder_1,
+                  author: "jane_anderson",
+                  authorAvatar: placeholder_1,
+                  description: pin.description || "",
+                }))
+              : []
+          );
           setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
           return;
         }
 
         const mockCollection = getCollectionById(collectionId);
         if (mockCollection) {
-          setCollection(mockCollection);
-          setCollectionPins(getCollectionPins(collectionId) || []);
+          setCollection({ ...mockCollection, image: placeholder_1 });
+          setCollectionPins(
+            getCollectionPins(collectionId)?.map(pin => ({
+              ...pin,
+              image: placeholder_1,
+              author: "jane_anderson",
+              authorAvatar: placeholder_1,
+              description: pin.description || "",
+            })) || []
+          );
           setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
           setError(`Коллекция с ID ${collectionId} не найдена`);
         }
       } catch (e) {
         console.error("Ошибка загрузки коллекции:", e);
-
         const mockCollection = getCollectionById(collectionId);
         if (mockCollection) {
-          setCollection(mockCollection);
-          setCollectionPins(getCollectionPins(collectionId) || []);
+          setCollection({ ...mockCollection, image: placeholder_1 });
+          setCollectionPins(
+            getCollectionPins(collectionId)?.map(pin => ({
+              ...pin,
+              image: placeholder_1,
+              author: "jane_anderson",
+              authorAvatar: placeholder_1,
+              description: pin.description || "",
+            })) || []
+          );
           setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
           setError("Не удалось загрузить коллекцию");
@@ -90,56 +117,40 @@ const CollectionViewPage = () => {
     if (!collectionId) return;
 
     const loadReactions = async () => {
-      // лайк
       try {
         const likedStatus = await isBoardLiked(collectionId);
         setLiked(likedStatus);
       } catch {}
 
-      // букмарка
       try {
         const bookmarkedStatus = await isBoardBookmarked(collectionId);
         setBookmarked(bookmarkedStatus);
       } catch {}
 
-      // количество лайков — переопределяем после загрузки коллекции
       try {
         const count = await countReactionsToBoard({ boardId: collectionId });
-        // Универсальная обработка: поддерживаем число, строку, объект { count }
         let actualCount: number | null = null;
 
-        if (typeof count === "number") {
-          actualCount = count;
-        } else if (typeof count === "string") {
-          const parsed = Number(count);
-          if (!isNaN(parsed)) actualCount = parsed;
-        } else if (count && typeof count === "object" && "count" in count) {
+        if (typeof count === "number") actualCount = count;
+        else if (typeof count === "string") actualCount = Number(count);
+        else if (count && typeof count === "object" && "count" in count) {
           const nested = (count as any).count;
-          if (typeof nested === "number") {
-            actualCount = nested;
-          } else if (typeof nested === "string") {
-            const parsed = Number(nested);
-            if (!isNaN(parsed)) actualCount = parsed;
-          }
+          if (typeof nested === "number") actualCount = nested;
+          else if (typeof nested === "string") actualCount = Number(nested);
         }
 
-        if (actualCount !== null && actualCount >= 0) {
-          setLikesCount(actualCount);
-        }
+        if (actualCount !== null && actualCount >= 0) setLikesCount(actualCount);
       } catch (err) {
         console.warn("Не удалось загрузить количество лайков:", err);
-        // оставляем текущее значение (из коллекции или fallback)
       }
     };
 
     loadReactions();
   }, [collectionId]);
 
-  /* ------------------ handlers ------------------ */
   const handleLike = async (nextLiked: boolean) => {
     setLiked(nextLiked);
-    setLikesCount(prev => (nextLiked ? prev + 1 : Math.max(prev - 1, 0)));
-
+    setLikesCount(prev => (nextLiked ? prev + 1 : Math.max(prev - 0, 0)));
     try {
       await reactToBoard({
         boardId: collectionId!,
@@ -160,11 +171,8 @@ const CollectionViewPage = () => {
     }
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const handleBack = () => navigate(-1);
 
-  /* ------------------ loading / error ------------------ */
   if (loading) {
     return (
       <div className={styles.pageWrapper}>
@@ -189,7 +197,6 @@ const CollectionViewPage = () => {
     );
   }
 
-  /* ------------------ render ------------------ */
   const comments = [
     {
       authorName: "jane_anderson",
@@ -206,9 +213,7 @@ const CollectionViewPage = () => {
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
-            <h2>
-              Подборка: <strong>{collection.name}</strong>
-            </h2>
+              <h2>Подборка от <Link to={`/profile`} className={styles.authorA}>@jane_anderson</Link></h2>
             <button
               className={styles.settingsBtn}
               onClick={() => navigate(`/collection/edit/${collectionId}`)}
@@ -216,9 +221,10 @@ const CollectionViewPage = () => {
           </div>
 
           <div className={styles.pinCard}>
+            <img src={collection.image || placeholder_1} alt={collection.name} className={styles.collectionImage} />
             <h3 className={styles.pinTitle}>{collection.name}</h3>
             <p className={styles.pinDescription}>
-              {collection.description || "Без описания"}
+              {collection.description || ""}
             </p>
 
             <ReactionBlock

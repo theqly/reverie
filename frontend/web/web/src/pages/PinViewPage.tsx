@@ -15,8 +15,6 @@ import { toggleBookmarkToPin } from "../services/bookmarksService";
 import { isPinLiked, isPinBookmarked } from "../services/pinService";
 
 const FALLBACK_LIKES = 226;
-
-// TODO: брать из auth
 const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 const PinViewPage = () => {
@@ -27,12 +25,10 @@ const PinViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // реакции
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
-  /* ------------------ загрузка пина ------------------ */
   useEffect(() => {
     if (!pinId) return;
 
@@ -72,7 +68,6 @@ const PinViewPage = () => {
     loadPin();
   }, [pinId]);
 
-  /* ------------------ загрузка реакций ------------------ */
   useEffect(() => {
     if (!pinId) return;
 
@@ -98,13 +93,11 @@ const PinViewPage = () => {
     loadReactions();
   }, [pinId]);
 
-  /* ------------------ handlers ------------------ */
   const handleLike = async (nextLiked: boolean) => {
-    setLiked(nextLiked); // optimistic UI
+    setLiked(nextLiked);
     setLikesCount(prev => nextLiked ? prev + 1 : Math.max(prev - 1, 0));
 
     try {
-      // togge на сервере: если есть лайк — удалит, если нет — добавит
       await reactToPin({ pinId, userId: TEMP_USER_ID });
     } catch (error) {
       console.error("Failed to toggle pin reaction", error);
@@ -112,9 +105,9 @@ const PinViewPage = () => {
   };
 
   const handleBookmark = async (nextBookmarked: boolean) => {
-    setBookmarked(nextBookmarked); // optimistic UI
+    setBookmarked(nextBookmarked);
     try {
-      await toggleBookmarkToPin(pinId!, TEMP_USER_ID); // togge на сервере
+      await toggleBookmarkToPin(pinId!, TEMP_USER_ID);
     } catch (error) {
       console.error("Failed to toggle bookmark", error);
     }
@@ -122,7 +115,6 @@ const PinViewPage = () => {
 
   const handleBack = () => navigate(-1);
 
-  /* ------------------ loading / error ------------------ */
   if (loading) return (
     <div className={styles.pageWrapper}>
       <Header />
@@ -143,10 +135,9 @@ const PinViewPage = () => {
     </div>
   );
 
-  /* ------------------ render ------------------ */
   const comments = [
     {
-      authorName: pin.author || "jane_anderson",
+      authorName: "jane_anderson",
       authorAvatar: placeholder_1,
       commentText: "Отличное фото! Очень красивое место.",
       commentDate: "2 часа назад",
@@ -161,7 +152,7 @@ const PinViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Пин от <Link to="/profile" className={styles.authorA}>@{pin.author}</Link>
+              Пин от <Link to="/profile" className={styles.authorA}>@jane_anderson</Link>
             </h2>
             <button
               className={styles.settingsBtn}
@@ -171,10 +162,12 @@ const PinViewPage = () => {
 
           <div className={styles.pinCardWrapper}>
             <div className={styles.pinCard}>
-              <img src={pin.image} alt={pin.title} className={styles.img1} />
-              <h3 className={styles.pinTitle}>{pin.title}</h3>
-              <p className={styles.collectionLocation}>{pin.location}</p>
-              <p className={styles.pinDescription}>{pin.description}</p>
+              <img src={placeholder_1} alt={pin.name} className={styles.img1} />
+              <h3 className={styles.pinTitle}>{pin.name}</h3>
+              <p className={styles.collectionLocation}>
+                Широта: {pin.latitude}, Долгота: {pin.longitude}
+              </p>
+              <p className={styles.pinDescription}>{pin.description || ""}</p>
 
               <ReactionBlock
                 initialLikes={likesCount}
