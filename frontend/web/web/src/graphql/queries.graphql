@@ -540,3 +540,27 @@ mutation BookmarkToPin($pinId: UUID!, $userId: UUID!) {
 mutation BookmarkToBoard($boardId: UUID!, $userId: UUID!) {
   bookmarkToBoard(boardId: $boardId, userId: $userId)
 }
+
+query GetPinReactionId($id: UUID!) {
+  pin(id: $id) {
+    reactionId
+  }
+}
+
+query GetBoardReactionId($id: UUID!) {
+  board(id: $id) {
+    reactionId
+  }
+}
+
+query IsPinBookmarked($id: UUID!) {
+  pin(id: $id) {
+    bookmarked
+  }
+}
+
+query IsBoardBookmarked($id: UUID!) {
+  board(id: $id) {
+    bookmarked
+  }
+}

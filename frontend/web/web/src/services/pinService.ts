@@ -4,8 +4,9 @@ import {
   type CreatePinInput,
   type UpdatePinInput,
   UpdatePinDocument,
-  type Pin, GetPinByIdDocument,
+  type Pin, GetPinByIdDocument, IsPinLikedDocument, IsPinBookmarkedDocument, GetPinReactionIdDocument,
 } from "@/graphql/generated/graphql.ts";
+import {getAvailableReactions} from "@/services/reactionsService.ts";
 
 export interface CreatePinPayload {
   name: string;
@@ -128,5 +129,39 @@ export async function getPinById(id: string): Promise<Pin | null> {
   } catch (error) {
     console.error('Failed to fetch pin:', error);
     return null;
+  }
+}
+
+/**
+ * Получает статус лайка на пине (лайкнут/не лайкнут)
+ * @returns true - лайкнут, false - нет или в случае ошибки
+ */
+export async function isPinLiked(id: string): Promise<boolean> {
+  try {
+    const result = await apolloClient.query({
+      query: GetPinReactionIdDocument,
+      variables: { id },
+    });
+    return result.data?.pin.reactionId == "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
+  } catch (error) {
+    console.error('Failed to fetch pin:', error);
+    return false;
+  }
+}
+
+/**
+ * Получает статус букмарка на пине (добавлен/не добавлен)
+ * @returns true - добавлен, false - нет или в случае ошибки
+ */
+export async function isPinBookmarked(id: string): Promise<boolean> {
+  try {
+    const result = await apolloClient.query({
+      query: IsPinBookmarkedDocument,
+      variables: { id },
+    });
+    return result.data?.pin.bookmarked ?? false;
+  } catch (error) {
+    console.error('Failed to fetch pin:', error);
+    return false;
   }
 }
