@@ -75,6 +75,7 @@ type PinCommentUpdated struct {
 // опенсерч должен только количество менять
 type PinCommentDeleted struct {
 	BaseEvent
+	PinID     string `json:"pin_id"`
 	CommentID string `json:"comment_id"`
 }
 

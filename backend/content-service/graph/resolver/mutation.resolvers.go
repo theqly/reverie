@@ -303,18 +303,17 @@ func (r *mutationResolver) UpdateCommentToPin(ctx context.Context, id uuid.UUID,
 
 // DeleteCommentToPin is the resolver for the deleteCommentToPin field.
 func (r *mutationResolver) DeleteCommentToPin(ctx context.Context, id uuid.UUID) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteCommentToPin - deleteCommentToPin"))
-	// logger := zap.L().With(zap.String("resolver", "DeleteComment"), zap.String("commentID", id.String()))
-	// logger.Info("Deleting comment")
+	logger := zap.L().With(zap.String("resolver", "DeleteCommentToPin"), zap.String("commentID", id.String()))
+	logger.Info("Deleting comment to pin")
 
-	// err := r.PinRepo.DeleteCommentByID(ctx, id)
-	// if err != nil {
-	// 	logger.Error("Failed to delete comment", zap.Error(err))
-	// 	return false, err
-	// }
+	err := r.PinRepo.DeleteCommentToPinByID(ctx, id)
+	if err != nil {
+		logger.Error("Failed to delete comment to pin", zap.Error(err))
+		return false, err
+	}
 
-	// logger.Info("Successfully deleted comment")
-	// return true, nil
+	logger.Info("Successfully deleted comment to pin")
+	return true, nil
 }
 
 // AddCommentToBoard is the resolver for the addCommentToBoard field.
@@ -349,7 +348,17 @@ func (r *mutationResolver) UpdateCommentToBoard(ctx context.Context, id uuid.UUI
 
 // DeleteCommentToBoard is the resolver for the deleteCommentToBoard field.
 func (r *mutationResolver) DeleteCommentToBoard(ctx context.Context, id uuid.UUID) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteCommentToBoard - deleteCommentToBoard"))
+	logger := zap.L().With(zap.String("resolver", "DeleteCommentToBoard"), zap.String("commentID", id.String()))
+	logger.Info("Deleting comment to board")
+
+	err := r.BoardRepo.DeleteCommentToBoardByID(ctx, id)
+	if err != nil {
+		logger.Error("Failed to delete comment to board", zap.Error(err))
+		return false, err
+	}
+
+	logger.Info("Successfully deleted comment to board")
+	return true, nil
 }
 
 // CreateGroup is the resolver for the createGroup field.
