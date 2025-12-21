@@ -4,9 +4,8 @@ import {
   type CreatePinInput,
   type UpdatePinInput,
   UpdatePinDocument,
-  type Pin, GetPinByIdDocument, IsPinLikedDocument, IsPinBookmarkedDocument, GetPinReactionIdDocument,
+  type Pin, GetPinByIdDocument, IsPinBookmarkedDocument, GetPinReactionIdDocument,
 } from "@/graphql/generated/graphql.ts";
-import {getAvailableReactions} from "@/services/reactionsService.ts";
 import { 
   uploadImageDev, 
   addImageToPin, 
