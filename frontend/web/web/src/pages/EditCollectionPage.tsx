@@ -7,6 +7,7 @@ import { useToast } from './ToastProvider';
 
 import { 
   getCollectionById as getMockCollectionById, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getCollectionPins 
 } from '../utils/mockData';
 
@@ -15,8 +16,9 @@ import {
   getPinById as getBackendCollectionById 
 } from "../services/collectionsService";
 
-import { UpdateBoardDocument, type UpdateBoardInput } from "@/graphql/generated/graphql.ts";
+import { type UpdateBoardInput } from "@/graphql/generated/graphql.ts";
 import { AccessLevelType } from "@/graphql/generated/graphql.ts";
+import { validateImageFile, uploadImageDev } from '../services/imageService';
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
@@ -32,6 +34,11 @@ const EditCollectionPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { showToast } = useToast();
+  
+  // Состояния для загрузки изображений
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Загрузка данных коллекции с бэкенда
   useEffect(() => {
@@ -99,18 +106,43 @@ const EditCollectionPage = () => {
       return;
     }
 
-    const payload: UpdateBoardInput = {
-      userId: originalCollection?.ownerId ?? "",
-      name: collectionName,                     
-      description: collectionInfo,              
-      accessLevel: AccessLevelType.Public,
-    };
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
 
     try {
+      // Если есть новая обложка - загружаем её
+      let newCoverUrl: string | undefined;
+      if (coverImage) {
+        const uploadResult = await uploadImageDev(coverImage, (progress) => {
+          setUploadProgress(progress.percentage);
+        });
+        
+        if (uploadResult.success && uploadResult.imageUrl) {
+          newCoverUrl = uploadResult.imageUrl;
+          console.log('Обложка загружена:', newCoverUrl);
+        } else {
+          setUploadError(uploadResult.error || 'Ошибка загрузки обложки');
+          setIsUploading(false);
+          return;
+        }
+      }
+
+      const payload: UpdateBoardInput = {
+        userId: originalCollection?.ownerId ?? "",
+        name: collectionName,                     
+        description: collectionInfo,              
+        accessLevel: AccessLevelType.Public,
+      };
+
       const updatedBoard = await updateCollection(id, payload);
 
       if (updatedBoard) {
         console.log("Коллекция успешно обновлена:", updatedBoard);
+        if (newCoverUrl) {
+          console.log("Новая обложка:", newCoverUrl);
+          // Примечание: URL обложки сохраняется локально, т.к. Board не имеет поля coverImage
+        }
         handleBack();
         showToast("Успешное сохранение!");
       } else {
@@ -119,7 +151,10 @@ const EditCollectionPage = () => {
       }
     } catch (error: any) {
       console.error("Ошибка при обновлении коллекции:", error.message);
+      setUploadError(error.message || 'Ошибка при сохранении');
       showToast("Ошибка при сохранении", true);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -144,11 +179,19 @@ const EditCollectionPage = () => {
   const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Валидация файла
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        setUploadError(validation.error || 'Недопустимый файл');
+        return;
+      }
+      setUploadError(null);
       setCoverImage(file);
     }
   };
 
-  const isSaveEnabled = collectionName.trim().length > 0 &&
+  const isSaveEnabled = !isUploading &&
+                        collectionName.trim().length > 0 &&
                         collectionName.length <= 50 &&
                         collectionInfo.length <= 1000;
 
@@ -300,13 +343,46 @@ const EditCollectionPage = () => {
           </section>
         </div>
         
+        {/* Показываем ошибку загрузки */}
+        {uploadError && (
+          <div className={styles.errorMessage} style={{ marginBottom: '1rem', color: 'red' }}>
+            {uploadError}
+          </div>
+        )}
+        
+        {/* Показываем прогресс загрузки */}
+        {isUploading && coverImage && (
+          <div className={styles.uploadProgress} style={{ marginBottom: '1rem' }}>
+            <div>Загрузка обложки: {uploadProgress}%</div>
+            <div 
+              style={{ 
+                width: '100%', 
+                height: '8px', 
+                backgroundColor: '#e0e0e0', 
+                borderRadius: '4px',
+                marginTop: '0.5rem'
+              }}
+            >
+              <div 
+                style={{ 
+                  width: `${uploadProgress}%`, 
+                  height: '100%', 
+                  backgroundColor: '#4CAF50', 
+                  borderRadius: '4px',
+                  transition: 'width 0.3s ease'
+                }}
+              />
+            </div>
+          </div>
+        )}
+        
         <button
           type="button"
           onClick={handleSaveCollection}
           disabled={!isSaveEnabled}
           className={styles.saveButton}
         >
-          Сохранить изменения
+          {isUploading ? 'Сохранение...' : 'Сохранить изменения'}
         </button>
 
         {isInviteModalOpen && (

@@ -7,7 +7,20 @@ import InviteCollaboratorModal from './InviteCollaboratorModal';
 import MapModal from './MapModal';
 import { getPinById as getMockPinById } from '../utils/mockData';
 import { useToast } from './ToastProvider';
-import { updatePin, getPinById as getBackendPinById } from "../services/pinService";
+import { 
+  updatePin, 
+  getPinById as getBackendPinById,
+  addImagesToPinById,
+  deletePinImage
+} from "../services/pinService";
+import { validateImageFile } from '../services/imageService';
+
+// Интерфейс для существующих изображений с бэкенда
+interface ExistingImage {
+  id: string;
+  imageUrl: string;
+  orderNumber: number;
+}
 
 const EditPinPage = () => {
   const navigate = useNavigate();
@@ -23,14 +36,26 @@ const EditPinPage = () => {
   const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState<string[]>([]);
-  const [images, setImages] = useState<File[]>([]);
+  
+  // Изображения: новые (File) и существующие (с бэкенда)
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pinCount, setPinCount] = useState(0);
   const { showToast } = useToast();
   
-  // Новые состояния для загрузки
+  // Состояния для загрузки
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Общее количество изображений (существующие + новые)
+  const totalImages = existingImages.length + newImages.length;
 
   // Загрузка данных пина по ID
   useEffect(() => {
@@ -46,7 +71,7 @@ const EditPinPage = () => {
 
         if (backendPin) {
           // Заполняем форму данными с бэкенда
-          setPinName(backendPin.title || '');
+          setPinName(backendPin.name || backendPin.title || '');
           setPinInfo(backendPin.description || '');
           
           // Устанавливаем координаты из данных бэкенда
@@ -54,13 +79,18 @@ const EditPinPage = () => {
             setPinLatitude(backendPin.coords[0]);
             setPinLongitude(backendPin.coords[1]);
           } else if (backendPin.latitude && backendPin.longitude) {
-            // Альтернативный формат координат
             setPinLatitude(backendPin.latitude);
             setPinLongitude(backendPin.longitude);
           }
           
-          // Загрузка изображений (если есть в API)
-          // TODO: Добавить загрузку изображений с бэкенда
+          // Загрузка существующих изображений
+          if (backendPin.images && backendPin.images.length > 0) {
+            setExistingImages(backendPin.images.map((img: any) => ({
+              id: img.id,
+              imageUrl: img.imageUrl,
+              orderNumber: img.orderNumber
+            })));
+          }
           return;
         }
 
@@ -125,31 +155,62 @@ const EditPinPage = () => {
       alert('Выберите точку на карте');
       return;
     }
-    
-    const payload = {
-      id: parseInt(id!),
-      name: pinName,
-      description: pinInfo,
-      latitude: pinLatitude,
-      longitude: pinLongitude,
-      ownerId: '00000000-0000-0000-0000-000000000001', // TODO: взять из контекста/авторизации
-      coverImages: images
-    };
+
+    if (totalImages === 0) {
+      alert('Добавьте хотя бы одно изображение');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
     
     try {
-      const updatedPin = await updatePin(payload);
+      // 1. Обновляем основные данные пина
+      const updatedPin = await updatePin(id!, {
+        name: pinName,
+        description: pinInfo,
+        latitude: pinLatitude,
+        longitude: pinLongitude,
+        userId: '00000000-0000-0000-0000-000000000001' // TODO: взять из контекста/авторизации
+      });
 
-      if (updatedPin) {
-        console.log("Пин успешно обновлён:", updatedPin);
-        showToast("Успешное сохранение!");
-        handleBack();
-      } else {
-        console.warn("Пин не был обновлён. Вернулся null");
-        showToast("Ошибка при сохранении", true);
+      if (!updatedPin) {
+        throw new Error('Не удалось обновить пин');
       }
+
+      // 2. Удаляем помеченные для удаления изображения
+      for (const imageId of deletedImageIds) {
+        await deletePinImage(imageId);
+      }
+
+      // 3. Загружаем новые изображения
+      if (newImages.length > 0) {
+        const startOrder = existingImages.length + 1;
+        const uploadResult = await addImagesToPinById(
+          id!,
+          newImages,
+          startOrder,
+          (fileIndex, progress) => {
+            const totalProgress = ((fileIndex + progress.percentage / 100) / newImages.length) * 100;
+            setUploadProgress(Math.round(totalProgress));
+          }
+        );
+
+        if (uploadResult.errors.length > 0) {
+          console.warn('Ошибки при загрузке изображений:', uploadResult.errors);
+        }
+      }
+
+      console.log("Пин успешно обновлён:", updatedPin);
+      showToast("Успешное сохранение!");
+      handleBack();
     } catch (error: any) {
       console.error("Ошибка при обновлении пина:", error.message);
+      setUploadError(error.message || 'Ошибка при сохранении');
       showToast("Ошибка при сохранении", true);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -167,36 +228,78 @@ const EditPinPage = () => {
     }
   };
 
-  // Остальные функции остаются без изменений
+  // Добавление нового изображения
   const handleAddImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (images.length >= 10) return;
+    if (totalImages >= 10) return;
 
-    const newImages = [...images, file];
-    setImages(newImages);
-    setCurrentIndex(newImages.length - 1);
+    // Валидация файла
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setUploadError(validation.error || 'Недопустимый файл');
+      return;
+    }
+
+    setUploadError(null);
+    const updatedNewImages = [...newImages, file];
+    setNewImages(updatedNewImages);
+    setCurrentIndex(existingImages.length + updatedNewImages.length - 1);
   };
 
-  const handleAddPin = () => {
+  // Удаление изображения
+  const handleDeleteImage = (index: number) => {
+    if (index < existingImages.length) {
+      // Удаляем существующее изображение
+      const imageToDelete = existingImages[index];
+      setDeletedImageIds(prev => [...prev, imageToDelete.id]);
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      // Удаляем новое изображение
+      const newImageIndex = index - existingImages.length;
+      setNewImages(prev => prev.filter((_, i) => i !== newImageIndex));
+    }
+    
+    // Корректируем индекс
+    if (currentIndex >= totalImages - 1) {
+      setCurrentIndex(Math.max(0, totalImages - 2));
+    }
+  };
+
+  // Получение URL текущего изображения для превью
+  const getCurrentImageUrl = (): string | null => {
+    if (currentIndex < existingImages.length) {
+      return existingImages[currentIndex]?.imageUrl || null;
+    } else {
+      const newImageIndex = currentIndex - existingImages.length;
+      const file = newImages[newImageIndex];
+      return file ? URL.createObjectURL(file) : null;
+    }
+  };
+
+  // Временно не используются - для будущей функциональности
+  const _handleAddPin = () => {
     setIsAddPinModalOpen(true);
     setPinCount(prev => prev + 1);
   };
+  void _handleAddPin;
 
-  const handleInviteCollaborator = () => {
+  const _handleInviteCollaborator = () => {
     setIsInviteModalOpen(true);
   };
+  void _handleInviteCollaborator;
 
-  const handleAddCollaborator = () => {
-    const newCollaborator = `Collaborator ${collaborators.length + 1}`;
-    setCollaborators(prev => [...prev, newCollaborator]);
+  const handleAddCollaborator = (name: string) => {
+    // Добавляем коллаборатора с переданным именем
+    setCollaborators(prev => [...prev, name]);
   };
 
-  const isSaveEnabled = pinName.trim().length > 0 && 
+  const isSaveEnabled = !isUploading &&
+                       pinName.trim().length > 0 && 
                        pinName.length <= 50 && 
                        pinInfo.length <= 1000 &&
-                       images.length > 0;
+                       totalImages > 0;
 
   // Показываем загрузку
   if (loading) {
@@ -286,12 +389,12 @@ const EditPinPage = () => {
               htmlFor="gallery-input"
               className={styles.galleryWrapper}
             >
-              {images.length === 0 ? (
+              {totalImages === 0 ? (
                 <div className={styles.coverPlaceholder}>+</div>
               ) : (
                 <>
                   <img
-                    src={URL.createObjectURL(images[currentIndex])}
+                    src={getCurrentImageUrl() || ''}
                     className={styles.galleryImage}
                     alt="preview"
                   />
@@ -302,11 +405,7 @@ const EditPinPage = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      const newImages = images.filter((_, i) => i !== currentIndex);
-                      setImages(newImages);
-                      if (currentIndex >= newImages.length) {
-                        setCurrentIndex(newImages.length - 1);
-                      }
+                      handleDeleteImage(currentIndex);
                     }}
                   >
                     ✕
@@ -326,7 +425,7 @@ const EditPinPage = () => {
                     </button>
                   )}
 
-                  {currentIndex < images.length - 1 && (
+                  {currentIndex < totalImages - 1 && (
                     <button
                       type="button"
                       className={styles.navRight}
@@ -342,7 +441,7 @@ const EditPinPage = () => {
 
                   <div
                     className={`${styles.counter} ${
-                      images.length === 10 ? styles.counterMax : ""
+                      totalImages === 10 ? styles.counterMax : ""
                     }`}
                   >
                     {currentIndex + 1} / 10
@@ -355,7 +454,7 @@ const EditPinPage = () => {
               htmlFor="gallery-input"
               className={styles.uploadButton}
             >
-              {images.length === 0 ? "Загрузить фото" : "Добавить ещё фото"}
+              {totalImages === 0 ? "Загрузить фото" : "Добавить ещё фото"}
             </label>
 
             <input
@@ -364,6 +463,7 @@ const EditPinPage = () => {
               accept="image/*"
               onChange={handleAddImage}
               className={styles.hiddenInput}
+              disabled={totalImages >= 10}
             />
 
             <button
@@ -387,13 +487,46 @@ const EditPinPage = () => {
           </section>
         </div>
         
+        {/* Показываем ошибку загрузки */}
+        {uploadError && (
+          <div className={styles.errorMessage} style={{ marginBottom: '1rem', color: 'red' }}>
+            {uploadError}
+          </div>
+        )}
+        
+        {/* Показываем прогресс загрузки */}
+        {isUploading && (
+          <div className={styles.uploadProgress} style={{ marginBottom: '1rem' }}>
+            <div>Сохранение изменений: {uploadProgress}%</div>
+            <div 
+              style={{ 
+                width: '100%', 
+                height: '8px', 
+                backgroundColor: '#e0e0e0', 
+                borderRadius: '4px',
+                marginTop: '0.5rem'
+              }}
+            >
+              <div 
+                style={{ 
+                  width: `${uploadProgress}%`, 
+                  height: '100%', 
+                  backgroundColor: '#4CAF50', 
+                  borderRadius: '4px',
+                  transition: 'width 0.3s ease'
+                }}
+              />
+            </div>
+          </div>
+        )}
+        
         <button 
           type="button" 
           onClick={handleSavePin}
           disabled={!isSaveEnabled}
           className={styles.saveButton}
         >
-          Сохранить изменения
+          {isUploading ? 'Сохранение...' : 'Сохранить изменения'}
         </button>
 
         {isAddPinModalOpen && (
@@ -401,7 +534,11 @@ const EditPinPage = () => {
         )}
 
         {isInviteModalOpen && (
-          <InviteCollaboratorModal onClose={() => setIsInviteModalOpen(false)} />
+          <InviteCollaboratorModal 
+            onClose={() => setIsInviteModalOpen(false)}
+            onAddCollaborator={handleAddCollaborator}
+            existingCollaborators={collaborators}
+          />
         )}
       </main>
       

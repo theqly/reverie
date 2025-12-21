@@ -7,6 +7,12 @@ import {
   type Pin, GetPinByIdDocument, IsPinLikedDocument, IsPinBookmarkedDocument, GetPinReactionIdDocument,
 } from "@/graphql/generated/graphql.ts";
 import {getAvailableReactions} from "@/services/reactionsService.ts";
+import { 
+  uploadImageDev, 
+  addImageToPin, 
+  removeImageFromPin,
+  type ImageUploadProgress 
+} from "@/services/imageService.ts";
 
 export interface CreatePinPayload {
   name: string;
@@ -14,7 +20,13 @@ export interface CreatePinPayload {
   latitude: number;
   longitude: number;
   ownerId: string; // UUID
-  coverImages: File[]; // массив изображений, пока вроде на бэке нету надо прибить гвоздями
+  coverImages: File[]; // массив изображений
+}
+
+export interface CreatePinWithImagesResult {
+  pin: Pin | null;
+  uploadedImages: Array<{ id: string; imageUrl: string; orderNumber: number }>;
+  errors: string[];
 }
 
 /**
@@ -25,14 +37,14 @@ export interface CreatePinPayload {
  * @example
  * await createPin({
  *   name: "Мой пин",
- *   info: "Описание пина",
- *   coverImage: file,
- *   pinCount: 10
- *   ownerId: "00000000-0000-0000-0000-000000000001"
- *   coverImage: [file1, ..., file10]
+ *   description: "Описание пина",
+ *   latitude: 55.7558,
+ *   longitude: 37.6173,
+ *   ownerId: "00000000-0000-0000-0000-000000000001",
+ *   coverImages: [file1, ..., file10]
  * });
  */
-export async function createPin(payload: CreatePinPayload) {
+export async function createPin(payload: CreatePinPayload): Promise<Pin | null> {
   const createInput: any = {
     ownerId: payload.ownerId,
   };
@@ -61,6 +73,70 @@ export async function createPin(payload: CreatePinPayload) {
   });
 
   return createPinResult.data?.createPin || null;
+}
+
+/**
+ * Создаёт пин и загружает изображения
+ * Комплексная функция: создаёт пин, загружает фото в S3 и привязывает их к пину
+ * 
+ * @param payload - Данные пина включая изображения
+ * @param onImageProgress - Колбэк для отслеживания прогресса загрузки изображений
+ * @returns Результат создания пина с информацией о загруженных изображениях
+ */
+export async function createPinWithImages(
+  payload: CreatePinPayload,
+  onImageProgress?: (fileIndex: number, progress: ImageUploadProgress) => void
+): Promise<CreatePinWithImagesResult> {
+  const result: CreatePinWithImagesResult = {
+    pin: null,
+    uploadedImages: [],
+    errors: []
+  };
+
+  // 1. Создаём пин в БД
+  const pin = await createPin(payload);
+  
+  if (!pin) {
+    result.errors.push('Не удалось создать пин');
+    return result;
+  }
+  
+  result.pin = pin;
+
+  // 2. Если есть изображения - загружаем их
+  if (payload.coverImages && payload.coverImages.length > 0) {
+    for (let i = 0; i < payload.coverImages.length; i++) {
+      const file = payload.coverImages[i];
+      
+      try {
+        // Загружаем изображение (используем dev версию пока нет S3)
+        // TODO: заменить на uploadImage когда будет готов S3 endpoint
+        const uploadResult = await uploadImageDev(file, (progress) => {
+          if (onImageProgress) {
+            onImageProgress(i, progress);
+          }
+        });
+
+        if (!uploadResult.success || !uploadResult.imageUrl) {
+          result.errors.push(`Ошибка загрузки файла ${file.name}: ${uploadResult.error}`);
+          continue;
+        }
+
+        // Добавляем изображение к пину в БД
+        const pinImage = await addImageToPin(pin.id, uploadResult.imageUrl, i + 1);
+        
+        if (pinImage) {
+          result.uploadedImages.push(pinImage);
+        } else {
+          result.errors.push(`Ошибка привязки файла ${file.name} к пину`);
+        }
+      } catch (error: any) {
+        result.errors.push(`Ошибка обработки файла ${file.name}: ${error.message}`);
+      }
+    }
+  }
+
+  return result;
 }
 
 
@@ -113,6 +189,62 @@ export async function updatePin(pinId: string, input: UpdatePinInput) : Promise<
   });
 
   return updatedPinResult.data?.updatePin || null;
+}
+
+/**
+ * Добавляет новые изображения к существующему пину
+ * 
+ * @param pinId - ID пина
+ * @param files - Массив файлов изображений для добавления
+ * @param startOrderNumber - Начальный номер порядка (для добавления в конец)
+ * @param onProgress - Колбэк для отслеживания прогресса
+ */
+export async function addImagesToPinById(
+  pinId: string,
+  files: File[],
+  startOrderNumber: number = 1,
+  onProgress?: (fileIndex: number, progress: ImageUploadProgress) => void
+): Promise<{ images: Array<{ id: string; imageUrl: string; orderNumber: number }>; errors: string[] }> {
+  const images: Array<{ id: string; imageUrl: string; orderNumber: number }> = [];
+  const errors: string[] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    
+    try {
+      // Загружаем изображение
+      const uploadResult = await uploadImageDev(file, (progress) => {
+        if (onProgress) {
+          onProgress(i, progress);
+        }
+      });
+
+      if (!uploadResult.success || !uploadResult.imageUrl) {
+        errors.push(`Ошибка загрузки файла ${file.name}: ${uploadResult.error}`);
+        continue;
+      }
+
+      // Добавляем изображение к пину в БД
+      const pinImage = await addImageToPin(pinId, uploadResult.imageUrl, startOrderNumber + i);
+      
+      if (pinImage) {
+        images.push(pinImage);
+      } else {
+        errors.push(`Ошибка привязки файла ${file.name} к пину`);
+      }
+    } catch (error: any) {
+      errors.push(`Ошибка обработки файла ${file.name}: ${error.message}`);
+    }
+  }
+
+  return { images, errors };
+}
+
+/**
+ * Удаляет изображение из пина по ID изображения
+ */
+export async function deletePinImage(imageId: string): Promise<boolean> {
+  return removeImageFromPin(imageId);
 }
 
 /**
