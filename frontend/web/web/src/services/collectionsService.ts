@@ -5,12 +5,14 @@ import {
   CreateBoardDocument,
   type CreateBoardInput,
   CreateGroupDocument,
-  type CreateGroupInput, GetBoardByIdDocument, IsBoardBookmarkedDocument, IsBoardLikedDocument,
+  type CreateGroupInput,
+  GetBoardByIdDocument,
+  GetBoardReactionIdDocument,
+  IsBoardBookmarkedDocument,
   OwnerType,
   UpdateBoardDocument,
   type UpdateBoardInput
 } from "@/graphql/generated/graphql.ts";
-import {getAvailableReactions} from "@/services/reactionsService.ts";
 
 export interface CreateCollectionPayload {
   name: string;
@@ -177,7 +179,7 @@ export async function getPinById(id: string): Promise<Board | null> {
 export async function isBoardLiked(id: string): Promise<boolean> {
   try {
     const result = await apolloClient.query({
-      query: IsBoardLikedDocument,
+      query: GetBoardReactionIdDocument,
       variables: { id },
     });
     return result.data?.board.reactionId == "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
