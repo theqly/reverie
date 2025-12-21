@@ -55,9 +55,7 @@ func main() {
 
 	waitMigration(60)
 
-	// kafkaPublisher := kafka.NewProducer([]string{"localhost:9092"}, nil)
-	var kafkaPublisher *kafka.Producer
-	kafkaPublisher = nil
+	kafkaPublisher := kafka.NewProducer([]string{"kafka:9092"}, nil)
 
 	userRepo := repository.NewUserRepository(database.DB, kafkaPublisher)
 

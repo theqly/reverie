@@ -63,9 +63,7 @@ func main() {
 		log.Fatalf("failed to load mappings from database: %v", err)
 	}
 
-	// kafkaPublisher := kafka.NewProducer([]string{"localhost:9092"}, nil)
-	var kafkaPublisher *kafka.Producer
-	kafkaPublisher = nil
+	kafkaPublisher := kafka.NewProducer([]string{"kafka:9092"}, nil)
 
 	boardRepo := repository.NewBoardRepository(database.DB, kafkaPublisher)
 	pinRepo := repository.NewPinRepository(database.DB, kafkaPublisher)
