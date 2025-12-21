@@ -17,7 +17,7 @@ import { isPinLiked, isPinBookmarked } from "../services/pinService";
 const FALLBACK_LIKES = 226;
 
 // TODO: брать из auth
-const TEMP_USER_ID = "TEMP_USER_ID";
+const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 const PinViewPage = () => {
   const navigate = useNavigate();

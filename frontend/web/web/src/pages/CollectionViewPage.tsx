@@ -14,18 +14,12 @@ import { getCollectionById, getCollectionPins } from "../utils/mockData";
 import { getPinById as getBoardById } from "../services/collectionsService";
 
 // реакции
-import {countReactionsToBoard, reactToBoard} from "../services/reactionsService";
-
-import {isBoardLiked, isBoardBookmarked} from "../services/collectionsService";
-
+import { countReactionsToBoard, reactToBoard } from "../services/reactionsService";
+import { isBoardLiked, isBoardBookmarked } from "../services/collectionsService";
 import { toggleBookmarkToBoard } from "../services/bookmarksService";
 
-const FALLBACK_LIKES = 226;
-
-// ID реакции "like" — тот же используется для добавления и удаления
+const FALLBACK_LIKES = 0;
 const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
-
-// TODO: брать из auth
 const TEMP_USER_ID = "TEMP_USER_ID";
 
 const CollectionViewPage = () => {
@@ -37,7 +31,6 @@ const CollectionViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // реакции
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -60,6 +53,8 @@ const CollectionViewPage = () => {
         if (board) {
           setCollection(board);
           setCollectionPins(Array.isArray(board.pins) ? board.pins : []);
+          // Установка likesCount из данных коллекции (как в PinViewPage)
+          setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
           return;
         }
 
@@ -67,6 +62,7 @@ const CollectionViewPage = () => {
         if (mockCollection) {
           setCollection(mockCollection);
           setCollectionPins(getCollectionPins(collectionId) || []);
+          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
           setError(`Коллекция с ID ${collectionId} не найдена`);
         }
@@ -77,6 +73,7 @@ const CollectionViewPage = () => {
         if (mockCollection) {
           setCollection(mockCollection);
           setCollectionPins(getCollectionPins(collectionId) || []);
+          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
           setError("Не удалось загрузить коллекцию");
         }
@@ -105,14 +102,33 @@ const CollectionViewPage = () => {
         setBookmarked(bookmarkedStatus);
       } catch {}
 
-      // количество лайков
+      // количество лайков — переопределяем после загрузки коллекции
       try {
         const count = await countReactionsToBoard({ boardId: collectionId });
-        if (typeof count === "number" && count >= 0) {
-          setLikesCount(count);
+        // Универсальная обработка: поддерживаем число, строку, объект { count }
+        let actualCount: number | null = null;
+
+        if (typeof count === "number") {
+          actualCount = count;
+        } else if (typeof count === "string") {
+          const parsed = Number(count);
+          if (!isNaN(parsed)) actualCount = parsed;
+        } else if (count && typeof count === "object" && "count" in count) {
+          const nested = (count as any).count;
+          if (typeof nested === "number") {
+            actualCount = nested;
+          } else if (typeof nested === "string") {
+            const parsed = Number(nested);
+            if (!isNaN(parsed)) actualCount = parsed;
+          }
         }
-      } catch {
-        // оставляем fallback
+
+        if (actualCount !== null && actualCount >= 0) {
+          setLikesCount(actualCount);
+        }
+      } catch (err) {
+        console.warn("Не удалось загрузить количество лайков:", err);
+        // оставляем текущее значение (из коллекции или fallback)
       }
     };
 
@@ -120,14 +136,9 @@ const CollectionViewPage = () => {
   }, [collectionId]);
 
   /* ------------------ handlers ------------------ */
-
-  // ❤️ лайк: add / remove одним и тем же запросом
   const handleLike = async (nextLiked: boolean) => {
-    // optimistic UI
     setLiked(nextLiked);
-    setLikesCount(prev =>
-      nextLiked ? prev + 1 : Math.max(prev - 1, 0)
-    );
+    setLikesCount(prev => (nextLiked ? prev + 1 : Math.max(prev - 1, 0)));
 
     try {
       await reactToBoard({
@@ -137,14 +148,11 @@ const CollectionViewPage = () => {
       });
     } catch (error) {
       console.error("Failed to toggle board reaction", error);
-      // ничего не откатываем
     }
   };
 
-  // 🔖 букмарка: toggle
   const handleBookmark = async (nextBookmarked: boolean) => {
     setBookmarked(nextBookmarked);
-
     try {
       await toggleBookmarkToBoard(collectionId!, TEMP_USER_ID);
     } catch (error) {
@@ -152,7 +160,6 @@ const CollectionViewPage = () => {
     }
   };
 
-  /* ------------------ back ------------------ */
   const handleBack = () => {
     navigate(-1);
   };
@@ -174,10 +181,7 @@ const CollectionViewPage = () => {
         <div className={styles.errorContainer}>
           <h2>Коллекция не найдена</h2>
           <p>{error || "Не удалось загрузить данные"}</p>
-          <button
-            onClick={() => navigate("/feed")}
-            className={styles.backButton}
-          >
+          <button onClick={() => navigate("/feed")} className={styles.backButton}>
             Вернуться на главную
           </button>
         </div>
@@ -198,7 +202,6 @@ const CollectionViewPage = () => {
   return (
     <div className={styles.pageWrapper}>
       <Header />
-
       <div className={styles.contentWrapper}>
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
@@ -208,13 +211,10 @@ const CollectionViewPage = () => {
             </h2>
             <button
               className={styles.settingsBtn}
-              onClick={() =>
-                navigate(`/collection/edit/${collectionId}`)
-              }
+              onClick={() => navigate(`/collection/edit/${collectionId}`)}
             />
           </div>
 
-          {/* карточка подборки */}
           <div className={styles.pinCard}>
             <h3 className={styles.pinTitle}>{collection.name}</h3>
             <p className={styles.pinDescription}>
@@ -230,7 +230,6 @@ const CollectionViewPage = () => {
             />
           </div>
 
-          {/* пины */}
           <h3 className={styles.pinsTitle}>
             Места в подборке ({collectionPins.length})
           </h3>
@@ -238,9 +237,7 @@ const CollectionViewPage = () => {
           <div className={styles.pinsWrapper}>
             <PinGrid
               pins={collectionPins}
-              onPinClick={(pinId) =>
-                navigate(`/pin/${pinId}`)
-              }
+              onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
             />
           </div>
 
