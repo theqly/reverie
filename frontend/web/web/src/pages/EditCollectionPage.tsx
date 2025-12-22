@@ -224,7 +224,7 @@ const EditCollectionPage = () => {
                 <button onClick={() => setCollaborators(prev => prev.filter(x => x !== c))}>✕</button>
               </div>
             ))}
-            <button onClick={() => setIsInviteModalOpen(true)}>Добавить соавтора</button>
+            <button className={styles.actionButton} onClick={() => setIsInviteModalOpen(true)}>Добавить соавтора</button>
           </div>
 
           <section className={styles.coverSection}>

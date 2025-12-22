@@ -52,7 +52,7 @@
     flex-direction: column;
     gap: 12px;
 
-    margin: 0 20px;        /* нормальные отступы */
+    margin: 10px 20px;        /* нормальные отступы */
     box-sizing: border-box;
 }
 
@@ -525,22 +525,34 @@
   color: rgb(0, 0, 0);
 }
 
+
 .addTo{
-  margin-top: 15px;
-  margin-left: 30px;
-  padding: 10px 15px;
-  font-size: 14px;
-  border-radius: 10px;
-  border: none;
-  background-color: #c7c7c7;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 35px;
+  height: 40px;
   cursor: pointer;
-  align-self:first baseline;
+  background-color: transparent;
+  width: 300px;
+  text-align: left;
+  padding-left: 40px;
+  font-size: 16px;
+
+  background-image: url('../assets/plus.svg');
+  background-size: 30px 30px;
+  background-position: left center ;
+  
+  background-repeat: no-repeat;
+  border: none;
+  align-self: first baseline;
 }
 
 .addTo:hover{
-  background-color: #d8d8d8;
-
+  background-size: 35px 35px;
+  padding-left: 45px;
 }
+
+
 
 /* Стили для модального окна */
 .modalOverlay {

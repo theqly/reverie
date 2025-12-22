@@ -1,7 +1,7 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "./Header";
-import MapPicker from "./MapPicker";
+import MapShower from "./MapShower";
 import styles from "./PinViewPage.module.css";
 import placeholder_1 from "../assets/placeholder1.jpg";
 import ReactionBlock from "./ReactionBlock";
@@ -334,7 +334,7 @@ const PinViewPage = () => {
               className={styles.addTo}
               onClick={handleAddToCollectionClick}
             >
-              Добавить пин в подборку...
+              Добавить пин в подборку
             </button>
 
             <CommentSection comments={comments} title="Комментарии" />
@@ -343,7 +343,7 @@ const PinViewPage = () => {
 
         <div className={styles.mapWrapperFixed}>
           {pin.latitude != null && pin.longitude != null && (
-            <MapPicker
+            <MapShower
               readOnly
               onSelect={() => {}}
               initialCoords={[pin.latitude, pin.longitude]}
