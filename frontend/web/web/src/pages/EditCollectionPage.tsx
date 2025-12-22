@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import styles from './CreateCollectionPage.module.css';
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header';
@@ -22,6 +22,7 @@ import { validateImageFile, uploadImageDev } from '../services/imageService';
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   
   // Состояния для полей формы
@@ -30,15 +31,28 @@ const EditCollectionPage = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState<string[]>([]);
   const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [originalCollection, setOriginalCollection] = useState(null);
+  const [originalCollection, setOriginalCollection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
   
   // Состояния для загрузки изображений
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Получаем URL изображения коллекции
+  const getCollectionImageUrl = (): string | null => {
+    if (!originalCollection) return null;
+    
+    // Пробуем получить изображение из разных возможных полей
+    return (
+      originalCollection.image ||           // Основное поле
+      originalCollection.boardImageURL ||   // Альтернативное поле из вашего примера
+      originalCollection.coverImage ||      // Ещё один вариант
+      null
+    );
+  };
 
   // Загрузка данных коллекции с бэкенда
   useEffect(() => {
@@ -60,11 +74,15 @@ const EditCollectionPage = () => {
           // Если в API есть данные о соавторах
           setCollaborators(board.collaborators || []);
           
+          console.log('Загруженная коллекция:', {
+            board,
+            imageUrl: getCollectionImageUrl()
+          });
           return;
         }
 
         // 2. Фолбек на моки
-        console.log("Используем моки для загрузки данных  коллекции");
+        console.log("Используем моки для загрузки данных коллекции");
         const mockCollection = getMockCollectionById(parseInt(id));
 
         if (mockCollection) {
@@ -129,20 +147,23 @@ const EditCollectionPage = () => {
       }
 
       const payload: UpdateBoardInput = {
-        userId: originalCollection?.ownerId ?? "",
+        userId: originalCollection?.ownerId || "",
         name: collectionName,                     
         description: collectionInfo,              
         accessLevel: AccessLevelType.Public,
       };
 
+      // Если есть новый URL обложки, добавляем его в payload
+      if (newCoverUrl) {
+        // Проверяем, поддерживает ли API обновление обложки
+        console.log('Новая обложка доступна:', newCoverUrl);
+        // Здесь можно добавить логику для сохранения обложки, если API поддерживает
+      }
+
       const updatedBoard = await updateCollection(id, payload);
 
       if (updatedBoard) {
         console.log("Коллекция успешно обновлена:", updatedBoard);
-        if (newCoverUrl) {
-          console.log("Новая обложка:", newCoverUrl);
-          // Примечание: URL обложки сохраняется локально, т.к. Board не имеет поля coverImage
-        }
         handleBack();
         showToast("Успешное сохранение!");
       } else {
@@ -195,6 +216,9 @@ const EditCollectionPage = () => {
                         collectionName.trim().length > 0 &&
                         collectionName.length <= 50 &&
                         collectionInfo.length <= 1000;
+
+  // Получаем URL текущего изображения для отображения
+  const currentImageUrl = getCollectionImageUrl();
 
   // Показываем загрузку
   if (loading) {
@@ -312,19 +336,19 @@ const EditCollectionPage = () => {
               {coverImage ? (
                 <img
                   src={URL.createObjectURL(coverImage)}
-                  alt="Обложка подборки"
+                  alt="Новая обложка подборки"
                   className={styles.coverPreview}
                 />
-              ) : originalCollection?.image ? (
+              ) : currentImageUrl ? (
                 <img
-                  src={originalCollection.image}
-                  alt="Текущая обложка"
+                  src={currentImageUrl}
+                  alt="Текущая обложка подборки"
                   className={styles.coverPreview}
                 />
               ) : (
                 <div className={styles.coverPlaceholder}>
                   <span className={styles.plus}>+</span>
-                  <p>Текущая обложка</p>
+                  <p>Загрузить обложку</p>
                 </div>
               )}
             </label>
@@ -336,9 +360,9 @@ const EditCollectionPage = () => {
               className={styles.hiddenInput}
             />
             <label htmlFor="cover-input" className={styles.uploadButton}>
-              {coverImage || originalCollection?.image ? "Изменить фото" : "Загрузить фото"}
+              {coverImage || currentImageUrl ? "Изменить фото" : "Загрузить фото"}
             </label>
-            {originalCollection?.image && !coverImage && (
+            {currentImageUrl && !coverImage && (
               <p className={styles.currentCoverNote}>Используется текущая обложка</p>
             )}
           </section>
