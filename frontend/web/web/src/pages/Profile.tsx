@@ -25,7 +25,6 @@ import {
   getBookmarksByUser,
 } from '../services/profileService';
 
-
 type TabType = 'collections' | 'pins' | 'likes' | 'bookmarks';
 
 const Profile = () => {
@@ -70,7 +69,6 @@ const Profile = () => {
   const [bookmarkedPins, setBookmarkedPins] = useState<any[]>([]);
   const [bookmarkedCollections, setBookmarkedCollections] = useState<any[]>([]);
 
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,7 +93,7 @@ const Profile = () => {
 
   /* =======================
      Загрузка данных
-     (ТОЧНО как в Feed)
+     (ИСПРАВЛЕНО - теперь как в Feed)
   ======================= */
 
   const handleGetPins = async () => {
@@ -104,8 +102,8 @@ const Profile = () => {
 
     try {
       const response = await getPinsByUser({
-        viewerId: '000', // временно
-        userId: '000',   // временно
+        viewerId: '00000000-0000-0000-0000-000000000001', // Исправлено на правильный UUID
+        userId: '00000000-0000-0000-0000-000000000001',   // Исправлено на правильный UUID
         limit: 20,
         offset: 0,
       });
@@ -131,7 +129,7 @@ const Profile = () => {
 
     try {
       const response = await getOwnBoardsByUser({
-        userId: '000', // временно
+        userId: '00000000-0000-0000-0000-000000000001', // Исправлено на правильный UUID
         limit: 20,
         offset: 0,
       });
@@ -152,68 +150,66 @@ const Profile = () => {
   };
 
   const handleGetLikes = async () => {
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  try {
-    const response = await getLikesByUser({
-      userId: '000', // временно
-      pinsLimit: 20,
-      pinsOffset: 0,
-      boardsLimit: 10,
-      boardsOffset: 0,
-    });
+    try {
+      const response = await getLikesByUser({
+        userId: '00000000-0000-0000-0000-000000000001', // Исправлено на правильный UUID
+        pinsLimit: 20,
+        pinsOffset: 0,
+        boardsLimit: 10,
+        boardsOffset: 0,
+      });
 
-    if (response) {
-      setLikedPins(response.pins || []);
-      setLikedCollections(response.boards || []);
-    } else {
-      console.log('[Profile] Использовали моки лайков');
+      if (response) {
+        setLikedPins(response.pins || []);
+        setLikedCollections(response.boards || []);
+      } else {
+        console.log('[Profile] Использовали моки лайков');
+        setLikedPins(mockPins);
+        setLikedCollections(mockCollections);
+      }
+    } catch (err) {
+      console.error('[Profile] getLikes error:', err);
       setLikedPins(mockPins);
       setLikedCollections(mockCollections);
+      setError('Не удалось загрузить лайки');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('[Profile] getLikes error:', err);
-    setLikedPins(mockPins);
-    setLikedCollections(mockCollections);
-    setError('Не удалось загрузить лайки');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-const handleGetBookmarks = async () => {
-  setLoading(true);
-  setError(null);
+  const handleGetBookmarks = async () => {
+    setLoading(true);
+    setError(null);
 
-  try {
-    const response = await getBookmarksByUser({
-      userId: '000', // временно
-      pinsLimit: 20,
-      pinsOffset: 0,
-      boardsLimit: 10,
-      boardsOffset: 0,
-    });
+    try {
+      const response = await getBookmarksByUser({
+        userId: '00000000-0000-0000-0000-000000000001', // Исправлено на правильный UUID
+        pinsLimit: 20,
+        pinsOffset: 0,
+        boardsLimit: 10,
+        boardsOffset: 0,
+      });
 
-    if (response) {
-      setBookmarkedPins(response.pins || []);
-      setBookmarkedCollections(response.boards || []);
-    } else {
-      console.log('[Profile] Использовали моки закладок');
+      if (response) {
+        setBookmarkedPins(response.pins || []);
+        setBookmarkedCollections(response.boards || []);
+      } else {
+        console.log('[Profile] Использовали моки закладок');
+        setBookmarkedPins(mockPins);
+        setBookmarkedCollections(mockCollections);
+      }
+    } catch (err) {
+      console.error('[Profile] getBookmarks error:', err);
       setBookmarkedPins(mockPins);
       setBookmarkedCollections(mockCollections);
+      setError('Не удалось загрузить закладки');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('[Profile] getBookmarks error:', err);
-    setBookmarkedPins(mockPins);
-    setBookmarkedCollections(mockCollections);
-    setError('Не удалось загрузить закладки');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   /* =======================
      Effects
@@ -229,7 +225,7 @@ const handleGetBookmarks = async () => {
     }
 
     if (activeTab === 'likes') {
-    handleGetLikes();
+      handleGetLikes();
     }
 
     if (activeTab === 'bookmarks') {
@@ -247,9 +243,6 @@ const handleGetBookmarks = async () => {
     const COLLECTIONS_PER_BLOCK = 2;
     const PINS_PER_BLOCK = 5;
 
-    //console.log('collections:', collections);
-
-
     const colls = [...collections];
     const ps = [...pins];
 
@@ -260,13 +253,23 @@ const handleGetBookmarks = async () => {
       if (next === 'collections' && colls.length) {
         feed.push({
           type: 'collections',
-          items: colls.splice(0, COLLECTIONS_PER_BLOCK),
+          items: colls.splice(0, COLLECTIONS_PER_BLOCK).map(col => ({
+            ...col,
+            image: placeholder_1,
+            title: col.name,
+            pinsCount: col.pinsCount || 0
+          })),
         });
         next = 'pins';
       } else if (next === 'pins' && ps.length) {
         feed.push({
           type: 'pins',
-          items: ps.splice(0, PINS_PER_BLOCK),
+          items: ps.splice(0, PINS_PER_BLOCK).map(pin => ({
+            ...pin,
+            image: placeholder_1,
+            title: pin.name,
+            location: pin.latitude
+          })),
         });
         next = 'collections';
       } else {
@@ -277,10 +280,29 @@ const handleGetBookmarks = async () => {
     return feed;
   };
 
-
   const likesFeed = generateMixedFeed(likedCollections, likedPins);
   const bookmarksFeed = generateMixedFeed(bookmarkedCollections, bookmarkedPins);
 
+  /* =======================
+     Transform data for Grid components
+  ======================= */
+  const transformPinsForGrid = (pinsData: any[]) => {
+    return pinsData.map(pin => ({
+      ...pin,
+      image: placeholder_1,
+      title: pin.name || pin.title,
+      location: pin.latitude || pin.location
+    }));
+  };
+
+  const transformCollectionsForGrid = (collectionsData: any[]) => {
+    return collectionsData.map(col => ({
+      ...col,
+      image: placeholder_1,
+      title: col.name || col.title,
+      pinsCount: col.pinsCount || 0
+    }));
+  };
 
   /* =======================
      Render
@@ -372,7 +394,6 @@ const handleGetBookmarks = async () => {
           </div>
         </section>
 
-
         {/* Tabs */}
         <div className={styles.tabs}>
           {(['collections', 'pins', 'likes', 'bookmarks'] as TabType[]).map(tab => (
@@ -396,80 +417,93 @@ const handleGetBookmarks = async () => {
         {loading && <p className={styles.loading}>Загрузка…</p>}
         {error && <p className={styles.error}>{error}</p>}
 
-        <div className={styles.tabContent}>
-          {activeTab === 'collections' && (
-            <>
-              <button
-                onClick={handleCreateCollection}
-                className={styles.newBoardBtn}
-              >
-                Создать подборку
-              </button>
+        {/* ...остальной код компонента до блока tabContent */}
 
-              <CollectionGrid
-                collections={collections.map(col => ({
-                  ...col,
-                  authorAvatar: col.authorAvatar || placeholder_1,
-                }))}
-                onCollectionClick={handleCollectionClick}
-              />
-            </>
-          )}
+<div className={styles.tabContent}>
+  {activeTab === 'collections' && (
+    <>
+      <button
+        onClick={handleCreateCollection}
+        className={styles.newBoardBtn}
+      >
+        Создать подборку
+      </button>
 
-          {activeTab === 'pins' && (
-            <>
-              <button
-                onClick={handleCreatePin}
-                className={styles.newPinBtn}
-              >
-                Создать пин
-              </button>
+      <CollectionGrid
+        collections={transformCollectionsForGrid(collections)}
+        onCollectionClick={handleCollectionClick}
+      />
+    </>
+  )}
 
-              <PinGrid pins={pins} onPinClick={handlePinClick} />
-            </>
-          )}
+  {activeTab === 'pins' && (
+    <>
+      <button
+        onClick={handleCreatePin}
+        className={styles.newPinBtn}
+      >
+        Создать пин
+      </button>
 
-          {activeTab === 'likes' && (
-            <div className={styles.likesFeed}>
-              {likesFeed.map((block, idx) => (
-                <div key={idx} className={styles.feedBlock}>
-                  {block.type === 'collections' ? (
-                    <CollectionGrid
-                      collections={block.items}
-                      onCollectionClick={handleCollectionClick}
-                    />
-                  ) : (
-                    <PinGrid
-                      pins={block.items}
-                      onPinClick={handlePinClick}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+      <PinGrid 
+        pins={transformPinsForGrid(pins)} 
+        onPinClick={handlePinClick} 
+      />
+    </>
+  )}
 
-          {activeTab === 'bookmarks' && (
-            <div className={styles.likesFeed}>
-              {bookmarksFeed.map((block, idx) => (
-                <div key={idx} className={styles.feedBlock}>
-                  {block.type === 'collections' ? (
-                    <CollectionGrid
-                      collections={block.items}
-                      onCollectionClick={handleCollectionClick}
-                    />
-                  ) : (
-                    <PinGrid
-                      pins={block.items}
-                      onPinClick={handlePinClick}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+  {activeTab === 'likes' && (
+    <div className={styles.likesFeed}>
+      <p style={{ textAlign: 'center', margin: '20px 0', color: '#888' }}>
+        Тут будут ваши лайки
+      </p>
+
+      {/*
+      {likesFeed.map((block, idx) => (
+        <div key={idx} className={styles.feedBlock}>
+          {block.type === 'collections' ? (
+            <CollectionGrid
+              collections={block.items}
+              onCollectionClick={handleCollectionClick}
+            />
+          ) : (
+            <PinGrid
+              pins={block.items}
+              onPinClick={handlePinClick}
+            />
           )}
         </div>
+      ))}
+      */}
+    </div>
+  )}
 
+  {activeTab === 'bookmarks' && (
+    <div className={styles.likesFeed}>
+      <p style={{ textAlign: 'center', margin: '20px 0', color: '#888' }}>
+        Тут будут ваши закладки
+      </p>
+
+      {/*
+      {bookmarksFeed.map((block, idx) => (
+        <div key={idx} className={styles.feedBlock}>
+          {block.type === 'collections' ? (
+            <CollectionGrid
+              collections={block.items}
+              onCollectionClick={handleCollectionClick}
+            />
+          ) : (
+            <PinGrid
+              pins={block.items}
+              onPinClick={handlePinClick}
+            />
+          )}
+        </div>
+      ))}
+      */}
+    </div>
+  )}
+</div>
 
 
         {/* Modals */}

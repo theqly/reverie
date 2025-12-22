@@ -8,10 +8,14 @@ import { createPinWithImages, type CreatePinPayload } from "../services/pinServi
 import { useLocation } from 'react-router-dom';
 import MapModal from './MapModal';
 import { validateImageFile } from '../services/imageService';
+import { useToast } from './ToastProvider';
+
 
 const CreatePinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
+
 
   // Состояния для полей формы
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
@@ -139,6 +143,8 @@ const handleBack = () => {
       });
 
       if (result.pin) {
+        showToast("Успешное сохранение!");
+
         console.log('Пин создан:', result.pin);
         console.log('Загружено изображений:', result.uploadedImages.length);
         
@@ -147,7 +153,7 @@ const handleBack = () => {
         }
         
         // Переходим на страницу созданного пина или обратно
-        navigate(`/pin/${result.pin.id}`);
+        navigate(`/feed`);
       } else {
         setUploadError('Не удалось создать пин');
       }
