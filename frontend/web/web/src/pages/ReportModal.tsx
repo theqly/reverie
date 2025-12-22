@@ -9,12 +9,15 @@ const REASONS = [
   "Other",
 ];
 
-const ReportModal = ({ isOpen, onClose, onSubmit }) => {
-  if (!isOpen) return null;
+interface ReportModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: { reason: string; text: string }) => void;
+}
 
-  // ШАГИ: 1 — выбор причины, 2 — ввод текста
+const ReportModal = ({ isOpen, onClose, onSubmit }: ReportModalProps) => {
   const [step, setStep] = useState(1);
-  const [reason, setReason] = useState(null);
+  const [reason, setReason] = useState<string | null>(null);
   const [text, setText] = useState("");
 
   const textLimit = 250;
@@ -26,7 +29,7 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
     if (!isTextValid) return;
 
     onSubmit({
-      reason,
+      reason: reason || '',
       text,
     });
 
@@ -40,6 +43,8 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
       setText("");
     }, 300);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className={styles.overlay} onClick={onClose}>

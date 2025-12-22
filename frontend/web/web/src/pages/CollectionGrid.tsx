@@ -1,8 +1,20 @@
-import React from 'react';
 import CollectionGridItem from './CollectionGridItem';
-import styles from './CollectionGridItem.module.css'; // или используй стили из Feed.module.css
+import styles from './CollectionGridItem.module.css';
 
-const CollectionGrid = ({ collections, onCollectionClick }) => {
+interface Collection {
+  id: string | number;
+  image?: string;
+  title: string;
+  location?: string;
+  pinsCount?: number;
+}
+
+interface CollectionGridProps {
+  collections: Collection[];
+  onCollectionClick: (id: string | number) => void;
+}
+
+const CollectionGrid = ({ collections, onCollectionClick }: CollectionGridProps) => {
   return (
     <div className={styles.collectionsGrid}>
       {collections.map(collection => (

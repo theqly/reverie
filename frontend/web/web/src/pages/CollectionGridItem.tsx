@@ -1,8 +1,22 @@
-import React from 'react';
 import placeholder_1 from '../assets/placeholder1.jpg';
 import styles from './CollectionGridItem.module.css';
 
-const CollectionGridItem = ({ collection, onClick }) => {
+interface Collection {
+  id: string | number;
+  image?: string;
+  title: string;
+  location?: string;
+  pinsCount?: number;
+  author?: string;
+  authorAvatar?: string;
+}
+
+interface CollectionGridItemProps {
+  collection: Collection;
+  onClick?: (id: string | number) => void;
+}
+
+const CollectionGridItem = ({ collection, onClick }: CollectionGridItemProps) => {
   const {
     id,
     image,

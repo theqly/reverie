@@ -1,4 +1,4 @@
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "./Header";
 import styles from "./PinViewPage.module.css";
@@ -6,6 +6,8 @@ import placeholder_1 from "../assets/placeholder1.jpg";
 import CommentSection from "./CommentSection";
 import ReactionBlock from "./ReactionBlock";
 import PinGrid from "./PinGrid";
+import MapViewer from "./MapViewer";
+import { getCityFromCoordinates } from "../services/geoService";
 
 // моки
 import { getCollectionById, getCollectionPins } from "../utils/mockData";
@@ -17,14 +19,16 @@ import { getPinById as getBoardById } from "../services/collectionsService";
 import { countReactionsToBoard, reactToBoard } from "../services/reactionsService";
 import { isBoardLiked, isBoardBookmarked } from "../services/collectionsService";
 import { toggleBookmarkToBoard } from "../services/bookmarksService";
+import { getCommentsByBoard, addCommentToBoard } from "../services/commentService";
+import { useCurrentUserId } from "../context/AuthContext";
 
 const FALLBACK_LIKES = 0;
 const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
-const TEMP_USER_ID = "TEMP_USER_ID";
 
 const CollectionViewPage = () => {
   const navigate = useNavigate();
   const { collectionId } = useParams();
+  const currentUserId = useCurrentUserId();
 
   const [collection, setCollection] = useState<any>(null);
   const [collectionPins, setCollectionPins] = useState<any[]>([]);
@@ -34,6 +38,10 @@ const CollectionViewPage = () => {
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+
+  // комментарии
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
 
   /* ------------------ загрузка коллекции ------------------ */
   useEffect(() => {
@@ -51,55 +59,60 @@ const CollectionViewPage = () => {
         const board = await getBoardById(collectionId);
 
         if (board) {
-          setCollection({
-            ...board,
-            image: placeholder_1 // заглушка для картинки самой подборки
+          setCollection(board);
+
+          // Трансформируем пины для PinGridItem - СНАЧАЛА без локаций (мгновенно)
+          const rawPins = Array.isArray(board.pins) ? board.pins : [];
+          const initialPins = rawPins.map((pin: any) => {
+            // Сортируем изображения по orderNumber чтобы взять первое
+            const sortedImages = [...(pin.images || [])].sort(
+              (a: any, b: any) => (a.orderNumber ?? 0) - (b.orderNumber ?? 0)
+            );
+            return {
+              id: pin.id,
+              title: pin.name,
+              image: sortedImages[0]?.imageUrl || placeholder_1,
+              location: '',
+              author: pin.owner?.nickname || 'Unknown',
+              authorAvatar: pin.owner?.profilePicture || placeholder_1,
+              latitude: pin.latitude,
+              longitude: pin.longitude,
+              name: pin.name,
+            };
           });
-          setCollectionPins(
-            Array.isArray(board.pins)
-              ? board.pins.map(pin => ({
-                  ...pin,
-                  image: placeholder_1,
-                  author: "jane_anderson",
-                  authorAvatar: placeholder_1,
-                  description: pin.description || "",
-                }))
-              : []
-          );
+
+          setCollectionPins(initialPins);
           setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
+          setLoading(false);
+
+          // Затем фоном подгружаем локации
+          for (const pin of initialPins) {
+            if (pin.latitude && pin.longitude) {
+              getCityFromCoordinates(pin.latitude, pin.longitude).then(location => {
+                setCollectionPins(prev => prev.map(p =>
+                  p.id === pin.id ? { ...p, location } : p
+                ));
+              });
+            }
+          }
           return;
         }
 
         const mockCollection = getCollectionById(collectionId);
         if (mockCollection) {
-          setCollection({ ...mockCollection, image: placeholder_1 });
-          setCollectionPins(
-            getCollectionPins(collectionId)?.map(pin => ({
-              ...pin,
-              image: placeholder_1,
-              author: "jane_anderson",
-              authorAvatar: placeholder_1,
-              description: pin.description || "",
-            })) || []
-          );
+          setCollection(mockCollection);
+          setCollectionPins(getCollectionPins(collectionId) || []);
           setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
           setError(`Коллекция с ID ${collectionId} не найдена`);
         }
       } catch (e) {
         console.error("Ошибка загрузки коллекции:", e);
+
         const mockCollection = getCollectionById(collectionId);
         if (mockCollection) {
-          setCollection({ ...mockCollection, image: placeholder_1 });
-          setCollectionPins(
-            getCollectionPins(collectionId)?.map(pin => ({
-              ...pin,
-              image: placeholder_1,
-              author: "jane_anderson",
-              authorAvatar: placeholder_1,
-              description: pin.description || "",
-            })) || []
-          );
+          setCollection(mockCollection);
+          setCollectionPins(getCollectionPins(collectionId) || []);
           setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
           setError("Не удалось загрузить коллекцию");
@@ -117,45 +130,112 @@ const CollectionViewPage = () => {
     if (!collectionId) return;
 
     const loadReactions = async () => {
+      // лайк
       try {
         const likedStatus = await isBoardLiked(collectionId);
         setLiked(likedStatus);
       } catch {}
 
+      // букмарка
       try {
         const bookmarkedStatus = await isBoardBookmarked(collectionId);
         setBookmarked(bookmarkedStatus);
       } catch {}
 
+      // количество лайков — переопределяем после загрузки коллекции
       try {
         const count = await countReactionsToBoard({ boardId: collectionId });
+        // Универсальная обработка: поддерживаем число, строку, объект { count }
         let actualCount: number | null = null;
 
-        if (typeof count === "number") actualCount = count;
-        else if (typeof count === "string") actualCount = Number(count);
-        else if (count && typeof count === "object" && "count" in count) {
+        if (typeof count === "number") {
+          actualCount = count;
+        } else if (typeof count === "string") {
+          const parsed = Number(count);
+          if (!isNaN(parsed)) actualCount = parsed;
+        } else if (count && typeof count === "object" && "count" in count) {
           const nested = (count as any).count;
-          if (typeof nested === "number") actualCount = nested;
-          else if (typeof nested === "string") actualCount = Number(nested);
+          if (typeof nested === "number") {
+            actualCount = nested;
+          } else if (typeof nested === "string") {
+            const parsed = Number(nested);
+            if (!isNaN(parsed)) actualCount = parsed;
+          }
         }
 
-        if (actualCount !== null && actualCount >= 0) setLikesCount(actualCount);
+        if (actualCount !== null && actualCount >= 0) {
+          setLikesCount(actualCount);
+        }
       } catch (err) {
         console.warn("Не удалось загрузить количество лайков:", err);
+        // оставляем текущее значение (из коллекции или fallback)
       }
     };
 
     loadReactions();
   }, [collectionId]);
 
+  /* ------------------ загрузка комментариев ------------------ */
+  useEffect(() => {
+    if (!collectionId) return;
+
+    const loadComments = async () => {
+      setCommentsLoading(true);
+      try {
+        const backendComments = await getCommentsByBoard({ boardId: collectionId, limit: 50 });
+        if (backendComments && backendComments.length > 0) {
+          const formattedComments = backendComments.map((c: any) => ({
+            id: c.id,
+            authorName: c.owner?.nickname || 'Unknown',
+            authorAvatar: c.owner?.profilePicture || placeholder_1,
+            commentText: c.message,
+            commentDate: c.createdAt ? new Date(c.createdAt).toLocaleDateString('ru-RU') : '',
+          }));
+          setComments(formattedComments);
+        }
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
+
+    loadComments();
+  }, [collectionId]);
+
+  /* ------------------ handlers ------------------ */
+  const handleAddComment = async (message: string) => {
+    if (!collectionId) return;
+    try {
+      const newComment = await addCommentToBoard({
+        boardId: collectionId,
+        ownerId: currentUserId,
+        message,
+      });
+      if (newComment) {
+        setComments(prev => [{
+          id: newComment.id,
+          authorName: newComment.owner?.nickname || 'You',
+          authorAvatar: newComment.owner?.profilePicture || placeholder_1,
+          commentText: newComment.message,
+          commentDate: 'Только что',
+        }, ...prev]);
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+      throw err;
+    }
+  };
+
   const handleLike = async (nextLiked: boolean) => {
     setLiked(nextLiked);
-    setLikesCount(prev => (nextLiked ? prev + 1 : Math.max(prev - 0, 0)));
+    setLikesCount(prev => (nextLiked ? prev + 1 : Math.max(prev - 1, 0)));
+
     try {
       await reactToBoard({
         boardId: collectionId!,
         reactionId: LIKE_REACTION_ID,
-        userId: TEMP_USER_ID,
+        userId: currentUserId,
       });
     } catch (error) {
       console.error("Failed to toggle board reaction", error);
@@ -165,14 +245,17 @@ const CollectionViewPage = () => {
   const handleBookmark = async (nextBookmarked: boolean) => {
     setBookmarked(nextBookmarked);
     try {
-      await toggleBookmarkToBoard(collectionId!, TEMP_USER_ID);
+      await toggleBookmarkToBoard(collectionId!, currentUserId);
     } catch (error) {
       console.error("Failed to toggle board bookmark", error);
     }
   };
 
-  const handleBack = () => navigate(-1);
+  const handleBack = () => {
+    navigate(-1);
+  };
 
+  /* ------------------ loading / error ------------------ */
   if (loading) {
     return (
       <div className={styles.pageWrapper}>
@@ -197,14 +280,19 @@ const CollectionViewPage = () => {
     );
   }
 
-  const comments = [
+  /* ------------------ render ------------------ */
+  // Моковые комментарии как fallback
+  const displayComments = comments.length === 0 ? [
     {
       authorName: "jane_anderson",
       authorAvatar: placeholder_1,
       commentText: "Отличная подборка! Спасибо за рекомендации.",
       commentDate: "2 часа назад",
     },
-  ];
+  ] : comments;
+
+  // Пины с координатами для карты
+  const pinsWithCoords = collectionPins.filter(p => p.latitude && p.longitude);
 
   return (
     <div className={styles.pageWrapper}>
@@ -213,7 +301,9 @@ const CollectionViewPage = () => {
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
-              <h2>Подборка от <Link to={`/profile`} className={styles.authorA}>@jane_anderson</Link></h2>
+            <h2>
+              Подборка: <strong>{collection.name}</strong>
+            </h2>
             <button
               className={styles.settingsBtn}
               onClick={() => navigate(`/collection/edit/${collectionId}`)}
@@ -221,10 +311,9 @@ const CollectionViewPage = () => {
           </div>
 
           <div className={styles.pinCard}>
-            <img src={collection.image || placeholder_1} alt={collection.name} className={styles.collectionImage} />
             <h3 className={styles.pinTitle}>{collection.name}</h3>
             <p className={styles.pinDescription}>
-              {collection.description || ""}
+              {collection.description || "Без описания"}
             </p>
 
             <ReactionBlock
@@ -247,8 +336,25 @@ const CollectionViewPage = () => {
             />
           </div>
 
-          <CommentSection comments={comments} title="Комментарии" />
+          <CommentSection
+            comments={displayComments}
+            title="Комментарии"
+            loading={commentsLoading}
+            onAddComment={handleAddComment}
+          />
         </div>
+
+        {/* Карта справа — как у пина */}
+        {pinsWithCoords.length > 0 && (
+          <div className={styles.mapWrapperFixed}>
+            <MapViewer
+              pins={pinsWithCoords}
+              onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
+              width="100%"
+              height="100%"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

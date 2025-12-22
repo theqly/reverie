@@ -35,6 +35,7 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/likes/feed" element={<LikedPins />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:nickTag" element={<Profile />} />
         </Routes>
       </ToastProvider>
     </Router>

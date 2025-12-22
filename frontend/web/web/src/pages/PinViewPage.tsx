@@ -13,22 +13,34 @@ import { getPinById as getBackendPinById } from "../services/pinService";
 import { countReactionsToPin, reactToPin } from "../services/reactionsService";
 import { toggleBookmarkToPin } from "../services/bookmarksService";
 import { isPinLiked, isPinBookmarked } from "../services/pinService";
+import { getCommentsByPin, addCommentToPin } from "../services/commentService";
+import { useCurrentUserId } from "../context/AuthContext";
+import { getCityFromCoordinates } from "../services/geoService";
 
 const FALLBACK_LIKES = 226;
-const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 const PinViewPage = () => {
   const navigate = useNavigate();
   const { pinId } = useParams();
+  const currentUserId = useCurrentUserId();
 
   const [pin, setPin] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // реакции
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
+  // комментарии
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+
+  // локация
+  const [location, setLocation] = useState<string>('');
+
+  /* ------------------ загрузка пина ------------------ */
   useEffect(() => {
     if (!pinId) return;
 
@@ -42,6 +54,13 @@ const PinViewPage = () => {
         if (backendPin) {
           setPin(backendPin);
           setLikesCount(backendPin.rating ?? backendPin.likes ?? FALLBACK_LIKES);
+
+          // Получаем город из координат
+          if (backendPin.latitude && backendPin.longitude) {
+            getCityFromCoordinates(backendPin.latitude, backendPin.longitude)
+              .then(city => setLocation(city))
+              .catch(() => setLocation(''));
+          }
           return;
         }
 
@@ -68,6 +87,7 @@ const PinViewPage = () => {
     loadPin();
   }, [pinId]);
 
+  /* ------------------ загрузка реакций ------------------ */
   useEffect(() => {
     if (!pinId) return;
 
@@ -93,21 +113,52 @@ const PinViewPage = () => {
     loadReactions();
   }, [pinId]);
 
+  /* ------------------ загрузка комментариев ------------------ */
+  useEffect(() => {
+    if (!pinId) return;
+
+    const loadComments = async () => {
+      setCommentsLoading(true);
+      try {
+        const backendComments = await getCommentsByPin({ pinId, limit: 50 });
+        if (backendComments && backendComments.length > 0) {
+          // Преобразуем формат комментариев
+          const formattedComments = backendComments.map((c: any) => ({
+            id: c.id,
+            authorName: c.owner?.nickname || 'Unknown',
+            authorAvatar: c.owner?.profilePicture || placeholder_1,
+            commentText: c.message,
+            commentDate: c.createdAt ? new Date(c.createdAt).toLocaleDateString('ru-RU') : '',
+          }));
+          setComments(formattedComments);
+        }
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
+
+    loadComments();
+  }, [pinId]);
+
+  /* ------------------ handlers ------------------ */
   const handleLike = async (nextLiked: boolean) => {
-    setLiked(nextLiked);
+    setLiked(nextLiked); // optimistic UI
     setLikesCount(prev => nextLiked ? prev + 1 : Math.max(prev - 1, 0));
 
     try {
-      await reactToPin({ pinId, userId: TEMP_USER_ID });
+      // togge на сервере: если есть лайк — удалит, если нет — добавит
+      await reactToPin({ pinId, userId: currentUserId });
     } catch (error) {
       console.error("Failed to toggle pin reaction", error);
     }
   };
 
   const handleBookmark = async (nextBookmarked: boolean) => {
-    setBookmarked(nextBookmarked);
+    setBookmarked(nextBookmarked); // optimistic UI
     try {
-      await toggleBookmarkToPin(pinId!, TEMP_USER_ID);
+      await toggleBookmarkToPin(pinId!, currentUserId); // toggle на сервере
     } catch (error) {
       console.error("Failed to toggle bookmark", error);
     }
@@ -115,6 +166,31 @@ const PinViewPage = () => {
 
   const handleBack = () => navigate(-1);
 
+  const handleAddComment = async (message: string) => {
+    if (!pinId) return;
+    try {
+      const newComment = await addCommentToPin({
+        pinId,
+        ownerId: currentUserId,
+        message,
+      });
+      if (newComment) {
+        // Добавляем новый комментарий в начало списка
+        setComments(prev => [{
+          id: newComment.id,
+          authorName: newComment.owner?.nickname || 'You',
+          authorAvatar: newComment.owner?.profilePicture || placeholder_1,
+          commentText: newComment.message,
+          commentDate: 'Только что',
+        }, ...prev]);
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+      throw err;
+    }
+  };
+
+  /* ------------------ loading / error ------------------ */
   if (loading) return (
     <div className={styles.pageWrapper}>
       <Header />
@@ -135,14 +211,16 @@ const PinViewPage = () => {
     </div>
   );
 
-  const comments = [
+  /* ------------------ render ------------------ */
+  // Моковые комментарии как fallback
+  const fallbackComments = comments.length === 0 ? [
     {
-      authorName: "jane_anderson",
+      authorName: pin.author || "jane_anderson",
       authorAvatar: placeholder_1,
       commentText: "Отличное фото! Очень красивое место.",
       commentDate: "2 часа назад",
     },
-  ];
+  ] : comments;
 
   return (
     <div className={styles.pageWrapper}>
@@ -152,7 +230,7 @@ const PinViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Пин от <Link to="/profile" className={styles.authorA}>@jane_anderson</Link>
+              Пин от <Link to={pin.owner?.nickTag ? `/profile/${pin.owner.nickTag}` : '/profile'} className={styles.authorA}>@{pin.owner?.nickname || pin.author || 'Unknown'}</Link>
             </h2>
             <button
               className={styles.settingsBtn}
@@ -162,12 +240,10 @@ const PinViewPage = () => {
 
           <div className={styles.pinCardWrapper}>
             <div className={styles.pinCard}>
-              <img src={placeholder_1} alt={pin.name} className={styles.img1} />
-              <h3 className={styles.pinTitle}>{pin.name}</h3>
-              <p className={styles.collectionLocation}>
-                Широта: {pin.latitude}, Долгота: {pin.longitude}
-              </p>
-              <p className={styles.pinDescription}>{pin.description || ""}</p>
+              <img src={pin.images?.[0]?.imageUrl || pin.image || placeholder_1} alt={pin.name || pin.title} className={styles.img1} />
+              <h3 className={styles.pinTitle}>{pin.name || pin.title}</h3>
+              <p className={styles.collectionLocation}>{location || pin.location}</p>
+              <p className={styles.pinDescription}>{pin.description}</p>
 
               <ReactionBlock
                 initialLikes={likesCount}
@@ -178,7 +254,12 @@ const PinViewPage = () => {
               />
             </div>
 
-            <CommentSection comments={comments} title="Комментарии" />
+            <CommentSection
+              comments={fallbackComments}
+              title="Комментарии"
+              loading={commentsLoading}
+              onAddComment={handleAddComment}
+            />
           </div>
         </div>
 

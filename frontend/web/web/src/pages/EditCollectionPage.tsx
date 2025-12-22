@@ -5,22 +5,15 @@ import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header';
 import { useToast } from './ToastProvider';
 
-import { 
-  getCollectionById as getMockCollectionById, 
-  getCollectionPins 
-} from '../utils/mockData';
-
-import { 
-  updateCollection,
-  getPinById as getBackendCollectionById 
-} from "../services/collectionsService";
-
-import { UpdateBoardDocument, type UpdateBoardInput } from "@/graphql/generated/graphql.ts";
-import { AccessLevelType } from "@/graphql/generated/graphql.ts";
+import { getCollectionById as getMockCollectionById } from '../utils/mockData';
+import { updateCollection, getPinById as getBackendCollectionById } from "../services/collectionsService";
+import { type UpdateBoardInput, AccessLevelType } from "@/graphql/generated/graphql.ts";
+import { useCurrentUserId } from '../context/AuthContext';
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const currentUserId = useCurrentUserId();
   
   // Состояния для полей формы
   const [collectionName, setCollectionName] = useState('');
@@ -57,7 +50,6 @@ const EditCollectionPage = () => {
         }
 
         // 2. Фолбек на моки
-        console.log("Используем моки для загрузки данных  коллекции");
         const mockCollection = getMockCollectionById(parseInt(id));
 
         if (mockCollection) {
@@ -73,7 +65,6 @@ const EditCollectionPage = () => {
         console.error("Ошибка при загрузке коллекции:", e);
 
         // 3. Фолбек на моки при ошибке
-        console.log("Ошибка при загрузке, используем моки");
         const mockCollection = getMockCollectionById(parseInt(id));
 
         if (mockCollection) {
@@ -96,29 +87,30 @@ const EditCollectionPage = () => {
   const handleSaveCollection = async () => {
     if (!id) {
       console.error("ID коллекции не указан");
+      showToast("ID коллекции не указан", true);
+      return;
+    }
+
+    if (!currentUserId) {
+      console.error("Пользователь не авторизован");
+      showToast("Необходимо авторизоваться", true);
       return;
     }
 
     const payload: UpdateBoardInput = {
-      userId: originalCollection?.ownerId ?? "",
-      name: collectionName,                     
-      description: collectionInfo,              
+      userId: currentUserId,
+      name: collectionName,
+      description: collectionInfo,
       accessLevel: AccessLevelType.Public,
     };
 
     try {
-      const updatedBoard = await updateCollection(id, payload);
-
-      if (updatedBoard) {
-        console.log("Коллекция успешно обновлена:", updatedBoard);
-        handleBack();
-        showToast("Успешное сохранение!");
-      } else {
-        console.warn("Коллекция не была обновлена. Вернулась null");
-        showToast("Ошибка при сохранении", true);
-      }
-    } catch (error: any) {
-      console.error("Ошибка при обновлении коллекции:", error.message);
+      await updateCollection(id, payload);
+      // Если мутация не выбросила ошибку - значит успех
+      showToast("Успешное сохранение!");
+      handleBack();
+    } catch (error) {
+      console.error("Ошибка при обновлении коллекции:", error);
       showToast("Ошибка при сохранении", true);
     }
   };

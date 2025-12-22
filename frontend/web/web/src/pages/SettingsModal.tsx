@@ -1,6 +1,11 @@
 import styles from "./SettingsModal.module.css";
 
-const SettingsModal = ({ isOpen, onClose }) => {
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   if (!isOpen) return null;
 
   return (
