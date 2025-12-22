@@ -154,6 +154,9 @@ const PinViewPage = () => {
             <h2>
               Пин от <Link to="/profile" className={styles.authorA}>@jane_anderson</Link>
             </h2>
+            
+            <button className={styles.settingsBtn} onClick={() => navigate(`/pin/edit/${pinId}`)}></button>
+
             <button
               className={styles.settingsBtn}
               onClick={() => navigate(`/pin/edit/${pinId}`)}
