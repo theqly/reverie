@@ -8,6 +8,8 @@ import CollectionGrid from './CollectionGrid';
 
 import { mockPins, mockCollections } from '../utils/mockData';
 import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
+import { getCityFromCoordinates } from '../services/geoService';
+
 import placeholder_1 from '../assets/placeholder1.jpg';
 
 const Feed = () => {
@@ -21,6 +23,10 @@ const Feed = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* =======================
+     Navigation
+  ======================= */
 
   const handlePlusClick = () => {
     if (activeTab === 'pins') {
@@ -43,6 +49,10 @@ const Feed = () => {
     navigate(`/collection/${collectionId}`);
   };
 
+  /* =======================
+     Data loading
+  ======================= */
+
   const handleGetPins = async () => {
     setLoading(true);
     setError(null);
@@ -55,12 +65,33 @@ const Feed = () => {
         offset: 0,
       });
 
-      if (response && response.length > 0) {
-        setPins(response);
-      } else {
-        console.log("Использовали моки");
-        setPins(mockPins);
-      }
+      const sourcePins =
+        response && response.length > 0 ? response : mockPins;
+
+      // 🔥 здесь получаем город по координатам
+      const pinsWithLocation = await Promise.all(
+        sourcePins.map(async (pin) => {
+          let location = '';
+
+          if (pin.latitude && pin.longitude) {
+            try {
+              location = await getCityFromCoordinates(
+                pin.latitude,
+                pin.longitude
+              );
+            } catch (e) {
+              console.warn('Не удалось определить город', e);
+            }
+          }
+
+          return {
+            ...pin,
+            location, // ← готовая строка города
+          };
+        })
+      );
+
+      setPins(pinsWithLocation);
     } catch (err) {
       console.error('[Feed] getPins error:', err);
       setPins(mockPins);
@@ -84,7 +115,6 @@ const Feed = () => {
       if (response && response.length > 0) {
         setCollections(response);
       } else {
-        console.log("Использовали моки");
         setCollections(mockCollections);
       }
     } catch (err) {
@@ -96,6 +126,10 @@ const Feed = () => {
     }
   };
 
+  /* =======================
+     Effects
+  ======================= */
+
   useEffect(() => {
     if (activeTab === 'pins') {
       handleGetPins();
@@ -106,17 +140,25 @@ const Feed = () => {
     }
   }, [activeTab]);
 
+  /* =======================
+     Filters
+  ======================= */
+
   const filteredPins = onlySubscriptions
-    ? pins.filter(pin =>
+    ? pins.filter((pin) =>
         ['jane_anderson', 'alex_smith'].includes(pin.author)
       )
     : pins;
 
   const filteredCollections = onlySubscriptions
-    ? collections.filter(col =>
+    ? collections.filter((col) =>
         ['jane_anderson', 'hana_tanaka'].includes(col.author)
       )
     : collections;
+
+  /* =======================
+     Render
+  ======================= */
 
   return (
     <div>
@@ -174,12 +216,17 @@ const Feed = () => {
               <input
                 type="checkbox"
                 checked={onlySubscriptions}
-                onChange={e => setOnlySubscriptions(e.target.checked)}
+                onChange={(e) =>
+                  setOnlySubscriptions(e.target.checked)
+                }
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 {onlySubscriptions && (
-                  <svg className={styles.checkIcon} viewBox="0 0 24 24">
+                  <svg
+                    className={styles.checkIcon}
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                   </svg>
                 )}
@@ -191,35 +238,38 @@ const Feed = () => {
           </div>
         </section>
 
-        {loading && <p className={styles.loading}>Загрузка…</p>}
-        {error && <p className={styles.error}>{error}</p>}
+        {loading && (
+          <p className={styles.loading}>Загрузка…</p>
+        )}
+        {error && (
+          <p className={styles.error}>{error}</p>
+        )}
 
         {activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
             <PinGrid
-              pins={filteredPins.map(pin => ({
+              pins={filteredPins.map((pin) => ({
                 ...pin,
-                image: placeholder_1,  // поменяли imageUrl на image
-                title: pin.name,        // название сразу в title
-                location: pin.latitude,
+                image: placeholder_1,
+                title: pin.name,
+                location: pin.location, // ✅ город
               }))}
               onPinClick={handlePinClick}
             />
-
           </div>
         )}
 
         {activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
-          <CollectionGrid
-            collections={filteredCollections.map(col => ({
-              ...col,
-              image: placeholder_1, // вместо imageUrl
-              title: col.name,       // название сразу в title
-              pinsCount: 0
-            }))}
-            onCollectionClick={handleCollectionClick}
-          />
+            <CollectionGrid
+              collections={filteredCollections.map((col) => ({
+                ...col,
+                image: placeholder_1,
+                title: col.name,
+                pinsCount: 0,
+              }))}
+              onCollectionClick={handleCollectionClick}
+            />
           </div>
         )}
       </main>

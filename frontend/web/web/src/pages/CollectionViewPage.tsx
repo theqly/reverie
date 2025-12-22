@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Header from "./Header";
 import styles from "./PinViewPage.module.css";
 import placeholder_1 from "../assets/placeholder1.jpg";
-import placeholder from "../assets/placeholder3.jpg";
+import placeholder from "../assets/placeholder1.jpg";
 import CommentSection from "./CommentSection";
 import ReactionBlock from "./ReactionBlock";
 import PinGrid from "./PinGrid";
