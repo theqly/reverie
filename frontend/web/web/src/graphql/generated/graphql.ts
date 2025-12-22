@@ -48,6 +48,7 @@ export type Board = {
   __typename?: 'Board';
   accessLevel: AccessLevelType;
   authorId: Scalars['UUID']['output'];
+  boardImageURL?: Maybe<Scalars['String']['output']>;
   bookmarked?: Maybe<Scalars['Boolean']['output']>;
   createdAt: Scalars['Time']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -80,6 +81,7 @@ export type CommentToPin = {
 
 export type CreateBoardInput = {
   accessLevel: AccessLevelType;
+  boardImageURL?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   ownerId: Scalars['UUID']['input'];
@@ -624,6 +626,7 @@ export type SettingsStatuses = {
 
 export type UpdateBoardInput = {
   accessLevel?: InputMaybe<AccessLevelType>;
+  boardImageURL?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['UUID']['input'];
@@ -776,7 +779,7 @@ export type CreateBoardMutationVariables = Exact<{
 }>;
 
 
-export type CreateBoardMutation = { __typename?: 'Mutation', createBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } };
+export type CreateBoardMutation = { __typename?: 'Mutation', createBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, boardImageURL?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } };
 
 export type GetPinByIdQueryVariables = Exact<{
   id: Scalars['UUID']['input'];
@@ -790,7 +793,7 @@ export type GetBoardByIdQueryVariables = Exact<{
 }>;
 
 
-export type GetBoardByIdQuery = { __typename?: 'Query', board?: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } | null };
+export type GetBoardByIdQuery = { __typename?: 'Query', board?: { __typename?: 'Board', id: any, name: string, boardImageURL?: string | null, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } | null };
 
 export type CreatePinMutationVariables = Exact<{
   input: CreatePinInput;
@@ -1741,6 +1744,7 @@ export const CreateBoardDocument = gql`
     id
     name
     description
+    boardImageURL
     accessLevel
     ownerId
     ownerType
@@ -1839,6 +1843,7 @@ export const GetBoardByIdDocument = gql`
   board(id: $id) {
     id
     name
+    boardImageURL
     description
     accessLevel
     ownerId

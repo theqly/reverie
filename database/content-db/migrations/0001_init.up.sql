@@ -12,6 +12,7 @@ CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) NOT NULL,
     description TEXT,
+     board_image_url TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
     author_id UUID NOT NULL,

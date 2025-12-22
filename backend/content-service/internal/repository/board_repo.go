@@ -201,6 +201,7 @@ func (r *BoardRepository) Update(ctx context.Context, updated models.Board) erro
 		Where("id = ?", updated.ID).
 		Updates(map[string]interface{}{
 			"name":            updated.Name,
+			"board_image_url": updated.BoardImageURL,
 			"access_level_id": updated.AccessLevelID,
 		}).Error
 

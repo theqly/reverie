@@ -91,6 +91,7 @@ export async function createCollection(
           input: {
             name: payload.name,
             description: payload.info || undefined,
+            boardImageURL: coverImageUrl,
             accessLevel: AccessLevelType.Group,
             ownerId: newGroupId,
             ownerType: OwnerType.Group,
@@ -118,6 +119,7 @@ export async function createCollection(
             name: payload.name,
             description: payload.info || undefined,
             accessLevel: AccessLevelType.Public,
+            boardImageURL: coverImageUrl, // ← ДОБАВЬ ЭТУ СТРОКУ
             ownerId: payload.collaborators[0],
             ownerType: OwnerType.User,
           } as CreateBoardInput
