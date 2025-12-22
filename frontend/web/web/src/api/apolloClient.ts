@@ -1,6 +1,4 @@
-// const GRAPHQL_URL = 'http://localhost:4000/graphql';
-const GRAPHQL_URL = '/api';   // TODO: убрать, когда 07-12-2025 frontend-main вольют в main, где будет фикс проблемы, для которой сейчас этот костыль
-
+const GRAPHQL_URL = import.meta.env.VITE_GRAPHQL_URL || '/api';
 
 import {
   ApolloClient,
@@ -11,6 +9,7 @@ import {
 } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
+import { getToken, login } from '../services/authService';
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_URL,
@@ -25,7 +24,8 @@ const httpLink = new HttpLink({
 
 // Добавляет токен авторизации к запросу
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem('authToken');
+  // Используем токен из Keycloak
+  const token = getToken();
 
   return {
     headers: {
@@ -35,42 +35,30 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors) {
-    graphQLErrors.forEach(({ message, locations, path, extensions }) => {
-      console.error(
-        `[GraphQL error]: Message: ${message}, Path: ${path}`,
-        { locations, extensions }
-      );
+    graphQLErrors.forEach(({ message, path, extensions }) => {
+      if (import.meta.env.DEV) {
+        console.error(`[GraphQL error]: ${message}, Path: ${path}`);
+      }
 
       if (extensions?.code === 'UNAUTHENTICATED') {
-        console.log('Пользователь не авторизован');
-        window.location.href = '/login';
+        login();
       }
     });
   }
 
-  if (networkError) {
+  if (networkError && import.meta.env.DEV) {
     console.error(`[Network error]: ${networkError.message}`);
-    console.error('Детали:', networkError);
   }
-
-  console.log('Operation:', operation.operationName);
-  console.log('Variables:', operation.variables);
 });
 
+// Logging only in development
 const loggingLink = new ApolloLink((operation, forward) => {
-  console.log(`🚀 GraphQL Request: ${operation.operationName}`);
-  console.log('Variables:', operation.variables);
-  console.log('Query:', operation.query.loc?.source.body);
-
-  const startTime = Date.now();
-
-  return forward(operation).map((response) => {
-    const elapsed = Date.now() - startTime;
-    console.log(`✅ Response for ${operation.operationName} (${elapsed}ms):`, response);
-    return response;
-  });
+  if (import.meta.env.DEV) {
+    console.log(`[GraphQL] ${operation.operationName}`);
+  }
+  return forward(operation);
 });
 
 const cache = new InMemoryCache({
