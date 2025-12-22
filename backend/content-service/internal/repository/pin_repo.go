@@ -182,7 +182,7 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, viewerI
 		tx = tx.Preload("Images")
 	}
 
-	err := tx.Order("saved_at DESC").Limit(limit).Offset(offset).Find(&pins, "owner_id = ?", userID).Error
+	err := tx.Order("pins.saved_at DESC").Limit(limit).Offset(offset).Where("pins.owner_id = ?", userID).Find(&pins).Error
 	return pins, err
 }
 
@@ -286,23 +286,46 @@ func (r *PinRepository) AddCommentToPin(ctx context.Context, pinID uuid.UUID, us
 func (r *PinRepository) DeleteCommentToPinByID(ctx context.Context, commentID uuid.UUID) error {
 	logger := zap.L().With(zap.String("repository", "DeleteCommentToPinByID"))
 
-	err := r.db.WithContext(ctx).
-		Where("id = ?", commentID).
-		Delete(&models.PinComment{}).Error
+	var pinID uuid.UUID
 
-	if err == nil && r.publisher != nil {
-		go func(commentID uuid.UUID) {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var comment struct {
+			ID    uuid.UUID `gorm:"column:id"`
+			PinID uuid.UUID `gorm:"column:pin_id"`
+		}
+
+		if err := tx.Select("id, pin_id").
+			Where("id = ?", commentID).
+			First(&comment).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&models.PinComment{}, "id = ?", commentID).Error; err != nil {
+			return err
+		}
+
+		pinID = comment.PinID
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if r.publisher != nil {
+		go func(pinID, commentID uuid.UUID) {
 			event := events1.PinCommentDeleted{
 				BaseEvent: kafka.NewBaseEvent(),
+				PinID:     pinID.String(),
 				CommentID: commentID.String(),
 			}
 			if err := r.publisher.PublishPinCommentDeleted(context.Background(), event); err != nil {
-				logger.Info("failed to publish pin.comment.deleted event: %v", zap.String("err", err.Error()))
+				logger.Error("failed to publish pin.comment.deleted event", zap.Error(err))
 			}
-		}(commentID)
+		}(pinID, commentID)
 	}
 
-	return err
+	return nil
 }
 
 func (r *PinRepository) UpdateCommentToPin(ctx context.Context, commentID uuid.UUID, newMessage string) (*models.PinComment, error) {

@@ -1,8 +1,9 @@
 import {apolloClient} from "@/api/apolloClient.ts";
 import {
+  FollowUserDocument,
   GetFollowersByIdDocument,
   GetUserByNickTagDocument,
-  GetUserIdByNickTagDocument
+  GetUserIdByNickTagDocument, UnfollowUserDocument
 } from "@/graphql/generated/graphql.ts";
 
 /**
@@ -88,4 +89,62 @@ export async function getFollowers(payload: GetFollowersPayload) {
   }
 
   return {followers: [], totalCount: 0};
+}
+
+/**
+ * Подписывает пользователя followerId на userId // TODO: или наоборот? Уточнить у команды бека надо
+ *
+ * @example
+ * const response = await followUser(
+ * "00000000-0000-0000-0000-000000000001",
+ * "00000000-0000-0000-0000-000000000003"
+ * );
+ *
+ * @return true при успешной подписке, иначе false
+ */
+export async function followUser(userId: string, followerId: string) : Promise< boolean > {
+  try {
+    const followed = await apolloClient.mutate({
+      mutation: FollowUserDocument,
+      variables: {
+        userId: userId,
+        followerId: followerId
+      }
+    });
+
+    return followed.data?.followUser || false;
+  } catch (error) {
+    console.error('Failed to follow user:', error);
+  }
+
+  return false;
+}
+
+/**
+ * Отписывает пользователя followerId от userId // TODO: или наоборот? Уточнить у команды бека надо
+ *
+ * @example
+ * const response = await unfollowUser(
+ * "00000000-0000-0000-0000-000000000001",
+ * "00000000-0000-0000-0000-000000000003"
+ * );
+ *
+ * @return true при успешной отписке, иначе false
+ */
+export async function unfollowUser(userId: string, followerId: string) : Promise< boolean  > {
+  try {
+    const unfollowed = await apolloClient.mutate({
+      mutation: UnfollowUserDocument,
+      variables: {
+        userId: userId,
+        followerId: followerId
+      }
+    });
+
+    return unfollowed.data?.followUser || false;
+  } catch (error) {
+    console.error('Failed to follow user:', error);
+  }
+
+  return false;
 }

@@ -38,8 +38,8 @@
 
 /* Карточка поверх карты */
 .pinCard {
-    min-width: 600px;       /* карточка приятной ширины */
-    max-width: 600px;
+    min-width: 400px;       /* карточка приятной ширины */
+    max-width: 90%;
     width: fit-content;
 
     padding: 22px 26px;
@@ -506,4 +506,21 @@
 
 .settingsBtn:hover{
   background-color:   rgb(242, 242, 242);
+}
+
+.pinCardWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.authorA {
+  cursor: pointer;
+  color: rgb(80, 80, 80);
+  text-decoration: none;
+}
+
+.authorA:hover {
+  color: rgb(0, 0, 0);
 }

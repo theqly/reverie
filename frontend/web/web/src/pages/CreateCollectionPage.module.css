@@ -151,7 +151,8 @@ body {
   padding-left: 45px;
 }
 
-.name_input{
+.name_input,
+#collection_name{
     margin: 0;
     padding: 5px 15px 0 15px;
     height: 40px;

@@ -1,5 +1,7 @@
 .commentWrapper {
   margin-left: 20px;
+  align-self:first baseline;
+  width: 90%;
 }
 
 .commentWrapper p {

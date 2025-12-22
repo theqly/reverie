@@ -1,155 +1,195 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Header from "./Header";
 import MapPicker from "./MapPicker";
 import styles from "./PinViewPage.module.css";
-import placeholder_1 from '../assets/placeholder1.jpg';
-import ReactionBlock from './ReactionBlock';
-import CommentSection from './CommentSection';
-import { getPinById } from '../utils/mockData'; // Импортируем функцию
-import { mockPins } from '../utils/mockData'; // Импортируем массив (опционально)
+import placeholder_1 from "../assets/placeholder1.jpg";
+import ReactionBlock from "./ReactionBlock";
+import CommentSection from "./CommentSection";
+
+// mock + backend
+import { getPinById as getMockPinById } from "../utils/mockData";
+import { getPinById as getBackendPinById } from "../services/pinService";
+import { countReactionsToPin, reactToPin } from "../services/reactionsService";
+import { toggleBookmarkToPin } from "../services/bookmarksService";
+import { isPinLiked, isPinBookmarked } from "../services/pinService";
+
+const FALLBACK_LIKES = 226;
+const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 const PinViewPage = () => {
   const navigate = useNavigate();
-  const { pinId } = useParams(); // Получаем ID из URL
-  const [pin, setPin] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { pinId } = useParams();
 
-  // Загружаем данные пина при монтировании или изменении pinId
+  const [pin, setPin] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
+  const [liked, setLiked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+
   useEffect(() => {
-    if (pinId) {
-      const foundPin = getPinById(pinId);
-      
-      if (foundPin) {
-        setPin(foundPin);
-        setError(null);
-      } else {
-        setError(`Пин с ID ${pinId} не найден`);
+    if (!pinId) return;
+
+    const loadPin = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const backendPin = await getBackendPinById(pinId);
+
+        if (backendPin) {
+          setPin(backendPin);
+          setLikesCount(backendPin.rating ?? backendPin.likes ?? FALLBACK_LIKES);
+          return;
+        }
+
+        const mockPin = getMockPinById(pinId);
+        if (mockPin) {
+          setPin(mockPin);
+          setLikesCount(mockPin.likes ?? FALLBACK_LIKES);
+        } else {
+          setError(`Пин с ID ${pinId} не найден`);
+        }
+      } catch {
+        const mockPin = getMockPinById(pinId);
+        if (mockPin) {
+          setPin(mockPin);
+          setLikesCount(mockPin.likes ?? FALLBACK_LIKES);
+        } else {
+          setError("Не удалось загрузить пин");
+        }
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
-    }
+    };
+
+    loadPin();
   }, [pinId]);
 
-  const handleBack = () => {
-    // Возвращаемся на предыдущую страницу или на фид по умолчанию
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/feed');
+  useEffect(() => {
+    if (!pinId) return;
+
+    const loadReactions = async () => {
+      try {
+        const likedStatus = await isPinLiked(pinId);
+        setLiked(likedStatus);
+      } catch {}
+
+      try {
+        const bookmarkedStatus = await isPinBookmarked(pinId);
+        setBookmarked(bookmarkedStatus);
+      } catch {}
+
+      try {
+        const reactionsCount = await countReactionsToPin({ pinId });
+        if (typeof reactionsCount === "number" && reactionsCount >= 0) {
+          setLikesCount(reactionsCount);
+        }
+      } catch {}
+    };
+
+    loadReactions();
+  }, [pinId]);
+
+  const handleLike = async (nextLiked: boolean) => {
+    setLiked(nextLiked);
+    setLikesCount(prev => nextLiked ? prev + 1 : Math.max(prev - 1, 0));
+
+    try {
+      await reactToPin({ pinId, userId: TEMP_USER_ID });
+    } catch (error) {
+      console.error("Failed to toggle pin reaction", error);
     }
   };
 
-  // Моковые комментарии (можно потом вынести в mockData)
+  const handleBookmark = async (nextBookmarked: boolean) => {
+    setBookmarked(nextBookmarked);
+    try {
+      await toggleBookmarkToPin(pinId!, TEMP_USER_ID);
+    } catch (error) {
+      console.error("Failed to toggle bookmark", error);
+    }
+  };
+
+  const handleBack = () => navigate(-1);
+
+  if (loading) return (
+    <div className={styles.pageWrapper}>
+      <Header />
+      <div className={styles.loading}>Загрузка...</div>
+    </div>
+  );
+
+  if (error || !pin) return (
+    <div className={styles.pageWrapper}>
+      <Header />
+      <div className={styles.errorContainer}>
+        <h2>Пин не найден</h2>
+        <p>{error}</p>
+        <button onClick={() => navigate("/feed")} className={styles.backButton}>
+          Вернуться на главную
+        </button>
+      </div>
+    </div>
+  );
+
   const comments = [
     {
-      authorName: pin?.author || "jane_anderson",
-      authorAvatar: pin?.authorAvatar || placeholder_1,
+      authorName: "jane_anderson",
+      authorAvatar: placeholder_1,
       commentText: "Отличное фото! Очень красивое место.",
-      commentDate: "2 часа назад"
+      commentDate: "2 часа назад",
     },
-    {
-      authorName: "alex_smith",
-      authorAvatar: placeholder_1,
-      commentText: "Был там прошлым летом, незабываемые впечатления!",
-      commentDate: "5 часов назад"
-    },
-    {
-      authorName: "travel_lover",
-      authorAvatar: placeholder_1,
-      commentText: "Спасибо за рекомендацию, обязательно посещу!",
-      commentDate: "1 день назад"
-    }
   ];
 
-  // Показываем загрузку
-  if (loading) {
-    return (
-      <div className={styles.pageWrapper}>
-        <Header />
-        <div className={styles.loading}>Загрузка...</div>
-      </div>
-    );
-  }
-
-  // Показываем ошибку
-  if (error) {
-    return (
-      <div className={styles.pageWrapper}>
-        <Header />
-        <div className={styles.errorContainer}>
-          <h2>Ошибка</h2>
-          <p>{error}</p>
-          <button onClick={() => navigate('/feed')} className={styles.backButton}>
-            Вернуться на главную
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Если пин не найден (защита на случай undefined)
-  if (!pin) {
-    return (
-      <div className={styles.pageWrapper}>
-        <Header />
-        <div className={styles.errorContainer}>
-          <h2>Пин не найден</h2>
-          <button onClick={() => navigate('/feed')} className={styles.backButton}>
-            Вернуться на главную
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Основной рендер с данными пина
   return (
     <div className={styles.pageWrapper}>
       <Header />
-
       <div className={styles.contentWrapper}>
-        {/* Левая колонка — скроллимый контент */}
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
-            <button onClick={handleBack} className={styles.back_btn}></button>
-            <h2>Пин</h2>
-            <button className={styles.settingsBtn}></button>
-          </div>
-
-          <div className={styles.pinCard}>
-            <img src={pin.image} alt={pin.title} className={styles.img1} />
-            <h3 className={styles.pinTitle}>{pin.title}</h3>
-            <p className={styles.collectionLocation}>{pin.location}</p>
-            <p className={styles.pinDescription}>{pin.description}</p>
-
-            <p className={styles.pinCoords}>
-              Координаты: {pin.coords[0]}, {pin.coords[1]}
-            </p>
-            
-            <ReactionBlock 
-              initialLikes={226}
-              initialLiked={false}
-              initialBookmarked={false}
-              onLike={(isLiked) => console.log('Лайк:', isLiked)}
-              onBookmark={(isBookmarked) => console.log('Закладка:', isBookmarked)}
+            <button onClick={handleBack} className={styles.back_btn} />
+            <h2>
+              Пин от <Link to="/profile" className={styles.authorA}>@jane_anderson</Link>
+            </h2>
+            <button
+              className={styles.settingsBtn}
+              onClick={() => navigate(`/pin/edit/${pinId}`)}
             />
           </div>
-          
-          <CommentSection 
-            comments={comments}
-            title="Комментарии"
-          />
+
+          <div className={styles.pinCardWrapper}>
+            <div className={styles.pinCard}>
+              <img src={placeholder_1} alt={pin.name} className={styles.img1} />
+              <h3 className={styles.pinTitle}>{pin.name}</h3>
+              <p className={styles.collectionLocation}>
+                Широта: {pin.latitude}, Долгота: {pin.longitude}
+              </p>
+              <p className={styles.pinDescription}>{pin.description || ""}</p>
+
+              <ReactionBlock
+                initialLikes={likesCount}
+                initialLiked={liked}
+                initialBookmarked={bookmarked}
+                onLike={handleLike}
+                onBookmark={handleBookmark}
+              />
+            </div>
+
+            <CommentSection comments={comments} title="Комментарии" />
+          </div>
         </div>
 
-        {/* Правая фиксированная карта */}
         <div className={styles.mapWrapperFixed}>
-          <MapPicker 
-            onSelect={() => {}} 
-            initialCoords={pin.coords} 
-            readOnly 
-          />
+          {pin.latitude != null && pin.longitude != null && (
+            <MapPicker
+              readOnly
+              onSelect={() => {}}
+              initialCoords={[pin.latitude, pin.longitude]}
+            />
+          )}
         </div>
       </div>
     </div>

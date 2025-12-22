@@ -1,75 +1,178 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Header from "./Header";
-import MapPicker from "./MapPicker";
 import styles from "./PinViewPage.module.css";
-import placeholder_1 from '../assets/placeholder1.jpg';
-import CommentSection from './CommentSection';
-import ReactionBlock from './ReactionBlock';
-import PinGrid from './PinGrid';
-import { 
-  getCollectionById, 
-  getCollectionPins 
-} from '../utils/mockData';
+import placeholder_1 from "../assets/placeholder1.jpg";
+import CommentSection from "./CommentSection";
+import ReactionBlock from "./ReactionBlock";
+import PinGrid from "./PinGrid";
+
+// моки
+import { getCollectionById, getCollectionPins } from "../utils/mockData";
+
+// backend
+import { getPinById as getBoardById } from "../services/collectionsService";
+
+// реакции
+import { countReactionsToBoard, reactToBoard } from "../services/reactionsService";
+import { isBoardLiked, isBoardBookmarked } from "../services/collectionsService";
+import { toggleBookmarkToBoard } from "../services/bookmarksService";
+
+const FALLBACK_LIKES = 0;
+const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
+const TEMP_USER_ID = "TEMP_USER_ID";
 
 const CollectionViewPage = () => {
   const navigate = useNavigate();
-  const { collectionId } = useParams(); // Получаем ID коллекции из URL
-  const [collection, setCollection] = useState(null);
-  const [collectionPins, setCollectionPins] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { collectionId } = useParams();
 
-  // Загружаем данные коллекции при монтировании или изменении collectionId
+  const [collection, setCollection] = useState<any>(null);
+  const [collectionPins, setCollectionPins] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
+  const [liked, setLiked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+
+  /* ------------------ загрузка коллекции ------------------ */
   useEffect(() => {
-    if (collectionId) {
-      const foundCollection = getCollectionById(collectionId);
-      
-      if (foundCollection) {
-        setCollection(foundCollection);
-        // Получаем пины этой коллекции
-        const pins = getCollectionPins(collectionId);
-        setCollectionPins(pins);
-        setError(null);
-      } else {
-        setError(`Подборка с ID ${collectionId} не найдена`);
+    const loadCollection = async () => {
+      if (!collectionId) {
+        setError("ID коллекции не указан");
+        setLoading(false);
+        return;
       }
-      
-      setLoading(false);
-    }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const board = await getBoardById(collectionId);
+
+        if (board) {
+          setCollection({
+            ...board,
+            image: placeholder_1 // заглушка для картинки самой подборки
+          });
+          setCollectionPins(
+            Array.isArray(board.pins)
+              ? board.pins.map(pin => ({
+                  ...pin,
+                  image: placeholder_1,
+                  author: "jane_anderson",
+                  authorAvatar: placeholder_1,
+                  description: pin.description || "",
+                }))
+              : []
+          );
+          setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
+          return;
+        }
+
+        const mockCollection = getCollectionById(collectionId);
+        if (mockCollection) {
+          setCollection({ ...mockCollection, image: placeholder_1 });
+          setCollectionPins(
+            getCollectionPins(collectionId)?.map(pin => ({
+              ...pin,
+              image: placeholder_1,
+              author: "jane_anderson",
+              authorAvatar: placeholder_1,
+              description: pin.description || "",
+            })) || []
+          );
+          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
+        } else {
+          setError(`Коллекция с ID ${collectionId} не найдена`);
+        }
+      } catch (e) {
+        console.error("Ошибка загрузки коллекции:", e);
+        const mockCollection = getCollectionById(collectionId);
+        if (mockCollection) {
+          setCollection({ ...mockCollection, image: placeholder_1 });
+          setCollectionPins(
+            getCollectionPins(collectionId)?.map(pin => ({
+              ...pin,
+              image: placeholder_1,
+              author: "jane_anderson",
+              authorAvatar: placeholder_1,
+              description: pin.description || "",
+            })) || []
+          );
+          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
+        } else {
+          setError("Не удалось загрузить коллекцию");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCollection();
   }, [collectionId]);
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/feed');
+  /* ------------------ загрузка реакций ------------------ */
+  useEffect(() => {
+    if (!collectionId) return;
+
+    const loadReactions = async () => {
+      try {
+        const likedStatus = await isBoardLiked(collectionId);
+        setLiked(likedStatus);
+      } catch {}
+
+      try {
+        const bookmarkedStatus = await isBoardBookmarked(collectionId);
+        setBookmarked(bookmarkedStatus);
+      } catch {}
+
+      try {
+        const count = await countReactionsToBoard({ boardId: collectionId });
+        let actualCount: number | null = null;
+
+        if (typeof count === "number") actualCount = count;
+        else if (typeof count === "string") actualCount = Number(count);
+        else if (count && typeof count === "object" && "count" in count) {
+          const nested = (count as any).count;
+          if (typeof nested === "number") actualCount = nested;
+          else if (typeof nested === "string") actualCount = Number(nested);
+        }
+
+        if (actualCount !== null && actualCount >= 0) setLikesCount(actualCount);
+      } catch (err) {
+        console.warn("Не удалось загрузить количество лайков:", err);
+      }
+    };
+
+    loadReactions();
+  }, [collectionId]);
+
+  const handleLike = async (nextLiked: boolean) => {
+    setLiked(nextLiked);
+    setLikesCount(prev => (nextLiked ? prev + 1 : Math.max(prev - 0, 0)));
+    try {
+      await reactToBoard({
+        boardId: collectionId!,
+        reactionId: LIKE_REACTION_ID,
+        userId: TEMP_USER_ID,
+      });
+    } catch (error) {
+      console.error("Failed to toggle board reaction", error);
     }
   };
 
-  // Комментарии
-  const comments = [
-    {
-      authorName: collection?.author || "jane_anderson",
-      authorAvatar: collection?.authorAvatar || placeholder_1,
-      commentText: "Отличная подборка! Спасибо за рекомендации.",
-      commentDate: "2 часа назад"
-    },
-    {
-      authorName: "alex_smith",
-      authorAvatar: placeholder_1,
-      commentText: "Уже посетил несколько мест из этой коллекции, все понравилось!",
-      commentDate: "5 часов назад"
-    },
-    {
-      authorName: "travel_lover",
-      authorAvatar: placeholder_1,
-      commentText: "Обязательно сохраню себе, чтобы посетить в будущем.",
-      commentDate: "1 день назад"
+  const handleBookmark = async (nextBookmarked: boolean) => {
+    setBookmarked(nextBookmarked);
+    try {
+      await toggleBookmarkToBoard(collectionId!, TEMP_USER_ID);
+    } catch (error) {
+      console.error("Failed to toggle board bookmark", error);
     }
-  ];
+  };
 
-  // Показываем загрузку
+  const handleBack = () => navigate(-1);
+
   if (loading) {
     return (
       <div className={styles.pageWrapper}>
@@ -79,15 +182,14 @@ const CollectionViewPage = () => {
     );
   }
 
-  // Показываем ошибку
   if (error || !collection) {
     return (
       <div className={styles.pageWrapper}>
         <Header />
         <div className={styles.errorContainer}>
-          <h2>Подборка не найдена</h2>
-          <p>{error || "Не удалось загрузить данные подборки"}</p>
-          <button onClick={() => navigate('/feed')} className={styles.backButton}>
+          <h2>Коллекция не найдена</h2>
+          <p>{error || "Не удалось загрузить данные"}</p>
+          <button onClick={() => navigate("/feed")} className={styles.backButton}>
             Вернуться на главную
           </button>
         </div>
@@ -95,70 +197,57 @@ const CollectionViewPage = () => {
     );
   }
 
+  const comments = [
+    {
+      authorName: "jane_anderson",
+      authorAvatar: placeholder_1,
+      commentText: "Отличная подборка! Спасибо за рекомендации.",
+      commentDate: "2 часа назад",
+    },
+  ];
+
   return (
     <div className={styles.pageWrapper}>
       <Header />
-
       <div className={styles.contentWrapper}>
-        {/* Левая колонка — скроллимый контент */}
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
-            <button onClick={handleBack} className={styles.back_btn}></button>
-            <h2>Подборка</h2>
-            <button className={styles.settingsBtn}></button>
-
+            <button onClick={handleBack} className={styles.back_btn} />
+              <h2>Подборка от <Link to={`/profile`} className={styles.authorA}>@jane_anderson</Link></h2>
+            <button
+              className={styles.settingsBtn}
+              onClick={() => navigate(`/collection/edit/${collectionId}`)}
+            />
           </div>
 
           <div className={styles.pinCard}>
-            
-            <img src={collection.image} alt={collection.title} className={styles.img1} />
-            <h3 className={styles.pinTitle}>{collection.title}</h3>
-            <p className={styles.collectionLocation}>{collection.location}</p>
-            <p className={styles.pinDescription}>{collection.description}</p>
-
-            <p className={styles.pinCoords}>
-              Координаты: {collection.coords[0]}, {collection.coords[1]}
+            <img src={collection.image || placeholder_1} alt={collection.name} className={styles.collectionImage} />
+            <h3 className={styles.pinTitle}>{collection.name}</h3>
+            <p className={styles.pinDescription}>
+              {collection.description || ""}
             </p>
-            
-            <div className={styles.collectionStats}>
-              <span>{collection.pinsCount} мест</span>
-              <span>•</span>
-              <span>Автор: {collection.author}</span>
-            </div>
-            
-            <ReactionBlock 
-              initialLikes={226}
-              initialLiked={false}
-              initialBookmarked={false}
-              onLike={(isLiked) => console.log('Лайк:', isLiked)}
-              onBookmark={(isBookmarked) => console.log('Закладка:', isBookmarked)}
+
+            <ReactionBlock
+              initialLikes={likesCount}
+              initialLiked={liked}
+              initialBookmarked={bookmarked}
+              onLike={handleLike}
+              onBookmark={handleBookmark}
             />
           </div>
 
           <h3 className={styles.pinsTitle}>
-            Места из этой подборки ({collectionPins.length})
+            Места в подборке ({collectionPins.length})
           </h3>
 
           <div className={styles.pinsWrapper}>
-            <PinGrid 
-              pins={collectionPins} 
+            <PinGrid
+              pins={collectionPins}
               onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
             />
           </div>
 
-          <CommentSection 
-            comments={comments}
-            title="Комментарии"
-          />
-        </div>
-
-        {/* Правая фиксированная карта */}
-        <div className={styles.mapWrapperFixed}>
-          <MapPicker 
-            onSelect={() => {}} 
-            initialCoords={collection.coords} 
-            readOnly 
-          />
+          <CommentSection comments={comments} title="Комментарии" />
         </div>
       </div>
     </div>

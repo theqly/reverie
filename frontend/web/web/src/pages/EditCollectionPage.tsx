@@ -3,35 +3,142 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styles from './CreateCollectionPage.module.css';
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header';
-// import { updateCollection } from "../services/collectionsService";
+import { useToast } from './ToastProvider';
+
+import { 
+  getCollectionById as getMockCollectionById, 
+  getCollectionPins 
+} from '../utils/mockData';
+
+import { 
+  updateCollection,
+  getPinById as getBackendCollectionById 
+} from "../services/collectionsService";
+
+import { UpdateBoardDocument, type UpdateBoardInput } from "@/graphql/generated/graphql.ts";
+import { AccessLevelType } from "@/graphql/generated/graphql.ts";
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // предполагаем, что путь будет что-то вроде /edit-collection/:id
-
+  const { id } = useParams();
+  
   // Состояния для полей формы
   const [collectionName, setCollectionName] = useState('');
   const [collectionInfo, setCollectionInfo] = useState('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState<string[]>([]);
-
   const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [originalCollection, setOriginalCollection] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { showToast } = useToast();
 
-  // --- Эмуляция загрузки данных с сервера ---
+  // Загрузка данных коллекции с бэкенда
   useEffect(() => {
-    console.log(`Загружаем данные подборки id=${id}... (заглушка)`);
-    // тут можно сделать fetch → заглушка:
-    setTimeout(() => {
-      setCollectionName("Моя существующая подборка");
-      setCollectionInfo("Описание, загруженное с сервера. Можно редактировать.");
-      setCollaborators(["alice", "bob", "charlie"]);
-      // Для cover — заглушка: берем дефолтный файл из public или assets
-      // Но для простоты оставим null, тогда пользователь может загрузить новый cover
-    }, 300);
+    const loadCollection = async () => {
+      if (!id) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // 1. Пытаемся получить с бэка
+        const board = await getBackendCollectionById(id);
+
+        if (board) {
+          setOriginalCollection(board);
+          setCollectionName(board.title || board.name || '');
+          setCollectionInfo(board.description || '');
+          
+          // Если в API есть данные о соавторах
+          setCollaborators(board.collaborators || []);
+          
+          return;
+        }
+
+        // 2. Фолбек на моки
+        console.log("Используем моки для загрузки данных  коллекции");
+        const mockCollection = getMockCollectionById(parseInt(id));
+
+        if (mockCollection) {
+          setOriginalCollection(mockCollection);
+          setCollectionName(mockCollection.title || '');
+          setCollectionInfo(mockCollection.description || '');
+          setCollaborators(mockCollection.collaborators || []);
+        } else {
+          setError(`Подборка с ID ${id} не найдена`);
+        }
+
+      } catch (e) {
+        console.error("Ошибка при загрузке коллекции:", e);
+
+        // 3. Фолбек на моки при ошибке
+        console.log("Ошибка при загрузке, используем моки");
+        const mockCollection = getMockCollectionById(parseInt(id));
+
+        if (mockCollection) {
+          setOriginalCollection(mockCollection);
+          setCollectionName(mockCollection.title || '');
+          setCollectionInfo(mockCollection.description || '');
+          setCollaborators(mockCollection.collaborators || []);
+        } else {
+          setError('Не удалось загрузить подборку');
+        }
+
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCollection();
   }, [id]);
 
+  const handleSaveCollection = async () => {
+    if (!id) {
+      console.error("ID коллекции не указан");
+      return;
+    }
+
+    const payload: UpdateBoardInput = {
+      userId: originalCollection?.ownerId ?? "",
+      name: collectionName,                     
+      description: collectionInfo,              
+      accessLevel: AccessLevelType.Public,
+    };
+
+    try {
+      const updatedBoard = await updateCollection(id, payload);
+
+      if (updatedBoard) {
+        console.log("Коллекция успешно обновлена:", updatedBoard);
+        handleBack();
+        showToast("Успешное сохранение!");
+      } else {
+        console.warn("Коллекция не была обновлена. Вернулась null");
+        showToast("Ошибка при сохранении", true);
+      }
+    } catch (error: any) {
+      console.error("Ошибка при обновлении коллекции:", error.message);
+      showToast("Ошибка при сохранении", true);
+    }
+  };
+
   const handleBack = () => {
-    navigate(-1);
+    // Пробуем взять from из URL
+    const searchParams = new URLSearchParams(location.search);
+    const from = searchParams.get('from');
+    
+    if (from) {
+      // Если есть параметр from - используем его
+      navigate(`/${from}`);
+    } else if (document.referrer && document.referrer.includes(window.location.origin)) {
+      // Если есть реферер и он с нашего сайта - используем его
+      const referrerPath = new URL(document.referrer).pathname;
+      navigate(referrerPath);
+    } else {
+      // Иначе возвращаемся в историю или на фид по умолчанию
+      navigate(-1);
+    }
   };
 
   const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,25 +148,44 @@ const EditCollectionPage = () => {
     }
   };
 
-  const handleSaveCollection = async () => {
-    const payload = {
-      id,
-      name: collectionName,
-      info: collectionInfo,
-      coverImage,
-      collaborators
-    };
-
-    // Здесь бы вызывался updateCollection(payload)
-    console.log("updateCollection called with payload:", payload);
-
-    // После сохранения можно вернуться назад или куда нужно
-    navigate(-1);
-  };
-
   const isSaveEnabled = collectionName.trim().length > 0 &&
                         collectionName.length <= 50 &&
                         collectionInfo.length <= 1000;
+
+  // Показываем загрузку
+  if (loading) {
+    return (
+      <div className={styles.createCollectionPage}>
+        <Header />
+        <main className={styles.collectionContent}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loading}>Загрузка данных коллекции...</div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Показываем ошибку
+  if (error || !originalCollection) {
+    return (
+      <div className={styles.createCollectionPage}>
+        <Header />
+        <main className={styles.collectionContent}>
+          <div className={styles.errorContainer}>
+            <h2>Коллекция не найдена</h2>
+            <p>{error || `Коллекция с ID ${id} не существует.`}</p>
+            <button 
+              onClick={() => navigate('/feed')}
+              className={styles.backButton}
+            >
+              Вернуться на главную
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.createCollectionPage}>
@@ -72,7 +198,7 @@ const EditCollectionPage = () => {
         </div>
 
         <div className={styles.gridWrapper}>
-          <label htmlFor="collection-name" className={styles.name_label}>Название:</label>
+          <label htmlFor="collection-name" className={styles.name_label}>Название:</label> 
           <div className={styles.name_input_block}>
             <input
               id="collection-name"
@@ -87,7 +213,7 @@ const EditCollectionPage = () => {
             </div>
             {collectionName.length > 50 && (
               <div className={styles.errorMessage}>
-                Название должно быть не более 50 символов
+                Collection name must be 50 characters or less
               </div>
             )}
           </div>
@@ -101,6 +227,7 @@ const EditCollectionPage = () => {
               maxLength={1000}
               rows={4}
               className={collectionInfo.length > 1000 ? styles.error : styles.discr_input}
+              placeholder="Опишите вашу подборку..."
             />
             <div className={styles.characterCounter}>
               {collectionInfo.length}/1000
@@ -109,19 +236,23 @@ const EditCollectionPage = () => {
 
           <label className={styles.collaborator_label}>Соавторы:</label>
           <div className={styles.collaboratorsList}>
-            {collaborators.map((name, idx) => (
-              <div key={idx} className={styles.collaboratorItem}>
-                <span>@{name}</span>
-                <button
-                  className={styles.removeCollaboratorBtn}
-                  onClick={() => {
-                    setCollaborators(prev => prev.filter(c => c !== name));
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+            {collaborators.length > 0 ? (
+              collaborators.map((name, idx) => (
+                <div key={idx} className={styles.collaboratorItem}>
+                  <span>@{name}</span>
+                  <button
+                    className={styles.removeCollaboratorBtn}
+                    onClick={() => {
+                      setCollaborators(prev => prev.filter(c => c !== name));
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className={styles.noCollaborators}>Пока нет соавторов</p>
+            )}
 
             <button
               type="button"
@@ -140,9 +271,16 @@ const EditCollectionPage = () => {
                   alt="Обложка подборки"
                   className={styles.coverPreview}
                 />
+              ) : originalCollection?.image ? (
+                <img
+                  src={originalCollection.image}
+                  alt="Текущая обложка"
+                  className={styles.coverPreview}
+                />
               ) : (
                 <div className={styles.coverPlaceholder}>
                   <span className={styles.plus}>+</span>
+                  <p>Текущая обложка</p>
                 </div>
               )}
             </label>
@@ -154,11 +292,14 @@ const EditCollectionPage = () => {
               className={styles.hiddenInput}
             />
             <label htmlFor="cover-input" className={styles.uploadButton}>
-              {coverImage ? "Изменить фото" : "Загрузить фото"}
+              {coverImage || originalCollection?.image ? "Изменить фото" : "Загрузить фото"}
             </label>
+            {originalCollection?.image && !coverImage && (
+              <p className={styles.currentCoverNote}>Используется текущая обложка</p>
+            )}
           </section>
         </div>
-
+        
         <button
           type="button"
           onClick={handleSaveCollection}
@@ -172,7 +313,9 @@ const EditCollectionPage = () => {
           <InviteCollaboratorModal
             onClose={() => setIsInviteModalOpen(false)}
             onAddCollaborator={(name) => {
-              setCollaborators(prev => [...prev, name]);
+              if (name && !collaborators.includes(name)) {
+                setCollaborators(prev => [...prev, name]);
+              }
             }}
             existingCollaborators={collaborators}
           />

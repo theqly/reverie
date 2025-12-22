@@ -1,42 +1,42 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import HomePage from './pages/HomePage';
 import CreateCollectionPage from './pages/CreateCollectionPage';
 import EditCollectionPage from './pages/EditCollectionPage';
-
 import CreatePinPage from './pages/CreatePinPage';
 import EditPinPage from './pages/EditPinPage';
-
 import MapPage from './pages/MapPage';
 import LikedPins from './pages/LikedPins';
 import Profile from './pages/Profile';
 import LoginPage from './pages/LoginPage';
-
 import PinViewPage from './pages/PinViewPage';
 import Feed from './pages/Feed';
-
 import CollectionViewPage from './pages/CollectionViewPage';
+
+import { ToastProvider } from './pages/ToastProvider';
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/collection/create" element={<CreateCollectionPage />} />
-        <Route path="/pin/create" element={<CreatePinPage />} />
-        <Route path="/pin/edit" element={<EditPinPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/feed" element={<Feed />} />
+      <ToastProvider>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/collection/create" element={<CreateCollectionPage />} />
+          <Route path="/pin/create" element={<CreatePinPage />} />
+          <Route path="/pin/edit/:id" element={<EditPinPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/feed" element={<Feed />} />
 
-        <Route path="/pin/:pinId" element={<PinViewPage />} />
-        <Route path="/collection/:collectionId" element={<CollectionViewPage />} />
-        <Route path="/collection/edit" element={<EditCollectionPage />} />
+          <Route path="/pin/:pinId" element={<PinViewPage />} />
+          <Route path="/collection/:collectionId" element={<CollectionViewPage />} />
+          <Route path="/collection/edit/:id" element={<EditCollectionPage />} />
 
-        <Route path="/map" element={<MapPage />} />
-        <Route path="/likes/feed" element={<LikedPins />} />
-        <Route path="/profile" element={<Profile />} />
-
-      </Routes>
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/likes/feed" element={<LikedPins />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </ToastProvider>
     </Router>
   );
 }

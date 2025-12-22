@@ -2,7 +2,7 @@
   "realm": "reverie-realm",
   "enabled": true,
 
-  "registrationAllowed": false,
+  "registrationAllowed": true,
   "loginWithEmailAllowed": true,
 
   "clients": [

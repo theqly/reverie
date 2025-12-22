@@ -1,6 +1,6 @@
 import React from 'react';
 import placeholder_1 from '../assets/placeholder1.jpg';
-import styles from './CollectionGridItem.module.css'; // твои стили
+import styles from './CollectionGridItem.module.css';
 
 const CollectionGridItem = ({ collection, onClick }) => {
   const {
@@ -28,7 +28,12 @@ const CollectionGridItem = ({ collection, onClick }) => {
         
         <div className={styles.collectionLabelWrapper}>
           <div className={styles.collectionTitle}>{title}</div>
-          <div className={styles.collectionLocation}>{location}</div>
+          
+          {/* Показываем только если location есть */}
+          {location && (
+            <div className={styles.collectionLocation}>{location}</div>
+          )}
+
           <div className={styles.collectionPinsCount}>
             {pinsCount} pins →
           </div>
