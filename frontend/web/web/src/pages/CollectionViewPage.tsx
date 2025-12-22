@@ -303,10 +303,9 @@ const CollectionViewPage = () => {
           </div>
 
           <div className={styles.pinCard}>
-            <img 
-              src={getCollectionImageUrl()} 
-              alt={getCollectionName()} 
-              className={styles.collectionImage}
+            <img
+              src={collection.boardImageURL ?? placeholder}
+              alt={collection.name}
             />
             <h3 className={styles.pinTitle}>{getCollectionName()}</h3>
             <p className={styles.pinDescription}>
