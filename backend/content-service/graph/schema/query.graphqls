@@ -1,9 +1,11 @@
 type Query {
   board(id: UUID!, viewerId: UUID): Board
+  boards(viewerId: UUID, limit: Int = 50, offset: Int = 0): [Board!]!
   boardByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
   boardsByGroup(groupId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!]
 
   pin(id: UUID!, viewerId: UUID): Pin
+  pins(viewerId: UUID, limit: Int = 50, offset: Int = 0): [Pin!]!
   pinsByUser(userId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
   pinsByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]
   pinsByLocation(query: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!]

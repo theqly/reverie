@@ -17,6 +17,7 @@ type Board {
   accessLevel: AccessLevelType!
   ownerId: UUID!
   authorId: UUID!
+  owner: User!
   ownerType: OwnerType!
   createdAt: Time!
   savedAt: Time!

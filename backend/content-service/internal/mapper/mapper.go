@@ -67,6 +67,7 @@ func ToGraphQLBoard(b *models.Board) *model.Board {
 		Description: &b.Description,
 		AccessLevel: model.AccessLevelType(b.AccessLevel),
 		OwnerID:     b.OwnerID,
+		Owner:       &model.User{ID: b.OwnerID},
 		OwnerType:   model.OwnerType(b.OwnerType),
 		CreatedAt:   b.CreatedAt,
 		Pins:        toGraphQlSlicePin(b.Pins),

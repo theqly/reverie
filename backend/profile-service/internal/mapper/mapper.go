@@ -17,5 +17,6 @@ func MapUserToGraphQL(u *models.User) *model.User {
 		ProfilePicture: u.ProfilePicture,
 		Description:    u.Description,
 		UserRating:     u.UserRating,
+		Status:         u.Status,
 	}
 }

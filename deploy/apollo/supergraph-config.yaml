@@ -7,7 +7,8 @@ subgraphs:
     routing_url: http://content-service:8080/query
     schema:
       file: /etc/apollo/schemas/content.graphql
-  feed:
-    routing_url: http://feed-service:8080/query
-    schema:
-      file: /etc/apollo/schemas/feed.graphql
+  # feed service excluded due to schema conflicts
+  # feed:
+  #   routing_url: http://feed-service:8080/query
+  #   schema:
+  #     file: /etc/apollo/schemas/feed.graphql

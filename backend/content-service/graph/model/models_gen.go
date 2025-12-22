@@ -37,6 +37,7 @@ type Board struct {
 	AccessLevel AccessLevelType `json:"accessLevel"`
 	OwnerID     uuid.UUID       `json:"ownerId"`
 	AuthorID    uuid.UUID       `json:"authorId"`
+	Owner       *User           `json:"owner"`
 	OwnerType   OwnerType       `json:"ownerType"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	SavedAt     time.Time       `json:"savedAt"`
