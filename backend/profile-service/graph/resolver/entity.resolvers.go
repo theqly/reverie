@@ -9,13 +9,19 @@ import (
 	"fmt"
 	"profile-service/graph/generated"
 	"profile-service/graph/model"
+	"profile-service/internal/mapper"
 
 	"github.com/google/uuid"
 )
 
 // FindUserByID is the resolver for the findUserByID field.
 func (r *entityResolver) FindUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: FindUserByID - findUserByID"))
+	user, err := r.UserRepo.GetUserByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	return mapper.MapUserToGraphQL(&user), nil
 }
 
 // Entity returns generated.EntityResolver implementation.

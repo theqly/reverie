@@ -31,9 +31,9 @@ func main() {
 	initLogger()
 	osClient := os_client.NewClient()
 
-	// if err := config.LoadConfig(); err != nil {
-	// 	log.Fatalf("config loading error: %v", err)
-	// }
+	if err := config.LoadConfig(); err != nil {
+		log.Fatalf("config loading error: %v", err)
+	}
 
 	resolver := &resolver.Resolver{
 		OSClient: osClient,

@@ -186,6 +186,22 @@ func (r *PinRepository) GetByUser(ctx context.Context, userID uuid.UUID, viewerI
 	return pins, err
 }
 
+func (r *PinRepository) GetAll(ctx context.Context, viewerID *uuid.UUID, limit, offset int) ([]models.Pin, error) {
+	var pins []models.Pin
+
+	tx := r.db.WithContext(ctx)
+
+	tx = r.withViewerData(tx, viewerID)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "images")
+	if requestedFields != nil && requestedFields["images"] {
+		tx = tx.Preload("Images")
+	}
+
+	err := tx.Order("pins.saved_at DESC").Limit(limit).Offset(offset).Find(&pins).Error
+	return pins, err
+}
+
 func (r *PinRepository) GetByName(ctx context.Context, name string, viewerID *uuid.UUID, limit, offset int) ([]models.Pin, error) {
 	var pins []models.Pin
 

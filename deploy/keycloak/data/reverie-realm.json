@@ -1,6 +1,7 @@
 {
   "realm": "reverie-realm",
   "enabled": true,
+  "sslRequired": "none",
 
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
@@ -11,7 +12,7 @@
       "enabled": true,
       "publicClient": true,
       "redirectUris": [
-        "http://localhost:5173"
+        "http://localhost:5173/*"
       ],
       "webOrigins": [
         "*"

@@ -162,7 +162,7 @@ func (r *BoardRepository) GetByID(ctx context.Context, id uuid.UUID, viewerID *u
 
 	requestedFields := utils.DoesItNeedFields(ctx, "pins")
 	if requestedFields != nil && requestedFields["pins"] {
-		tx = tx.Preload("Pins")
+		tx = tx.Preload("Pins").Preload("Pins.Images")
 	}
 
 	err := tx.First(&board, "boards.id = ?", id).Error
@@ -571,6 +571,8 @@ func (r *BoardRepository) GetOwnBoardsByUser(ctx context.Context, userID uuid.UU
 
 	err := r.db.WithContext(ctx).
 		Model(&models.Board{}).
+		Preload("Pins").
+		Preload("Pins.Images").
 		Select("boards.*, al.type as access_level, ot.type as owner_type").
 		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
 		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
@@ -683,6 +685,37 @@ func (r *BoardRepository) GetBookmarkedByUser(ctx context.Context, userID uuid.U
 		Order("boards.saved_at DESC").
 		Limit(limit).
 		Offset(offset)
+
+	if err := tx.Find(&boards).Error; err != nil {
+		return nil, err
+	}
+
+	return boards, nil
+}
+
+func (r *BoardRepository) GetAllPublic(ctx context.Context, viewerID *uuid.UUID, limit, offset int) ([]models.Board, error) {
+	var boards []models.Board
+
+	tx := r.db.WithContext(ctx).
+		Model(&models.Board{}).
+		Select("boards.*, al.type as access_level, ot.type as owner_type").
+		Joins("LEFT JOIN access_levels as al ON al.id = boards.access_level_id").
+		Joins("LEFT JOIN owner_types as ot ON ot.id = boards.owner_type_id").
+		Where("al.type IN (?, ?)", "public", "group_public")
+
+	// Исключаем подборки текущего пользователя
+	if viewerID != nil {
+		tx = tx.Where("boards.owner_id != ?", *viewerID)
+	}
+
+	tx = tx.Order("boards.saved_at DESC").
+		Limit(limit).
+		Offset(offset)
+
+	requestedFields := utils.DoesItNeedFields(ctx, "pins")
+	if requestedFields != nil && requestedFields["pins"] {
+		tx = tx.Preload("Pins").Preload("Pins.Images")
+	}
 
 	if err := tx.Find(&boards).Error; err != nil {
 		return nil, err

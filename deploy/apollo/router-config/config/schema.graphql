@@ -1,0 +1,359 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+{
+  query: Query
+  mutation: Mutation
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+enum AccessLevelType
+  @join__type(graph: CONTENT)
+{
+  private @join__enumValue(graph: CONTENT)
+  public @join__enumValue(graph: CONTENT)
+  group @join__enumValue(graph: CONTENT)
+  group_public @join__enumValue(graph: CONTENT)
+}
+
+input AddCommentToBoardInput
+  @join__type(graph: CONTENT)
+{
+  boardId: UUID!
+  userId: UUID!
+  message: String!
+}
+
+input AddCommentToPinInput
+  @join__type(graph: CONTENT)
+{
+  pinId: UUID!
+  userId: UUID!
+  message: String!
+}
+
+input AddImageInput
+  @join__type(graph: CONTENT)
+{
+  pinId: UUID!
+  imageUrl: String!
+  orderNumber: Int!
+}
+
+type Board
+  @join__type(graph: CONTENT)
+{
+  id: UUID!
+  name: String!
+  description: String
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  authorId: UUID!
+  owner: User!
+  ownerType: OwnerType!
+  createdAt: Time!
+  savedAt: Time!
+  pins: [Pin!]
+  reactionId: UUID
+  bookmarked: Boolean
+}
+
+type CommentToBoard
+  @join__type(graph: CONTENT)
+{
+  id: UUID!
+  boardId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+
+type CommentToPin
+  @join__type(graph: CONTENT)
+{
+  id: UUID!
+  pinId: UUID!
+  message: String!
+  createdAt: Time!
+  owner: User!
+}
+
+input CreateBoardInput
+  @join__type(graph: CONTENT)
+{
+  name: String!
+  description: String
+  accessLevel: AccessLevelType!
+  ownerId: UUID!
+  ownerType: OwnerType!
+}
+
+input CreateGroupInput
+  @join__type(graph: CONTENT)
+{
+  members: [UUID!]!
+}
+
+input CreatePinInput
+  @join__type(graph: CONTENT)
+{
+  name: String!
+  ownerId: UUID!
+  latitude: Float!
+  longitude: Float!
+  description: String
+}
+
+input CreateUserInput
+  @join__type(graph: PROFILE)
+{
+  nickname: String!
+  email: String!
+  nick_tag: String!
+  profilePicture: String
+  description: String
+}
+
+type Group
+  @join__type(graph: CONTENT)
+{
+  id: UUID!
+}
+
+scalar join__FieldSet
+
+enum join__Graph {
+  CONTENT @join__graph(name: "content", url: "http://content-service:8080/query")
+  PROFILE @join__graph(name: "profile", url: "http://profile-service:8080/query")
+}
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+type Mutation
+  @join__type(graph: CONTENT)
+  @join__type(graph: PROFILE)
+{
+  createBoard(input: CreateBoardInput!): Board! @join__field(graph: CONTENT)
+  updateBoard(id: UUID!, input: UpdateBoardInput!): Board! @join__field(graph: CONTENT)
+  copyBoard(boardId: UUID!, userId: UUID!): Board! @join__field(graph: CONTENT)
+  createPin(input: CreatePinInput!): Pin! @join__field(graph: CONTENT)
+  updatePin(id: UUID!, input: UpdatePinInput!): Pin! @join__field(graph: CONTENT)
+  copyPin(pinId: UUID!, userId: UUID!): Pin! @join__field(graph: CONTENT)
+  addPinToBoard(pinId: UUID!, boardId: UUID!): Board! @join__field(graph: CONTENT)
+  removePinFromBoard(pinId: UUID!, boardId: UUID!): Board! @join__field(graph: CONTENT)
+  addImageToPin(input: AddImageInput!): PinImage! @join__field(graph: CONTENT)
+  removeImageFromPin(imageId: UUID!): Boolean! @join__field(graph: CONTENT)
+  updateImageOrder(imageId: UUID!, newOrder: Int!): PinImage! @join__field(graph: CONTENT)
+  addCommentToPin(input: AddCommentToPinInput!): CommentToPin! @join__field(graph: CONTENT)
+  updateCommentToPin(id: UUID!, message: String!): CommentToPin! @join__field(graph: CONTENT)
+  deleteCommentToPin(id: UUID!): Boolean! @join__field(graph: CONTENT)
+  addCommentToBoard(input: AddCommentToBoardInput!): CommentToBoard! @join__field(graph: CONTENT)
+  updateCommentToBoard(id: UUID!, message: String!): CommentToBoard! @join__field(graph: CONTENT)
+  deleteCommentToBoard(id: UUID!): Boolean! @join__field(graph: CONTENT)
+  createGroup(input: CreateGroupInput!): Group! @join__field(graph: CONTENT)
+  addUserToGroup(userId: UUID!, groupId: UUID!): Boolean! @join__field(graph: CONTENT)
+  removeUserFromGroup(userId: UUID!, groupId: UUID!): Boolean! @join__field(graph: CONTENT)
+  deleteGroup(groupId: UUID!): Boolean! @join__field(graph: CONTENT)
+  requestJoinGroup(groupId: UUID!, userId: UUID!): Boolean! @join__field(graph: CONTENT)
+  acceptJoinToGroup(requestId: UUID!): Boolean! @join__field(graph: CONTENT)
+  reactionToPin(pinId: UUID!, reactionId: UUID!, userId: UUID!): Boolean! @join__field(graph: CONTENT)
+  reactionToBoard(boardId: UUID!, reactionId: UUID!, userId: UUID!): Boolean! @join__field(graph: CONTENT)
+  bookmarkToPin(pinId: UUID!, userId: UUID!): Boolean! @join__field(graph: CONTENT)
+  bookmarkToBoard(boardId: UUID!, userId: UUID!): Boolean! @join__field(graph: CONTENT)
+  createUser(input: CreateUserInput!): User! @join__field(graph: PROFILE)
+  updateUser(userId: UUID!, input: UpdateUserInput!): User! @join__field(graph: PROFILE)
+  deleteUser(userId: UUID!): Boolean! @join__field(graph: PROFILE)
+  followUser(userId: UUID!, followerId: UUID!): Boolean! @join__field(graph: PROFILE)
+  unfollowUser(userId: UUID!, followerId: UUID!): Boolean! @join__field(graph: PROFILE)
+  changeAccessBookmarks(userId: UUID!, newStatus: Int!): Boolean! @join__field(graph: PROFILE)
+}
+
+enum OwnerType
+  @join__type(graph: CONTENT)
+{
+  user @join__enumValue(graph: CONTENT)
+  group @join__enumValue(graph: CONTENT)
+}
+
+type Pin
+  @join__type(graph: CONTENT, key: "id")
+{
+  id: UUID!
+  name: String!
+  owner: User!
+  author: User!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  description: String
+  rating: Float!
+  createdAt: Time!
+  savedAt: Time!
+  place: Place
+  images: [PinImage!]
+  reactionId: UUID
+  bookmarked: Boolean
+}
+
+type PinImage
+  @join__type(graph: CONTENT)
+{
+  id: UUID!
+  orderNumber: Int!
+  imageUrl: String!
+}
+
+type Place
+  @join__type(graph: CONTENT)
+{
+  id: UUID!
+  gis_id: UUID
+  name: String!
+  address: String
+  latitude: Float!
+  longitude: Float!
+  purpose_name: String
+  type: String
+}
+
+type Query
+  @join__type(graph: CONTENT)
+  @join__type(graph: PROFILE)
+{
+  board(id: UUID!, viewerId: UUID): Board @join__field(graph: CONTENT)
+  boards(viewerId: UUID, limit: Int = 50, offset: Int = 0): [Board!]! @join__field(graph: CONTENT)
+  boardByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!] @join__field(graph: CONTENT)
+  boardsByGroup(groupId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Board!] @join__field(graph: CONTENT)
+  pin(id: UUID!, viewerId: UUID): Pin @join__field(graph: CONTENT)
+  pins(viewerId: UUID, limit: Int = 50, offset: Int = 0): [Pin!]! @join__field(graph: CONTENT)
+  pinsByUser(userId: UUID!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!] @join__field(graph: CONTENT)
+  pinsByName(name: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!] @join__field(graph: CONTENT)
+  pinsByLocation(query: String!, viewerId: UUID, limit: Int = 10, offset: Int = 0): [Pin!] @join__field(graph: CONTENT)
+  groupById(groupId: UUID!): Group @join__field(graph: CONTENT)
+  isUserInGroup(userId: UUID!, groupId: UUID!): Boolean! @join__field(graph: CONTENT)
+  groupsOfUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Group!]! @join__field(graph: CONTENT)
+  commentsByBoard(boardId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToBoard]! @join__field(graph: CONTENT)
+  commentsByPin(pinId: UUID!, limit: Int = 10, offset: Int = 0): [CommentToPin]! @join__field(graph: CONTENT)
+  ownBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]! @join__field(graph: CONTENT)
+  groupBoardsByUser(userId: UUID!, limit: Int = 10, offset: Int = 0): [Board!]! @join__field(graph: CONTENT)
+  countOwnBoardsByUser(userId: UUID!): Int! @join__field(graph: CONTENT)
+  countGroupBoardsByUser(userId: UUID!): Int! @join__field(graph: CONTENT)
+  countPinsByUser(userId: UUID!): Int! @join__field(graph: CONTENT)
+  reactions: [Reaction!]! @join__field(graph: CONTENT)
+  countAllReactionsToPin(pinId: UUID!): Int! @join__field(graph: CONTENT)
+  countAllReactionsToBoard(boardId: UUID!): Int! @join__field(graph: CONTENT)
+  likedPinsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]! @join__field(graph: CONTENT)
+  likedBoardsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Board!]! @join__field(graph: CONTENT)
+  bookmarkedPinsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Pin!]! @join__field(graph: CONTENT)
+  bookmarkedBoardsByUser(userID: UUID!, limit: Int = 10, offset: Int = 0): [Board!]! @join__field(graph: CONTENT)
+  userById(userId: UUID!): User @join__field(graph: PROFILE)
+  userByNickname(nickname: String!): [User!] @join__field(graph: PROFILE)
+  userByTag(nickTag: String!): User @join__field(graph: PROFILE)
+  userByEmail(email: String!): User @join__field(graph: PROFILE)
+  followersOf(userId: UUID!): [User!]! @join__field(graph: PROFILE)
+  followingOf(userId: UUID!): [User!]! @join__field(graph: PROFILE)
+  followersCount(userId: UUID!): Int! @join__field(graph: PROFILE)
+  followingCount(userId: UUID!): Int! @join__field(graph: PROFILE)
+  getSettingsStatuses: [SettingsStatuses!]! @join__field(graph: PROFILE)
+}
+
+type Reaction
+  @join__type(graph: CONTENT)
+{
+  id: UUID!
+  type: String!
+  description: String
+}
+
+type SettingsStatuses
+  @join__type(graph: PROFILE)
+{
+  id: Int!
+  type: String!
+  description: String
+}
+
+scalar Time
+  @join__type(graph: CONTENT)
+
+input UpdateBoardInput
+  @join__type(graph: CONTENT)
+{
+  name: String
+  description: String
+  accessLevel: AccessLevelType
+  userId: UUID!
+}
+
+input UpdatePinInput
+  @join__type(graph: CONTENT)
+{
+  name: String
+  latitude: Float
+  longitude: Float
+  description: String
+  rating: Float
+  userId: UUID!
+}
+
+input UpdateUserInput
+  @join__type(graph: PROFILE)
+{
+  nickname: String
+  email: String
+  nick_tag: String
+  profilePicture: String
+  description: String
+}
+
+type User
+  @join__type(graph: CONTENT, key: "id")
+  @join__type(graph: PROFILE, key: "id")
+{
+  id: UUID!
+  nickname: String! @join__field(graph: PROFILE)
+  email: String! @join__field(graph: PROFILE)
+  nickTag: String! @join__field(graph: PROFILE)
+  profilePicture: String @join__field(graph: PROFILE)
+  description: String @join__field(graph: PROFILE)
+  status: UserStatus! @join__field(graph: PROFILE)
+  userRating: Float! @join__field(graph: PROFILE)
+  followers: [User!]! @join__field(graph: PROFILE)
+  following: [User!]! @join__field(graph: PROFILE)
+}
+
+enum UserStatus
+  @join__type(graph: PROFILE)
+{
+  active @join__enumValue(graph: PROFILE)
+  deleted @join__enumValue(graph: PROFILE)
+}
+
+scalar UUID
+  @join__type(graph: CONTENT)
+  @join__type(graph: PROFILE)
