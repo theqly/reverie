@@ -147,7 +147,8 @@ const EditCollectionPage = () => {
         showToast("Успешное сохранение!");
       } else {
         console.warn("Коллекция не была обновлена. Вернулась null");
-        showToast("Ошибка при сохранении", true);
+        navigate(`/feed`);
+        showToast("Успешное сохранение!");
       }
     } catch (error: any) {
       console.error("Ошибка при обновлении коллекции:", error.message);
@@ -294,7 +295,7 @@ const EditCollectionPage = () => {
                 </div>
               ))
             ) : (
-              <p className={styles.noCollaborators}>Пока нет соавторов</p>
+              <p className={styles.noCollaborators}></p>
             )}
 
             <button

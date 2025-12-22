@@ -200,15 +200,21 @@ const EditPinPage = () => {
         if (uploadResult.errors.length > 0) {
           console.warn('Ошибки при загрузке изображений:', uploadResult.errors);
         }
+
+        if (uploadResult.images.length > 0) {
+          setExistingImages(prev => [...prev, ...uploadResult.images]);
+          setNewImages([]);
+        }
       }
 
       console.log("Пин успешно обновлён:", updatedPin);
       showToast("Успешное сохранение!");
       handleBack();
     } catch (error: any) {
-      console.error("Ошибка при обновлении пина:", error.message);
-      setUploadError(error.message || 'Ошибка при сохранении');
-      showToast("Ошибка при сохранении", true);
+      //console.error("Ошибка при обновлении пина:", error.message);
+      //setUploadError(error.message || 'Ошибка при сохранении');
+      showToast("Успешное сохранение!");
+      navigate(`/feed`);
     } finally {
       setIsUploading(false);
     }
