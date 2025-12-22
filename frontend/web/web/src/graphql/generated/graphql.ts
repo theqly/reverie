@@ -733,7 +733,7 @@ export type GetOwnBoardsByUserIdQueryVariables = Exact<{
 }>;
 
 
-export type GetOwnBoardsByUserIdQuery = { __typename?: 'Query', ownBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
+export type GetOwnBoardsByUserIdQuery = { __typename?: 'Query', ownBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, boardImageURL?: string | null, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
 
 export type GetLikedBoardsByUserIdQueryVariables = Exact<{
   userID: Scalars['UUID']['input'];
@@ -1425,6 +1425,7 @@ export const GetOwnBoardsByUserIdDocument = gql`
     description
     accessLevel
     ownerId
+    boardImageURL
     ownerType
     pins {
       id

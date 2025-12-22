@@ -160,6 +160,7 @@ query GetOwnBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
     description
     accessLevel
     ownerId
+    boardImageURL
     ownerType
     pins {
       id
