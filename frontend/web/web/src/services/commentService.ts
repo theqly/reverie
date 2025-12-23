@@ -33,7 +33,7 @@ export async function getCommentsByPin(
 ): Promise<CommentToPin[]> {
   try {
     // Формируем переменные, включая только те, что переданы
-    const variables: any = { pinId: params.pinId };
+    const variables: { pinId: string; limit?: number; offset?: number } = { pinId: params.pinId };
 
     if (params.limit !== undefined) {
       variables.limit = params.limit;
@@ -144,7 +144,7 @@ export async function getCommentsByBoard(
 ): Promise<CommentToBoard[]> {
   try {
     // Формируем переменные, включая только те, что переданы
-    const variables: any = { boardId: params.boardId };
+    const variables: { boardId: string; limit?: number; offset?: number } = { boardId: params.boardId };
 
     if (params.limit !== undefined) {
       variables.limit = params.limit;

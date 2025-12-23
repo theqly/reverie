@@ -142,7 +142,7 @@ export async function getLikedPinsByUser(
   }
 
   try {
-    const variables: any = { userId: finalUserId };
+    const variables: { userId: string; limit?: number; offset?: number } = { userId: finalUserId };
 
     if (params.limit !== undefined) {
       variables.limit = params.limit;
@@ -190,7 +190,7 @@ export async function getLikedBoardsByUser(
   }
 
   try {
-    const variables: any = { userId: finalUserId };
+    const variables: { userId: string; limit?: number; offset?: number } = { userId: finalUserId };
 
     if (params.limit !== undefined) {
       variables.limit = params.limit;
