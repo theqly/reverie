@@ -51,9 +51,6 @@ export async function copyBoard(
       return null;
     }
 
-    // Логируем событие для аналитики
-    console.log("Pins copied via Collection_ID", { boardId });
-    
     return json.data?.copyBoard.id || null;
   } catch (err) {
     console.error("Ошибка copyBoard:", err);
@@ -87,9 +84,6 @@ export async function complainAboutBoard(
       return false;
     }
 
-    console.log("CollectionReported", { boardId, creatorId });
-
-
     return json.data?.complainAboutBoard || false;
   } catch (err) {
     console.error("Ошибка complainAboutBoard:", err);
@@ -122,9 +116,6 @@ export async function addBoardToBookmarks(
       return false;
     }
 
-    console.log("Bookmark toggled – added", { boardId, userId });
-
-
     return json.data?.boardToBookmarks || false;
   } catch (err) {
     console.error("Ошибка addBoardToBookmarks:", err);
@@ -156,9 +147,6 @@ export async function removeBoardFromBookmarks(
       console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
       return false;
     }
-
-    console.log("Bookmark toggled – removed", { boardId, userId });
-
 
     return json.data?.removeBoardFromBookmarks || false;
   } catch (err) {
@@ -200,14 +188,6 @@ export async function addCommentToBoard(input: AddCommentInput): Promise<Comment
 
     const newComment = json.data?.addCommentToBoard;
     
-    if (newComment) {
-      //Специально получили ID комментария
-      console.log("Comment added", { 
-        commentId: newComment.id, 
-        userId: input.userId 
-      });
-    }
-
     return newComment || null;
   } catch (err) {
     console.error("Ошибка addCommentToBoard:", err);
@@ -311,9 +291,6 @@ export async function addReactionToBoard(
       return false;
     }
 
-    console.log("Line toggled – added", { boardId, userId });
-
-
     return json.data?.addReactionToBoard || false;
   } catch (err) {
     console.error("Ошибка addReactionToBoard:", err);
@@ -346,9 +323,6 @@ export async function removeReactionToBoard(
       console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
       return false;
     }
-    console.log("Line toggled – added", { boardId, userId });
-
-
     return json.data?.removeReactionToBoard || false;
   } catch (err) {
     console.error("Ошибка removeReactionToBoard:", err);
@@ -377,9 +351,6 @@ export async function followUser(userId: string, followerId: string): Promise<bo
       console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
       return false;
     }
-    console.log("Author followed via Collection_ID", {userId, followerId });
-
-
     return json.data?.followUser || false;
   } catch (err) {
     console.error("Ошибка followUser:", err);

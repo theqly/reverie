@@ -2,33 +2,26 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import styles from './CreatePinPage.module.css';
 import Header from './Header';
-import AddPinModal from "./AddPinModal";
-import InviteCollaboratorModal from './InviteCollaboratorModal';
 import MapModal from './MapModal';
 import { getPinById as getMockPinById } from '../utils/mockData';
 import { useToast } from './ToastProvider';
 import { updatePin, getPinById as getBackendPinById } from "../services/pinService";
+import { useCurrentUserId } from '../context/AuthContext';
 
 const EditPinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
+  const currentUserId = useCurrentUserId();
+  const { showToast } = useToast();
 
-  // Состояния
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
   const [pinLongitude, setPinLongitude] = useState<number | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [pinName, setPinName] = useState('');
   const [pinInfo, setPinInfo] = useState('');
-  const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [collaborators, setCollaborators] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [pinCount, setPinCount] = useState(0);
-  const { showToast } = useToast();
-  
-  // Новые состояния для загрузки
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,26 +39,20 @@ const EditPinPage = () => {
 
         if (backendPin) {
           // Заполняем форму данными с бэкенда
-          setPinName(backendPin.title || '');
+          setPinName(backendPin.name || '');
           setPinInfo(backendPin.description || '');
-          
+
           // Устанавливаем координаты из данных бэкенда
-          if (backendPin.coords && backendPin.coords.length === 2) {
-            setPinLatitude(backendPin.coords[0]);
-            setPinLongitude(backendPin.coords[1]);
-          } else if (backendPin.latitude && backendPin.longitude) {
-            // Альтернативный формат координат
+          if (backendPin.latitude != null && backendPin.longitude != null) {
             setPinLatitude(backendPin.latitude);
             setPinLongitude(backendPin.longitude);
           }
-          
-          // Загрузка изображений (если есть в API)
-          // TODO: Добавить загрузку изображений с бэкенда
+
+          // TODO: Загрузка существующих изображений
           return;
         }
 
         // 2. Фолбек на моки
-        console.log("Используем моки для загрузки данных пина");
         const mockPin = getMockPinById(parseInt(id));
 
         if (mockPin) {
@@ -84,7 +71,6 @@ const EditPinPage = () => {
         console.error("Ошибка при загрузке пина:", e);
 
         // 3. Фолбек на моки при ошибке
-        console.log("Ошибка при загрузке, используем моки");
         const mockPin = getMockPinById(parseInt(id));
 
         if (mockPin) {
@@ -116,39 +102,36 @@ const EditPinPage = () => {
   }, [location.state]);
 
   const handleSavePin = async () => {
-    console.log('[EditPin] Current coordinates:', {
-      latitude: pinLatitude,
-      longitude: pinLongitude
-    });
-    
     if (pinLatitude === null || pinLongitude === null) {
       alert('Выберите точку на карте');
       return;
     }
-    
-    const payload = {
-      id: parseInt(id!),
+
+    if (!id) {
+      showToast("ID пина не указан", true);
+      return;
+    }
+
+    // UpdatePinInput согласно схеме GraphQL
+    const updateInput = {
+      userId: currentUserId,
       name: pinName,
       description: pinInfo,
       latitude: pinLatitude,
       longitude: pinLongitude,
-      ownerId: '00000000-0000-0000-0000-000000000001', // TODO: взять из контекста/авторизации
-      coverImages: images
     };
-    
+
     try {
-      const updatedPin = await updatePin(payload);
+      const updatedPin = await updatePin(id, updateInput);
 
       if (updatedPin) {
-        console.log("Пин успешно обновлён:", updatedPin);
         showToast("Успешное сохранение!");
         handleBack();
       } else {
-        console.warn("Пин не был обновлён. Вернулся null");
         showToast("Ошибка при сохранении", true);
       }
-    } catch (error: any) {
-      console.error("Ошибка при обновлении пина:", error.message);
+    } catch (error) {
+      console.error("Ошибка при обновлении пина:", error);
       showToast("Ошибка при сохранении", true);
     }
   };
@@ -167,34 +150,15 @@ const EditPinPage = () => {
     }
   };
 
-  // Остальные функции остаются без изменений
   const handleAddImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (images.length >= 10) return;
-
-    const newImages = [...images, file];
-    setImages(newImages);
-    setCurrentIndex(newImages.length - 1);
+    if (!file || images.length >= 10) return;
+    setImages([...images, file]);
+    setCurrentIndex(images.length);
   };
 
-  const handleAddPin = () => {
-    setIsAddPinModalOpen(true);
-    setPinCount(prev => prev + 1);
-  };
-
-  const handleInviteCollaborator = () => {
-    setIsInviteModalOpen(true);
-  };
-
-  const handleAddCollaborator = () => {
-    const newCollaborator = `Collaborator ${collaborators.length + 1}`;
-    setCollaborators(prev => [...prev, newCollaborator]);
-  };
-
-  const isSaveEnabled = pinName.trim().length > 0 && 
-                       pinName.length <= 50 && 
+  const isSaveEnabled = pinName.trim().length > 0 &&
+                       pinName.length <= 50 &&
                        pinInfo.length <= 1000 &&
                        images.length > 0;
 
@@ -387,22 +351,14 @@ const EditPinPage = () => {
           </section>
         </div>
         
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={handleSavePin}
           disabled={!isSaveEnabled}
           className={styles.saveButton}
         >
           Сохранить изменения
         </button>
-
-        {isAddPinModalOpen && (
-          <AddPinModal onClose={() => setIsAddPinModalOpen(false)} />
-        )}
-
-        {isInviteModalOpen && (
-          <InviteCollaboratorModal onClose={() => setIsInviteModalOpen(false)} />
-        )}
       </main>
       
       {isMapOpen && (

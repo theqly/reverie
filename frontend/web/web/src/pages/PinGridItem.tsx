@@ -1,8 +1,21 @@
-import React from 'react';
 import placeholder_1 from '../assets/placeholder1.jpg';
-import styles from './PinGridItem.module.css'; 
+import styles from './PinGridItem.module.css';
 
-const PinGridItem = ({ pin, onClick }) => {
+interface Pin {
+  id: string | number;
+  image?: string;
+  title: string;
+  location?: string;
+  author?: string;
+  authorAvatar?: string;
+}
+
+interface PinGridItemProps {
+  pin: Pin;
+  onClick?: (id: string | number) => void;
+}
+
+const PinGridItem = ({ pin, onClick }: PinGridItemProps) => {
   const {
     id,
     image,
