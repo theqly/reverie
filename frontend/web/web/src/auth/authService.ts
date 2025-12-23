@@ -34,7 +34,7 @@ export async function redirectToLogin(): Promise<void> {
   authUrl.searchParams.set('client_id', authConfig.clientId);
   authUrl.searchParams.set('redirect_uri', authConfig.redirectUri);
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('scope', 'openid profile email offline_access');
+  authUrl.searchParams.set('scope', 'openid profile email');
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('nonce', nonce);
   authUrl.searchParams.set('code_challenge', codeChallenge);
