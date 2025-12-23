@@ -30,9 +30,10 @@ export async function generateCodeChallenge(
 
 
   const hashBuffer: ArrayBuffer = await crypto.subtle.digest(
-    'SHA-256',
-    data.buffer
-  );
+  'SHA-256',
+  new Uint8Array(data).buffer
+);
+
 
   const hashArray: Uint8Array = new Uint8Array(hashBuffer);
 
