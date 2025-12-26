@@ -2,6 +2,7 @@ import {apolloClient} from "@/api/apolloClient.ts";
 import {
   FollowUserDocument,
   GetFollowersByIdDocument,
+  GetFollowingByIdDocument,
   GetUserByNickTagDocument,
   GetUserIdByNickTagDocument, UnfollowUserDocument
 } from "@/graphql/generated/graphql.ts";
@@ -92,6 +93,34 @@ export async function getFollowers(payload: GetFollowersPayload) {
 }
 
 /**
+ * Возвращает список пользователей, на которых подписан указанный пользователь.
+ *
+ * @param {string} userId — ID пользователя
+ *
+ * @example
+ * const following = await getFollowing("00000000-0000-0000-0000-000000000001");
+ * // вернет массив пользователей [{id, nickname, nickTag, profilePicture}, ...]
+ */
+export async function getFollowing(userId: string) {
+  if (!userId) {
+    return [];
+  }
+
+  try {
+    const result = await apolloClient.query({
+      query: GetFollowingByIdDocument,
+      variables: { userId },
+      fetchPolicy: 'network-only',
+    });
+
+    return result.data?.followingOf || [];
+  } catch (error) {
+    console.error('Failed to get following:', error);
+    return [];
+  }
+}
+
+/**
  * Подписывает пользователя followerId на userId // TODO: или наоборот? Уточнить у команды бека надо
  *
  * @example
@@ -141,7 +170,7 @@ export async function unfollowUser(userId: string, followerId: string) : Promise
       }
     });
 
-    return unfollowed.data?.followUser || false;
+    return unfollowed.data?.unfollowUser || false;
   } catch (error) {
     console.error('Failed to follow user:', error);
   }

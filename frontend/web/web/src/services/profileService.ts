@@ -5,6 +5,8 @@ import {
   GetLikedPinsByUserIdDocument,
   GetOwnBoardsByUserIdDocument,
   GetPinsByUserIdDocument,
+  GetAllPinsDocument,
+  GetAllBoardsDocument,
   GetUserByIdDocument,
   GetUserByNickTagDocument,
   type Pin,
@@ -75,7 +77,7 @@ export async function findUser(
           nickTag: userInfo.nickTag
         }
       });
-      return userResult.data?.userById || null
+      return userResult.data?.userByTag || null
     } else {
       return null;
     }
@@ -398,3 +400,34 @@ export async function updateUser(userId: string, input: UpdateUserInput): Promis
   return null;
 }
 
+export async function getAllPins(
+  params: { viewerId?: string; limit?: number; offset?: number }
+): Promise<Pin[] | null> {
+  try {
+    const result = await apolloClient.query({
+      query: GetAllPinsDocument,
+      variables: { viewerId: params.viewerId, limit: params.limit, offset: params.offset },
+      fetchPolicy: 'network-only',
+    });
+    return result.data?.pins || null;
+  } catch (error) {
+    console.error('[getAllPins] Failed:', error);
+    return null;
+  }
+}
+
+export async function getAllBoards(
+  params: { viewerId?: string; limit?: number; offset?: number }
+): Promise<Board[] | null> {
+  try {
+    const result = await apolloClient.query({
+      query: GetAllBoardsDocument,
+      variables: { viewerId: params.viewerId, limit: params.limit, offset: params.offset },
+      fetchPolicy: 'network-only',
+    });
+    return result.data?.boards || null;
+  } catch (error) {
+    console.error('[getAllBoards] Failed:', error);
+    return null;
+  }
+}
