@@ -13,12 +13,15 @@ import LoginPage from './pages/LoginPage';
 import PinViewPage from './pages/PinViewPage';
 import Feed from './pages/Feed';
 import CollectionViewPage from './pages/CollectionViewPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 
 import { ToastProvider } from './pages/ToastProvider';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
     <Router>
+      <AuthProvider>
       <ToastProvider>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -26,6 +29,7 @@ function App() {
           <Route path="/pin/create" element={<CreatePinPage />} />
           <Route path="/pin/edit/:id" element={<EditPinPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/feed" element={<Feed />} />
 
           <Route path="/pin/:pinId" element={<PinViewPage />} />
@@ -35,8 +39,10 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/likes/feed" element={<LikedPins />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:nickTag" element={<Profile />} />
         </Routes>
       </ToastProvider>
+      </AuthProvider>
     </Router>
   );
 }

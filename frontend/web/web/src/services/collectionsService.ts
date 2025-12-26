@@ -11,14 +11,28 @@ import {
   IsBoardBookmarkedDocument,
   OwnerType,
   UpdateBoardDocument,
-  type UpdateBoardInput
+  type UpdateBoardInput,
+  AddPinToBoardDocument
 } from "@/graphql/generated/graphql.ts";
+
+import {
+  uploadImageDev, 
+  type ImageUploadProgress 
+} from "@/services/imageService.ts";
 
 export interface CreateCollectionPayload {
   name: string;
   info: string;
   coverImage: File | null;
   collaborators: string[];
+}
+
+export interface CreateCollectionResult {
+  success: boolean;
+  boardId?: string;
+  board?: Board;
+  coverImageUrl?: string; // URL загруженной обложки
+  error?: string;
 }
 
 /**
@@ -31,14 +45,34 @@ export interface CreateCollectionPayload {
  *   name: "Моя коллекция",
  *   info: "Описание коллекции",
  *   coverImage: file,
- *   collaborators: ["Alice", "Bob"] // TODO: заменить на массив id. Сейчас чтоб хотя бы как-то работало есть строка 38
+ *   collaborators: ["user-uuid-1", "user-uuid-2"]
  * });
  */
-export async function createCollection(payload: CreateCollectionPayload) {
+export async function createCollection(
+  payload: CreateCollectionPayload,
+  onImageProgress?: (progress: ImageUploadProgress) => void
+): Promise<CreateCollectionResult> {
   if (payload.collaborators.length == 0) {
-    return { success: false };
+    return { success: false, error: 'Не указаны участники коллекции' };
   }
+  
+  let coverImageUrl: string | undefined;
+  
   try {
+    // Загружаем обложку если она есть
+    // Примечание: у Board нет своего поля для обложки в схеме GraphQL
+    // Обложка берётся из первого пина коллекции
+    // Но мы можем сохранить URL для локального использования
+    if (payload.coverImage) {
+      const uploadResult = await uploadImageDev(payload.coverImage, onImageProgress);
+      if (uploadResult.success && uploadResult.imageUrl) {
+        coverImageUrl = uploadResult.imageUrl;
+        console.log('Cover image uploaded:', coverImageUrl);
+      } else {
+        console.warn('Failed to upload cover image:', uploadResult.error);
+      }
+    }
+
     if (payload.collaborators.length > 1) {
       const groupResult = await apolloClient.mutate({
         mutation: CreateGroupDocument,
@@ -60,13 +94,12 @@ export async function createCollection(payload: CreateCollectionPayload) {
         variables: {
           input: {
             name: payload.name,
+            description: payload.info || undefined,
             accessLevel: AccessLevelType.Group,
             ownerId: newGroupId,
-            ownerType: OwnerType.Group,
-            description: payload.info
+            ownerType: OwnerType.Group
           } as CreateBoardInput
         },
-        // refetchQueries: ['ownBoardsByUser', 'groupBoardsByUser']
       });
 
       const newBoard = boardResult.data?.createBoard;
@@ -78,7 +111,8 @@ export async function createCollection(payload: CreateCollectionPayload) {
       return {
         success: true,
         boardId: newBoard.id,
-        board: newBoard
+        board: newBoard,
+        coverImageUrl
       };
     } else {
       const boardResult = await apolloClient.mutate({
@@ -86,10 +120,10 @@ export async function createCollection(payload: CreateCollectionPayload) {
         variables: {
           input: {
             name: payload.name,
+            description: payload.info || undefined,
             accessLevel: AccessLevelType.Public,
             ownerId: payload.collaborators[0],
-            ownerType: OwnerType.User,
-            description: payload.info
+            ownerType: OwnerType.User
           } as CreateBoardInput
         },
       });
@@ -103,13 +137,17 @@ export async function createCollection(payload: CreateCollectionPayload) {
       return {
         success: true,
         boardId: newBoard.id,
-        board: newBoard
+        board: newBoard,
+        coverImageUrl
       };
     }
 
   } catch (error: any) {
     console.error('Error creating collection:', error);
-    throw new Error(`Failed to create collection: ${error.message}`);
+    return { 
+      success: false, 
+      error: `Failed to create collection: ${error.message}` 
+    };
   }
 }
 
@@ -129,32 +167,40 @@ export async function createCollection(payload: CreateCollectionPayload) {
  * });
  */
 export async function updateCollection(collectionId: string, input: UpdateBoardInput) : Promise< Board | null > {
+  try {
+    const updateInput: any = {
+      userId: input.userId,
+    };
 
-  const updateInput: any = {
-    userId: input.userId,
-  };
+    if (input.accessLevel !== undefined) {
+      updateInput.accessLevel = input.accessLevel;
+    }
 
-  if (input.accessLevel !== undefined) {
-    updateInput.accessLevel = input.accessLevel;
+    if (input.name !== undefined) {
+      updateInput.name = input.name;
+    }
+
+    if (input.description !== undefined) {
+      updateInput.description = input.description;
+    }
+
+    console.log('[updateCollection] Sending mutation with:', { id: collectionId, input: updateInput });
+
+    const updatedBoardResult = await apolloClient.mutate({
+      mutation: UpdateBoardDocument,
+      variables: {
+        id: collectionId,
+        input: updateInput as UpdateBoardInput
+      },
+    });
+
+    console.log('[updateCollection] Result:', updatedBoardResult);
+
+    return updatedBoardResult.data?.updateBoard || null;
+  } catch (error) {
+    console.error('[updateCollection] Error:', error);
+    throw error;
   }
-
-  if (input.name !== undefined) {
-    updateInput.name = input.name;
-  }
-
-  if (input.description !== undefined) {
-    updateInput.description = input.description;
-  }
-
-  const updatedBoardResult = await apolloClient.mutate({
-    mutation: UpdateBoardDocument,
-    variables: {
-      id: collectionId,
-      input: updateInput as UpdateBoardInput
-    },
-  });
-
-  return updatedBoardResult.data?.updateBoard || null;
 }
 
 /**
@@ -205,5 +251,29 @@ export async function isBoardBookmarked(id: string): Promise<boolean> {
   } catch (error) {
     console.error('Failed to fetch pin:', error);
     return false;
+  }
+}
+
+/**
+ * Добавляет пин в подборку
+ * @param pinId - ID пина
+ * @param boardId - ID подборки
+ * @returns Board с обновлённым списком пинов или null в случае ошибки
+ */
+export async function addPinToBoard(pinId: string, boardId: string): Promise<Board | null> {
+  try {
+    const result = await apolloClient.mutate({
+      mutation: AddPinToBoardDocument,
+      variables: {
+        pinId,
+        boardId
+      },
+    });
+
+    console.log('[addPinToBoard] Result:', result);
+    return result.data?.addPinToBoard || null;
+  } catch (error) {
+    console.error('[addPinToBoard] Error:', error);
+    return null;
   }
 }

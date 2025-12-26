@@ -28,6 +28,20 @@
   transform: scale(0.95);
 }
 
+/* Отключённое состояние для своего контента */
+.reactionButton.disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.reactionButton.disabled:hover {
+  transform: none;
+}
+
+.reactionButton.disabled:hover::after {
+  opacity: 0;
+}
+
 /* Лайки */
 .likesWrapper {
   margin-left: auto;

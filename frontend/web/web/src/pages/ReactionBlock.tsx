@@ -1,18 +1,29 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import styles from './ReactionBlock.module.css';
 
-const ReactionBlock = ({ 
+interface ReactionBlockProps {
+  initialLikes?: number;
+  initialLiked?: boolean;
+  initialBookmarked?: boolean;
+  onLike?: (liked: boolean) => void;
+  onBookmark?: (bookmarked: boolean) => void;
+  isOwnContent?: boolean; // Запрет лайков на своём контенте
+}
+
+const ReactionBlock = ({
   initialLikes = 226,
   initialLiked = false,
   initialBookmarked = false,
   onLike,
-  onBookmark
-}) => {
+  onBookmark,
+  isOwnContent = false
+}: ReactionBlockProps) => {
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
 
   const handleLike = () => {
+    if (isOwnContent) return; // Нельзя лайкать свой контент
     const newLikedState = !isLiked;
     setIsLiked(newLikedState);
     setLikesCount(prev => newLikedState ? prev + 1 : prev - 1);
@@ -20,6 +31,7 @@ const ReactionBlock = ({
   };
 
   const handleBookmark = () => {
+    if (isOwnContent) return; // Нельзя добавлять в закладки свой контент
     const newBookmarkedState = !isBookmarked;
     setIsBookmarked(newBookmarkedState);
     if (onBookmark) onBookmark(newBookmarkedState);
@@ -29,10 +41,11 @@ const ReactionBlock = ({
     <div className={styles.reactionBlock}>
       {/* Лайки */}
       <div className={styles.likesWrapper}>
-        <button 
-          className={`${styles.reactionButton} ${styles.likeButton} ${isLiked ? styles.active : ''}`}
+        <button
+          className={`${styles.reactionButton} ${styles.likeButton} ${isLiked ? styles.active : ''} ${isOwnContent ? styles.disabled : ''}`}
           onClick={handleLike}
-          aria-label={isLiked ? "Убрать лайк" : "Поставить лайк"}
+          disabled={isOwnContent}
+          aria-label={isOwnContent ? "Нельзя лайкать свой контент" : (isLiked ? "Убрать лайк" : "Поставить лайк")}
           aria-pressed={isLiked}
         >
           <svg 
@@ -50,10 +63,11 @@ const ReactionBlock = ({
 
       {/* Закладки */}
       <div className={styles.bmWrapper}>
-        <button 
-          className={`${styles.reactionButton} ${styles.bookmarkButton} ${isBookmarked ? styles.active : ''}`}
+        <button
+          className={`${styles.reactionButton} ${styles.bookmarkButton} ${isBookmarked ? styles.active : ''} ${isOwnContent ? styles.disabled : ''}`}
           onClick={handleBookmark}
-          aria-label={isBookmarked ? "Убрать из закладок" : "Добавить в закладки"}
+          disabled={isOwnContent}
+          aria-label={isOwnContent ? "Нельзя добавить в закладки свой контент" : (isBookmarked ? "Убрать из закладок" : "Добавить в закладки")}
           aria-pressed={isBookmarked}
         >
           <svg 

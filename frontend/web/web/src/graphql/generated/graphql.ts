@@ -47,17 +47,29 @@ export type AddImageInput = {
 export type Board = {
   __typename?: 'Board';
   accessLevel: AccessLevelType;
+  access_level: Scalars['String']['output'];
   authorId: Scalars['UUID']['output'];
+  board_id: Scalars['UUID']['output'];
   bookmarked?: Maybe<Scalars['Boolean']['output']>;
+  bookmarks_count?: Maybe<Scalars['Int']['output']>;
+  comments_count?: Maybe<Scalars['Int']['output']>;
   createdAt: Scalars['Time']['output'];
+  created_at: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  group_member_ids: Array<Scalars['UUID']['output']>;
   id: Scalars['UUID']['output'];
+  likes_count?: Maybe<Scalars['Int']['output']>;
   name: Scalars['String']['output'];
+  owner: User;
   ownerId: Scalars['UUID']['output'];
   ownerType: OwnerType;
+  owner_id: Scalars['UUID']['output'];
+  owner_type: Scalars['String']['output'];
+  pin_ids: Array<Scalars['UUID']['output']>;
   pins?: Maybe<Array<Pin>>;
   reactionId?: Maybe<Scalars['UUID']['output']>;
   savedAt: Scalars['Time']['output'];
+  saved_at: Scalars['String']['output'];
 };
 
 export type CommentToBoard = {
@@ -343,21 +355,36 @@ export enum OwnerType {
 
 export type Pin = {
   __typename?: 'Pin';
+  access_level: Scalars['String']['output'];
   address?: Maybe<Scalars['String']['output']>;
   author: User;
   bookmarked?: Maybe<Scalars['Boolean']['output']>;
+  bookmarks_count?: Maybe<Scalars['Int']['output']>;
+  comments_count?: Maybe<Scalars['Int']['output']>;
   createdAt: Scalars['Time']['output'];
+  created_at: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
   images?: Maybe<Array<PinImage>>;
   latitude: Scalars['Float']['output'];
+  likes_count?: Maybe<Scalars['Int']['output']>;
   longitude: Scalars['Float']['output'];
   name: Scalars['String']['output'];
   owner: User;
+  owner_id: Scalars['UUID']['output'];
+  pin_id: Scalars['UUID']['output'];
   place?: Maybe<Place>;
+  place_address?: Maybe<Scalars['String']['output']>;
+  place_id?: Maybe<Scalars['UUID']['output']>;
+  place_latitude?: Maybe<Scalars['Float']['output']>;
+  place_longitude?: Maybe<Scalars['Float']['output']>;
+  place_name?: Maybe<Scalars['String']['output']>;
+  place_purpose_name?: Maybe<Scalars['String']['output']>;
+  place_type?: Maybe<Scalars['String']['output']>;
   rating: Scalars['Float']['output'];
   reactionId?: Maybe<Scalars['UUID']['output']>;
   savedAt: Scalars['Time']['output'];
+  saved_at: Scalars['String']['output'];
 };
 
 export type PinImage = {
@@ -383,6 +410,7 @@ export type Query = {
   __typename?: 'Query';
   board?: Maybe<Board>;
   boardByName?: Maybe<Array<Board>>;
+  boards: Array<Board>;
   boardsByGroup?: Maybe<Array<Board>>;
   bookmarkedBoardsByUser: Array<Board>;
   bookmarkedPinsByUser: Array<Pin>;
@@ -393,7 +421,8 @@ export type Query = {
   countGroupBoardsByUser: Scalars['Int']['output'];
   countOwnBoardsByUser: Scalars['Int']['output'];
   countPinsByUser: Scalars['Int']['output'];
-  feed: Array<Pin>;
+  feedBoards: Array<Board>;
+  feedPins: Array<Pin>;
   followersCount: Scalars['Int']['output'];
   followersOf: Array<User>;
   followingCount: Scalars['Int']['output'];
@@ -407,10 +436,14 @@ export type Query = {
   likedPinsByUser: Array<Pin>;
   ownBoardsByUser: Array<Board>;
   pin?: Maybe<Pin>;
+  pins: Array<Pin>;
   pinsByLocation?: Maybe<Array<Pin>>;
   pinsByName?: Maybe<Array<Pin>>;
   pinsByUser?: Maybe<Array<Pin>>;
   reactions: Array<Reaction>;
+  searchBoards: Array<Board>;
+  searchPins: Array<Pin>;
+  searchUsers: Array<User>;
   userByEmail?: Maybe<User>;
   userById?: Maybe<User>;
   userByNickname?: Maybe<Array<User>>;
@@ -427,6 +460,13 @@ export type QueryBoardArgs = {
 export type QueryBoardByNameArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+export type QueryBoardsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   viewerId?: InputMaybe<Scalars['UUID']['input']>;
 };
@@ -490,6 +530,16 @@ export type QueryCountOwnBoardsByUserArgs = {
 
 export type QueryCountPinsByUserArgs = {
   userId: Scalars['UUID']['input'];
+};
+
+
+export type QueryFeedBoardsArgs = {
+  userID: Scalars['UUID']['input'];
+};
+
+
+export type QueryFeedPinsArgs = {
+  userID: Scalars['UUID']['input'];
 };
 
 
@@ -565,6 +615,13 @@ export type QueryPinArgs = {
 };
 
 
+export type QueryPinsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
 export type QueryPinsByLocationArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
@@ -586,6 +643,21 @@ export type QueryPinsByUserArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   userId: Scalars['UUID']['input'];
   viewerId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+export type QuerySearchBoardsArgs = {
+  query: Scalars['String']['input'];
+};
+
+
+export type QuerySearchPinsArgs = {
+  query: Scalars['String']['input'];
+};
+
+
+export type QuerySearchUsersArgs = {
+  query: Scalars['String']['input'];
 };
 
 
@@ -651,13 +723,18 @@ export type User = {
   description?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
   followers: Array<User>;
+  followers_count?: Maybe<Scalars['Int']['output']>;
   following: Array<User>;
+  followings_count?: Maybe<Scalars['Int']['output']>;
   id: Scalars['UUID']['output'];
   nickTag: Scalars['String']['output'];
+  nick_tag?: Maybe<Scalars['String']['output']>;
   nickname: Scalars['String']['output'];
   profilePicture?: Maybe<Scalars['String']['output']>;
   status: UserStatus;
   userRating: Scalars['Float']['output'];
+  user_id: Scalars['UUID']['output'];
+  user_rating?: Maybe<Scalars['Float']['output']>;
 };
 
 export enum UserStatus {
@@ -670,14 +747,14 @@ export type GetUserByNickTagQueryVariables = Exact<{
 }>;
 
 
-export type GetUserByNickTagQuery = { __typename?: 'Query', userByTag?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } | null };
+export type GetUserByNickTagQuery = { __typename?: 'Query', userByTag?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null }>, following: Array<{ __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null }> } | null };
 
 export type GetUserByIdQueryVariables = Exact<{
   userId: Scalars['UUID']['input'];
 }>;
 
 
-export type GetUserByIdQuery = { __typename?: 'Query', userById?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> } | null };
+export type GetUserByIdQuery = { __typename?: 'Query', userById?: { __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null }>, following: Array<{ __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null }> } | null };
 
 export type GetPinsByUserIdQueryVariables = Exact<{
   userId: Scalars['UUID']['input'];
@@ -687,7 +764,7 @@ export type GetPinsByUserIdQueryVariables = Exact<{
 }>;
 
 
-export type GetPinsByUserIdQuery = { __typename?: 'Query', pinsByUser?: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null };
+export type GetPinsByUserIdQuery = { __typename?: 'Query', pinsByUser?: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null, owner: { __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null } }> | null };
 
 export type GetLikedPinsByUserIdQueryVariables = Exact<{
   userID: Scalars['UUID']['input'];
@@ -721,7 +798,7 @@ export type UpdateBoardMutationVariables = Exact<{
 }>;
 
 
-export type UpdateBoardMutation = { __typename?: 'Mutation', updateBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } };
+export type UpdateBoardMutation = { __typename?: 'Mutation', updateBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, createdAt: any, reactionId?: any | null, bookmarked?: boolean | null } };
 
 export type GetOwnBoardsByUserIdQueryVariables = Exact<{
   userId: Scalars['UUID']['input'];
@@ -730,7 +807,7 @@ export type GetOwnBoardsByUserIdQueryVariables = Exact<{
 }>;
 
 
-export type GetOwnBoardsByUserIdQuery = { __typename?: 'Query', ownBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
+export type GetOwnBoardsByUserIdQuery = { __typename?: 'Query', ownBoardsByUser: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
 
 export type GetLikedBoardsByUserIdQueryVariables = Exact<{
   userID: Scalars['UUID']['input'];
@@ -764,6 +841,13 @@ export type GetFollowersByIdQueryVariables = Exact<{
 
 export type GetFollowersByIdQuery = { __typename?: 'Query', followersOf: Array<{ __typename?: 'User', id: any, nickname: string, email: string, nickTag: string, profilePicture?: string | null, description?: string | null, status: UserStatus, userRating: number, followers: Array<{ __typename?: 'User', id: any, nickname: string }>, following: Array<{ __typename?: 'User', id: any, nickname: string }> }> };
 
+export type GetFollowingByIdQueryVariables = Exact<{
+  userId: Scalars['UUID']['input'];
+}>;
+
+
+export type GetFollowingByIdQuery = { __typename?: 'Query', followingOf: Array<{ __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null }> };
+
 export type CreateGroupMutationVariables = Exact<{
   input: CreateGroupInput;
 }>;
@@ -783,14 +867,14 @@ export type GetPinByIdQueryVariables = Exact<{
 }>;
 
 
-export type GetPinByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
+export type GetPinByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null, owner: { __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null } } | null };
 
 export type GetBoardByIdQueryVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
 
 
-export type GetBoardByIdQuery = { __typename?: 'Query', board?: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } | null };
+export type GetBoardByIdQuery = { __typename?: 'Query', board?: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null } }> | null } | null };
 
 export type CreatePinMutationVariables = Exact<{
   input: CreatePinInput;
@@ -1026,6 +1110,38 @@ export type IsBoardBookmarkedQueryVariables = Exact<{
 
 export type IsBoardBookmarkedQuery = { __typename?: 'Query', board?: { __typename?: 'Board', bookmarked?: boolean | null } | null };
 
+export type GetAllPinsQueryVariables = Exact<{
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetAllPinsQuery = { __typename?: 'Query', pins: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null, owner: { __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null } }> };
+
+export type GetAllBoardsQueryVariables = Exact<{
+  viewerId?: InputMaybe<Scalars['UUID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetAllBoardsQuery = { __typename?: 'Query', boards: Array<{ __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, reactionId?: any | null, bookmarked?: boolean | null, owner: { __typename?: 'User', id: any, nickname: string, nickTag: string, profilePicture?: string | null }, pins?: Array<{ __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null }> };
+
+export type GetFeedPinsQueryVariables = Exact<{
+  userID: Scalars['UUID']['input'];
+}>;
+
+
+export type GetFeedPinsQuery = { __typename?: 'Query', feedPins: Array<{ __typename?: 'Pin', pin_id: any, name: string, owner_id: any, description?: string | null, latitude: number, longitude: number, rating: number, created_at: string, likes_count?: number | null, comments_count?: number | null, bookmarks_count?: number | null }> };
+
+export type GetFeedBoardsQueryVariables = Exact<{
+  userID: Scalars['UUID']['input'];
+}>;
+
+
+export type GetFeedBoardsQuery = { __typename?: 'Query', feedBoards: Array<{ __typename?: 'Board', board_id: any, name: string, owner_id: any, owner_type: string, access_level: string, created_at: string, likes_count?: number | null, comments_count?: number | null, bookmarks_count?: number | null, pin_ids: Array<any> }> };
+
 
 export const GetUserByNickTagDocument = gql`
     query GetUserByNickTag($nickTag: String!) {
@@ -1041,10 +1157,14 @@ export const GetUserByNickTagDocument = gql`
     followers {
       id
       nickname
+      nickTag
+      profilePicture
     }
     following {
       id
       nickname
+      nickTag
+      profilePicture
     }
   }
 }
@@ -1096,10 +1216,14 @@ export const GetUserByIdDocument = gql`
     followers {
       id
       nickname
+      nickTag
+      profilePicture
     }
     following {
       id
       nickname
+      nickTag
+      profilePicture
     }
   }
 }
@@ -1150,6 +1274,12 @@ export const GetPinsByUserIdDocument = gql`
       id
       orderNumber
       imageUrl
+    }
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
     }
   }
 }
@@ -1364,24 +1494,8 @@ export const UpdateBoardDocument = gql`
     description
     accessLevel
     ownerId
-    authorId
     ownerType
     createdAt
-    savedAt
-    pins {
-      id
-      name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
-      images {
-        id
-        orderNumber
-        imageUrl
-      }
-    }
     reactionId
     bookmarked
   }
@@ -1426,6 +1540,8 @@ export const GetOwnBoardsByUserIdDocument = gql`
     pins {
       id
       name
+      latitude
+      longitude
       images {
         id
         orderNumber
@@ -1699,6 +1815,49 @@ export type GetFollowersByIdQueryHookResult = ReturnType<typeof useGetFollowersB
 export type GetFollowersByIdLazyQueryHookResult = ReturnType<typeof useGetFollowersByIdLazyQuery>;
 export type GetFollowersByIdSuspenseQueryHookResult = ReturnType<typeof useGetFollowersByIdSuspenseQuery>;
 export type GetFollowersByIdQueryResult = Apollo.QueryResult<GetFollowersByIdQuery, GetFollowersByIdQueryVariables>;
+export const GetFollowingByIdDocument = gql`
+    query GetFollowingById($userId: UUID!) {
+  followingOf(userId: $userId) {
+    id
+    nickname
+    nickTag
+    profilePicture
+  }
+}
+    `;
+
+/**
+ * __useGetFollowingByIdQuery__
+ *
+ * To run a query within a React component, call `useGetFollowingByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFollowingByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFollowingByIdQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useGetFollowingByIdQuery(baseOptions: Apollo.QueryHookOptions<GetFollowingByIdQuery, GetFollowingByIdQueryVariables> & ({ variables: GetFollowingByIdQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetFollowingByIdQuery, GetFollowingByIdQueryVariables>(GetFollowingByIdDocument, options);
+      }
+export function useGetFollowingByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFollowingByIdQuery, GetFollowingByIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetFollowingByIdQuery, GetFollowingByIdQueryVariables>(GetFollowingByIdDocument, options);
+        }
+export function useGetFollowingByIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetFollowingByIdQuery, GetFollowingByIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetFollowingByIdQuery, GetFollowingByIdQueryVariables>(GetFollowingByIdDocument, options);
+        }
+export type GetFollowingByIdQueryHookResult = ReturnType<typeof useGetFollowingByIdQuery>;
+export type GetFollowingByIdLazyQueryHookResult = ReturnType<typeof useGetFollowingByIdLazyQuery>;
+export type GetFollowingByIdSuspenseQueryHookResult = ReturnType<typeof useGetFollowingByIdSuspenseQuery>;
+export type GetFollowingByIdQueryResult = Apollo.QueryResult<GetFollowingByIdQuery, GetFollowingByIdQueryVariables>;
 export const CreateGroupDocument = gql`
     mutation CreateGroup($input: CreateGroupInput!) {
   createGroup(input: $input) {
@@ -1798,6 +1957,12 @@ export const GetPinByIdDocument = gql`
       orderNumber
       imageUrl
     }
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
+    }
   }
 }
     `;
@@ -1846,10 +2011,17 @@ export const GetBoardByIdDocument = gql`
     pins {
       id
       name
+      latitude
+      longitude
       images {
         id
         orderNumber
         imageUrl
+      }
+      owner {
+        id
+        nickname
+        profilePicture
       }
     }
     reactionId
@@ -3042,3 +3214,226 @@ export type IsBoardBookmarkedQueryHookResult = ReturnType<typeof useIsBoardBookm
 export type IsBoardBookmarkedLazyQueryHookResult = ReturnType<typeof useIsBoardBookmarkedLazyQuery>;
 export type IsBoardBookmarkedSuspenseQueryHookResult = ReturnType<typeof useIsBoardBookmarkedSuspenseQuery>;
 export type IsBoardBookmarkedQueryResult = Apollo.QueryResult<IsBoardBookmarkedQuery, IsBoardBookmarkedQueryVariables>;
+export const GetAllPinsDocument = gql`
+    query GetAllPins($viewerId: UUID, $limit: Int = 50, $offset: Int = 0) {
+  pins(viewerId: $viewerId, limit: $limit, offset: $offset) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAllPinsQuery__
+ *
+ * To run a query within a React component, call `useGetAllPinsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAllPinsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAllPinsQuery({
+ *   variables: {
+ *      viewerId: // value for 'viewerId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetAllPinsQuery(baseOptions?: Apollo.QueryHookOptions<GetAllPinsQuery, GetAllPinsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAllPinsQuery, GetAllPinsQueryVariables>(GetAllPinsDocument, options);
+      }
+export function useGetAllPinsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllPinsQuery, GetAllPinsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAllPinsQuery, GetAllPinsQueryVariables>(GetAllPinsDocument, options);
+        }
+export function useGetAllPinsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllPinsQuery, GetAllPinsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAllPinsQuery, GetAllPinsQueryVariables>(GetAllPinsDocument, options);
+        }
+export type GetAllPinsQueryHookResult = ReturnType<typeof useGetAllPinsQuery>;
+export type GetAllPinsLazyQueryHookResult = ReturnType<typeof useGetAllPinsLazyQuery>;
+export type GetAllPinsSuspenseQueryHookResult = ReturnType<typeof useGetAllPinsSuspenseQuery>;
+export type GetAllPinsQueryResult = Apollo.QueryResult<GetAllPinsQuery, GetAllPinsQueryVariables>;
+export const GetAllBoardsDocument = gql`
+    query GetAllBoards($viewerId: UUID, $limit: Int = 50, $offset: Int = 0) {
+  boards(viewerId: $viewerId, limit: $limit, offset: $offset) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    ownerType
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
+    }
+    pins {
+      id
+      name
+      latitude
+      longitude
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+    `;
+
+/**
+ * __useGetAllBoardsQuery__
+ *
+ * To run a query within a React component, call `useGetAllBoardsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAllBoardsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAllBoardsQuery({
+ *   variables: {
+ *      viewerId: // value for 'viewerId'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetAllBoardsQuery(baseOptions?: Apollo.QueryHookOptions<GetAllBoardsQuery, GetAllBoardsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAllBoardsQuery, GetAllBoardsQueryVariables>(GetAllBoardsDocument, options);
+      }
+export function useGetAllBoardsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllBoardsQuery, GetAllBoardsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAllBoardsQuery, GetAllBoardsQueryVariables>(GetAllBoardsDocument, options);
+        }
+export function useGetAllBoardsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllBoardsQuery, GetAllBoardsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAllBoardsQuery, GetAllBoardsQueryVariables>(GetAllBoardsDocument, options);
+        }
+export type GetAllBoardsQueryHookResult = ReturnType<typeof useGetAllBoardsQuery>;
+export type GetAllBoardsLazyQueryHookResult = ReturnType<typeof useGetAllBoardsLazyQuery>;
+export type GetAllBoardsSuspenseQueryHookResult = ReturnType<typeof useGetAllBoardsSuspenseQuery>;
+export type GetAllBoardsQueryResult = Apollo.QueryResult<GetAllBoardsQuery, GetAllBoardsQueryVariables>;
+export const GetFeedPinsDocument = gql`
+    query GetFeedPins($userID: UUID!) {
+  feedPins(userID: $userID) {
+    pin_id
+    name
+    owner_id
+    description
+    latitude
+    longitude
+    rating
+    created_at
+    likes_count
+    comments_count
+    bookmarks_count
+  }
+}
+    `;
+
+/**
+ * __useGetFeedPinsQuery__
+ *
+ * To run a query within a React component, call `useGetFeedPinsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFeedPinsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFeedPinsQuery({
+ *   variables: {
+ *      userID: // value for 'userID'
+ *   },
+ * });
+ */
+export function useGetFeedPinsQuery(baseOptions: Apollo.QueryHookOptions<GetFeedPinsQuery, GetFeedPinsQueryVariables> & ({ variables: GetFeedPinsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetFeedPinsQuery, GetFeedPinsQueryVariables>(GetFeedPinsDocument, options);
+      }
+export function useGetFeedPinsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFeedPinsQuery, GetFeedPinsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetFeedPinsQuery, GetFeedPinsQueryVariables>(GetFeedPinsDocument, options);
+        }
+export function useGetFeedPinsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetFeedPinsQuery, GetFeedPinsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetFeedPinsQuery, GetFeedPinsQueryVariables>(GetFeedPinsDocument, options);
+        }
+export type GetFeedPinsQueryHookResult = ReturnType<typeof useGetFeedPinsQuery>;
+export type GetFeedPinsLazyQueryHookResult = ReturnType<typeof useGetFeedPinsLazyQuery>;
+export type GetFeedPinsSuspenseQueryHookResult = ReturnType<typeof useGetFeedPinsSuspenseQuery>;
+export type GetFeedPinsQueryResult = Apollo.QueryResult<GetFeedPinsQuery, GetFeedPinsQueryVariables>;
+export const GetFeedBoardsDocument = gql`
+    query GetFeedBoards($userID: UUID!) {
+  feedBoards(userID: $userID) {
+    board_id
+    name
+    owner_id
+    owner_type
+    access_level
+    created_at
+    likes_count
+    comments_count
+    bookmarks_count
+    pin_ids
+  }
+}
+    `;
+
+/**
+ * __useGetFeedBoardsQuery__
+ *
+ * To run a query within a React component, call `useGetFeedBoardsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFeedBoardsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFeedBoardsQuery({
+ *   variables: {
+ *      userID: // value for 'userID'
+ *   },
+ * });
+ */
+export function useGetFeedBoardsQuery(baseOptions: Apollo.QueryHookOptions<GetFeedBoardsQuery, GetFeedBoardsQueryVariables> & ({ variables: GetFeedBoardsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetFeedBoardsQuery, GetFeedBoardsQueryVariables>(GetFeedBoardsDocument, options);
+      }
+export function useGetFeedBoardsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFeedBoardsQuery, GetFeedBoardsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetFeedBoardsQuery, GetFeedBoardsQueryVariables>(GetFeedBoardsDocument, options);
+        }
+export function useGetFeedBoardsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetFeedBoardsQuery, GetFeedBoardsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetFeedBoardsQuery, GetFeedBoardsQueryVariables>(GetFeedBoardsDocument, options);
+        }
+export type GetFeedBoardsQueryHookResult = ReturnType<typeof useGetFeedBoardsQuery>;
+export type GetFeedBoardsLazyQueryHookResult = ReturnType<typeof useGetFeedBoardsLazyQuery>;
+export type GetFeedBoardsSuspenseQueryHookResult = ReturnType<typeof useGetFeedBoardsSuspenseQuery>;
+export type GetFeedBoardsQueryResult = Apollo.QueryResult<GetFeedBoardsQuery, GetFeedBoardsQueryVariables>;

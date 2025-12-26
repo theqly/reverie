@@ -1,46 +1,101 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./FollowersModal.module.css";
 import placeholder from "../assets/placeholder.jpg";
+import { followUser, unfollowUser } from '../services/followService';
+import { useCurrentUserId } from '../context/AuthContext';
+
+interface FollowingUser {
+  id: string;
+  nickname: string;
+  nickTag?: string;
+  profilePicture?: string | null;
+}
 
 interface FollowingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  following: FollowingUser[];
+  onUnfollow?: (userId: string) => void;
+  isOwnProfile?: boolean;
+  currentUserFollowing?: string[]; // IDs пользователей, на которых подписан текущий пользователь
+  onFollowChange?: (userId: string, isNowFollowing: boolean) => void; // Колбэк при изменении подписки
 }
 
-const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
+const FollowingModal: React.FC<FollowingModalProps> = ({
+  isOpen,
+  onClose,
+  following = [],
+  onUnfollow,
+  isOwnProfile = false,
+  currentUserFollowing = [],
+  onFollowChange
+}) => {
+  const navigate = useNavigate();
+  const currentUserId = useCurrentUserId();
 
   const [search, setSearch] = useState("");
 
-  // Состояние подписок (локально)
-  const [following, setFollowing] = useState(
-    Array.from({ length: 70 }, (_, i) => ({
-      id: i + 1,
-      name: `Following ${i + 1}`,
-      avatar: placeholder,
-      isFollowing: true,
-    }))
-  );
+  // Локальное отслеживание изменений (отписки во время сессии)
+  const [unfollowedDuringSession, setUnfollowedDuringSession] = useState<Set<string>>(new Set());
+  const [followedDuringSession, setFollowedDuringSession] = useState<Set<string>>(new Set());
+
+  // Вычисляем актуальный статус подписки
+  const isFollowingUser = (userId: string): boolean => {
+    // Если отписались во время сессии - не подписаны
+    if (unfollowedDuringSession.has(userId)) return false;
+    // Если подписались во время сессии - подписаны
+    if (followedDuringSession.has(userId)) return true;
+    // Для своего профиля: все в списке - подписки
+    if (isOwnProfile) return true;
+    // Для чужого профиля: проверяем currentUserFollowing
+    return currentUserFollowing.includes(userId);
+  };
+
+  if (!isOpen) return null;
 
   const filtered = following.filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase())
+    f.nickname.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ---- ОБРАБОТЧИК ДЛЯ СЕРВЕРА ----
-  const toggleFollow = async (id: number) => {
-    console.log("Отправка на сервер...", id);
+  const handleToggleFollow = async (userId: string) => {
+    if (userId === currentUserId) return;
 
-    // имитация API запроса
-    await new Promise((res) => setTimeout(res, 100));
+    try {
+      const isCurrentlyFollowing = isFollowingUser(userId);
 
-    console.log("Готово. Сервер обработал запрос.");
+      if (isCurrentlyFollowing) {
+        await unfollowUser(userId, currentUserId);
+        setUnfollowedDuringSession(prev => new Set(prev).add(userId));
+        setFollowedDuringSession(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+        if (isOwnProfile) {
+          onUnfollow?.(userId);
+        }
+        onFollowChange?.(userId, false);
+      } else {
+        await followUser(userId, currentUserId);
+        setFollowedDuringSession(prev => new Set(prev).add(userId));
+        setUnfollowedDuringSession(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+        onFollowChange?.(userId, true);
+      }
+    } catch (error) {
+      console.error('Follow/unfollow error:', error);
+    }
+  };
 
-    // локально меняем состояние
-    setFollowing((prev) =>
-      prev.map((u) =>
-        u.id === id ? { ...u, isFollowing: !u.isFollowing } : u
-      )
-    );
+  const handleUserClick = (nickTag?: string) => {
+    if (nickTag) {
+      onClose();
+      navigate(`/profile/${nickTag}`);
+    }
   };
 
   return (
@@ -62,23 +117,37 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose }) => {
         <div className={styles.list}>
           {filtered.map((user) => (
             <div key={user.id} className={styles.row}>
-              <img src={user.avatar} className={styles.avatar} />
+              <img
+                src={user.profilePicture || placeholder}
+                className={styles.avatar}
+                onClick={() => handleUserClick(user.nickTag)}
+                style={{ cursor: 'pointer' }}
+              />
 
-              <span>{user.name}</span>
-
-              <button
-                className={`${styles.followBtn} ${
-                  user.isFollowing ? styles.unfollow : styles.follow
-                }`}
-                onClick={() => toggleFollow(user.id)}
+              <span
+                onClick={() => handleUserClick(user.nickTag)}
+                style={{ cursor: 'pointer' }}
               >
-                {user.isFollowing ? "Отписаться" : "Подписаться"}
-              </button>
+                {user.nickname}
+              </span>
+
+              {user.id !== currentUserId && (
+                <button
+                  onClick={() => handleToggleFollow(user.id)}
+                  className={`${styles.followBtn} ${
+                    isFollowingUser(user.id) ? styles.unfollow : styles.follow
+                  }`}
+                >
+                  {isFollowingUser(user.id) ? "Отписаться" : "Подписаться"}
+                </button>
+              )}
             </div>
           ))}
 
           {filtered.length === 0 && (
-            <div className={styles.noResults}>Ничего не найдено</div>
+            <div className={styles.noResults}>
+              {following.length === 0 ? "Нет подписок" : "Ничего не найдено"}
+            </div>
           )}
         </div>
       </div>

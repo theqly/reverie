@@ -1,7 +1,7 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "./Header";
-import MapPicker from "./MapPicker";
+import MapShower from "./MapShower";
 import styles from "./PinViewPage.module.css";
 import placeholder_1 from "../assets/placeholder1.jpg";
 import ReactionBlock from "./ReactionBlock";
@@ -13,13 +13,30 @@ import { getPinById as getBackendPinById } from "../services/pinService";
 import { countReactionsToPin, reactToPin } from "../services/reactionsService";
 import { toggleBookmarkToPin } from "../services/bookmarksService";
 import { isPinLiked, isPinBookmarked } from "../services/pinService";
+// Добавляем импорт сервиса для работы с подборками
+import { getOwnBoardsByUser } from "../services/profileService";
+import { addPinToBoard } from "../services/collectionsService";
+import { useCurrentUserId } from "../context/AuthContext";
+import { useToast } from "./ToastProvider";
 
 const FALLBACK_LIKES = 226;
 const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
+const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
+
+// Интерфейс для подборки
+interface Collection {
+  id: string;
+  name: string;
+  description?: string;
+  author?: string;
+  // другие поля при необходимости
+}
 
 const PinViewPage = () => {
   const navigate = useNavigate();
   const { pinId } = useParams();
+  const currentUserId = useCurrentUserId();
+  const { showToast } = useToast();
 
   const [pin, setPin] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +45,12 @@ const PinViewPage = () => {
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+
+  // Состояния для модального окна и подборок
+  const [showCollectionsModal, setShowCollectionsModal] = useState(false);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [loadingCollections, setLoadingCollections] = useState(false);
+  const [errorCollections, setErrorCollections] = useState<string | null>(null);
 
   useEffect(() => {
     if (!pinId) return;
@@ -41,7 +64,7 @@ const PinViewPage = () => {
 
         if (backendPin) {
           setPin(backendPin);
-          setLikesCount(backendPin.rating ?? backendPin.likes ?? FALLBACK_LIKES);
+          setLikesCount((backendPin as any).rating ?? (backendPin as any).likes ?? backendPin.likes_count ?? FALLBACK_LIKES);
           return;
         }
 
@@ -53,6 +76,8 @@ const PinViewPage = () => {
           setError(`Пин с ID ${pinId} не найден`);
         }
       } catch {
+        // 3. Фолбек на моки при ошибке
+        console.log("Ошибка при загрузке, используем моки");
         const mockPin = getMockPinById(pinId);
         if (mockPin) {
           setPin(mockPin);
@@ -93,12 +118,55 @@ const PinViewPage = () => {
     loadReactions();
   }, [pinId]);
 
+  // Функция загрузки подборок пользователя
+  const loadUserCollections = async () => {
+    if (!showCollectionsModal) return; // Загружаем только при открытии модалки
+    
+    setLoadingCollections(true);
+    setErrorCollections(null);
+
+    try {
+      const response = await getOwnBoardsByUser({
+        userId: TEMP_USER_ID,
+        limit: 50, // Достаточно много, чтобы показать все
+        offset: 0,
+      });
+
+      if (response && response.length > 0) {
+        // Преобразуем ответ в нужный формат
+        const formattedCollections: Collection[] = response.map((col: any) => ({
+          id: col.id || col._id,
+          name: col.name,
+          description: col.description,
+          author: col.author,
+        }));
+        setCollections(formattedCollections);
+      } else {
+        console.log("Нет подборок или пустой ответ");
+        setCollections([]);
+      }
+    } catch (err) {
+      console.error("[PinViewPage] getOwnBoardsByUser error:", err);
+      setErrorCollections("Не удалось загрузить подборки");
+      setCollections([]);
+    } finally {
+      setLoadingCollections(false);
+    }
+  };
+
+  // Загружаем подборки при открытии модалки
+  useEffect(() => {
+    if (showCollectionsModal) {
+      loadUserCollections();
+    }
+  }, [showCollectionsModal]);
+
   const handleLike = async (nextLiked: boolean) => {
     setLiked(nextLiked);
     setLikesCount(prev => nextLiked ? prev + 1 : Math.max(prev - 1, 0));
 
     try {
-      await reactToPin({ pinId, userId: TEMP_USER_ID });
+      await reactToPin({ pinId: pinId!, reactionId: LIKE_REACTION_ID, userId: TEMP_USER_ID });
     } catch (error) {
       console.error("Failed to toggle pin reaction", error);
     }
@@ -107,13 +175,57 @@ const PinViewPage = () => {
   const handleBookmark = async (nextBookmarked: boolean) => {
     setBookmarked(nextBookmarked);
     try {
-      await toggleBookmarkToPin(pinId!, TEMP_USER_ID);
+      await toggleBookmarkToPin({ pinId: pinId!, userId: TEMP_USER_ID });
     } catch (error) {
       console.error("Failed to toggle bookmark", error);
     }
   };
 
-  const handleBack = () => navigate(-1);
+  const handleBack = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const from = searchParams.get('from');
+    
+    if (from) {
+      navigate(`/${from}`);
+    } else if (document.referrer && document.referrer.includes(window.location.origin)) {
+      const referrerPath = new URL(document.referrer).pathname;
+      navigate(referrerPath);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // Обработчик клика по кнопке "Добавить пин в подборку"
+  const handleAddToCollectionClick = () => {
+    setShowCollectionsModal(true);
+  };
+
+  // Обработчик закрытия модального окна
+  const handleCloseModal = () => {
+    setShowCollectionsModal(false);
+    setErrorCollections(null);
+  };
+
+  // Обработчик выбора подборки
+  const handleSelectCollection = async (collectionId: string, collectionName: string) => {
+    if (!pinId) return;
+
+    console.log(`Добавляем пин ${pinId} в подборку ${collectionName} (${collectionId})`);
+
+    try {
+      const result = await addPinToBoard(pinId, collectionId);
+
+      if (result) {
+        showToast(`Пин добавлен в подборку "${collectionName}"`);
+        handleCloseModal();
+      } else {
+        showToast('Не удалось добавить пин в подборку', true);
+      }
+    } catch (error) {
+      console.error('[handleSelectCollection] Error:', error);
+      showToast('Ошибка при добавлении пина в подборку', true);
+    }
+  };
 
   if (loading) return (
     <div className={styles.pageWrapper}>
@@ -127,7 +239,7 @@ const PinViewPage = () => {
       <Header />
       <div className={styles.errorContainer}>
         <h2>Пин не найден</h2>
-        <p>{error}</p>
+        <p>{error || "Не удалось загрузить данные пина"}</p>
         <button onClick={() => navigate("/feed")} className={styles.backButton}>
           Вернуться на главную
         </button>
@@ -135,14 +247,49 @@ const PinViewPage = () => {
     </div>
   );
 
+  // Комментарии
   const comments = [
     {
-      authorName: "jane_anderson",
+      authorName: pin?.author || "jane_anderson",
+      authorAvatar: placeholder_1,
+      commentText: "Отличное фото! Очень красивое место.",
+      commentDate: "2 часа назад",
+    },
+    {
+      authorName: "alex_smith",
       authorAvatar: placeholder_1,
       commentText: "Отличное фото! Очень красивое место.",
       commentDate: "2 часа назад",
     },
   ];
+
+  // Извлекаем URL изображения с правильной обработкой
+  const getImageUrl = () => {
+    // Проверяем разные возможные пути к изображению
+    if (pin.images && pin.images[0] && pin.images[0].imageUrl) {
+      return pin.images[0].imageUrl;
+    }
+    if (pin.imageUrl) {
+      return pin.imageUrl;
+    }
+    // Если ничего нет, используем заглушку
+    return placeholder_1;
+  };
+
+  // Получаем название пина
+  const getPinName = () => {
+    return pin.name || pin.title || "Без названия";
+  };
+
+  // Получаем автора
+  const getAuthor = () => {
+    return pin.author || "jane_anderson";
+  };
+
+  // Получаем описание
+  const getDescription = () => {
+    return pin.description || "";
+  };
 
   return (
     <div className={styles.pageWrapper}>
@@ -152,7 +299,7 @@ const PinViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Пин от <Link to="/profile" className={styles.authorA}>@jane_anderson</Link>
+              Пин от <Link to="/profile" className={styles.authorA}>@{getAuthor()}</Link>
             </h2>
             <button
               className={styles.settingsBtn}
@@ -162,12 +309,22 @@ const PinViewPage = () => {
 
           <div className={styles.pinCardWrapper}>
             <div className={styles.pinCard}>
-              <img src={placeholder_1} alt={pin.name} className={styles.img1} />
-              <h3 className={styles.pinTitle}>{pin.name}</h3>
-              <p className={styles.collectionLocation}>
-                Широта: {pin.latitude}, Долгота: {pin.longitude}
-              </p>
-              <p className={styles.pinDescription}>{pin.description || ""}</p>
+              <img src={getImageUrl()} alt={getPinName()} className={styles.img1} />
+              <h3 className={styles.pinTitle}>{getPinName()}</h3>
+              
+              {/* Координаты и локация */}
+              {pin.latitude != null && pin.longitude != null && (
+                <p className={styles.collectionLocation}>
+                  Координаты: {pin.latitude.toFixed(6)}, {pin.longitude.toFixed(6)}
+                </p>
+              )}
+              
+              {/* Альтернативное отображение location если есть */}
+              {pin.location && !pin.latitude && (
+                <p className={styles.collectionLocation}>{pin.location}</p>
+              )}
+              
+              <p className={styles.pinDescription}>{getDescription()}</p>
 
               <ReactionBlock
                 initialLikes={likesCount}
@@ -175,8 +332,15 @@ const PinViewPage = () => {
                 initialBookmarked={bookmarked}
                 onLike={handleLike}
                 onBookmark={handleBookmark}
+                isOwnContent={currentUserId !== null && (pin?.author?.id === currentUserId || pin?.owner_id === currentUserId)}
               />
             </div>
+            <button 
+              className={styles.addTo}
+              onClick={handleAddToCollectionClick}
+            >
+              Добавить пин в подборку
+            </button>
 
             <CommentSection comments={comments} title="Комментарии" />
           </div>
@@ -184,7 +348,7 @@ const PinViewPage = () => {
 
         <div className={styles.mapWrapperFixed}>
           {pin.latitude != null && pin.longitude != null && (
-            <MapPicker
+            <MapShower
               readOnly
               onSelect={() => {}}
               initialCoords={[pin.latitude, pin.longitude]}
@@ -192,6 +356,72 @@ const PinViewPage = () => {
           )}
         </div>
       </div>
+
+      {/* Модальное окно для выбора подборки */}
+      {showCollectionsModal && (
+        <div className={styles.modalOverlay} onClick={handleCloseModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Выберите подборку</h3>
+              <button 
+                className={styles.modalCloseBtn}
+                onClick={handleCloseModal}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              {loadingCollections ? (
+                <div className={styles.modalLoading}>Загрузка подборок...</div>
+              ) : errorCollections ? (
+                <div className={styles.modalError}>
+                  <p>{errorCollections}</p>
+                  <button 
+                    onClick={loadUserCollections}
+                    className={styles.retryButton}
+                  >
+                    Повторить попытку
+                  </button>
+                </div>
+              ) : collections.length === 0 ? (
+                <div className={styles.modalEmpty}>
+                  <p>У вас пока нет подборок</p>
+                  <button 
+                    onClick={() => {
+                      handleCloseModal();
+                      navigate('/collection/create');
+                    }}
+                    className={styles.createCollectionButton}
+                  >
+                    Создать новую подборку
+                  </button>
+                </div>
+              ) : (
+                <ul className={styles.collectionsList}>
+                  {collections.map((collection) => (
+                    <li 
+                      key={collection.id}
+                      className={styles.collectionItem}
+                      onClick={() => handleSelectCollection(collection.id, collection.name)}
+                    >
+                      <div className={styles.collectionInfo}>
+                        <span className={styles.collectionName}>{collection.name}</span>
+                        {collection.description && (
+                          <span className={styles.collectionDescription}>
+                            {collection.description}
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.collectionAction}>+</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

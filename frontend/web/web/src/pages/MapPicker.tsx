@@ -39,6 +39,7 @@ interface MapPickerProps {
   zoom?: number;
   width?: string | number;
   height?: string | number;
+  readOnly?: boolean; // Если true - только просмотр, маркер не двигается
 }
 
 /* -------------------------------------
@@ -49,8 +50,8 @@ const MapPicker: React.FC<MapPickerProps> = ({
   initialCoords = [55.751244, 37.618423],
   zoom = 12,
   width = '100%',
-  //height = '430px',
   height = '100vh',
+  readOnly = false,
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -90,23 +91,36 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
           mapInstanceRef.current = map;
 
-          // выбор точки
-          map.events.add('click', (e: any) => {
-            const coords: [number, number] = e.get('coords');
+          // Создаём начальный маркер если есть координаты (не дефолтные)
+          const hasValidCoords = initialCoords[0] !== 55.751244 || initialCoords[1] !== 37.618423;
+          if (hasValidCoords || readOnly) {
+            placemarkRef.current = new window.ymaps.Placemark(
+              initialCoords,
+              {},
+              { preset: 'islands#redIcon' }
+            );
+            map.geoObjects.add(placemarkRef.current);
+          }
 
-            if (!placemarkRef.current) {
-              placemarkRef.current = new window.ymaps.Placemark(
-                coords,
-                {},
-                { preset: 'islands#redIcon' }
-              );
-              map.geoObjects.add(placemarkRef.current);
-            } else {
-              placemarkRef.current.geometry.setCoordinates(coords);
-            }
+          // Выбор точки (только если не readOnly)
+          if (!readOnly) {
+            map.events.add('click', (e: any) => {
+              const coords: [number, number] = e.get('coords');
 
-            onSelect(coords);
-          });
+              if (!placemarkRef.current) {
+                placemarkRef.current = new window.ymaps.Placemark(
+                  coords,
+                  {},
+                  { preset: 'islands#redIcon' }
+                );
+                map.geoObjects.add(placemarkRef.current);
+              } else {
+                placemarkRef.current.geometry.setCoordinates(coords);
+              }
+
+              onSelect(coords);
+            });
+          }
 
           setMapLoaded(true);
         });

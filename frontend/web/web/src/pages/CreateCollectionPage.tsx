@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreateCollectionPage.module.css';
 import InviteCollaboratorModal from './InviteCollaboratorModal';
-import Header from './Header'; 
+import Header from './Header';
 import { createCollection } from "../services/collectionsService";
+import { useCurrentUserId } from '../context/AuthContext';
 
 const CreateCollectionPage = () => {
   const navigate = useNavigate();
+  const currentUserId = useCurrentUserId();
 
   // Состояния для полей формы
   const [collectionName, setCollectionName] = useState('');
@@ -46,31 +48,34 @@ const handleBack = () => {
     setIsInviteModalOpen(true);
   };
 
-  const handleAddCollaborator = () => {
-    // Заглушка: добавляем фиктивного коллаборатора
-    const newCollaborator = `Collaborator ${collaborators.length + 1}`;
-    setCollaborators(prev => [...prev, newCollaborator]);
-  };
-
-  
   const handleSaveCollection = async () => {
-    const currentUser = "00000000-0000-0000-0000-000000000001"; 
+    if (!currentUserId) {
+      console.error('User not authenticated');
+      return;
+    }
 
     const payload = {
       name: collectionName,
       info: collectionInfo,
       coverImage,
-      collaborators: [currentUser]
+      collaborators: [currentUserId]
     };
 
-    await createCollection(payload);
-    console.log("createCollection вызвана с payload(c owner):", payload);
+    const result = await createCollection(payload);
+
+    if (result.success) {
+      // Переходим на страницу профиля после создания
+      navigate('/profile');
+    } else {
+      console.error('Failed to create collection:', result.error);
+    }
   };
 
 
   // Валидация для кнопки сохранения
-  const isSaveEnabled = collectionName.trim().length > 0 && 
-                       collectionName.length <= 50 && 
+  const isSaveEnabled = currentUserId !== null &&
+                       collectionName.trim().length > 0 &&
+                       collectionName.length <= 50 &&
                        collectionInfo.length <= 1000;
 
   return (

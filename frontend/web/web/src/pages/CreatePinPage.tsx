@@ -1,32 +1,39 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from './CreatePinPage.module.css'; // ← ИМПОРТ СТИЛЕЙ
-import logo from '../assets/Reverie.svg';
-import AddPinModal from "./AddPinModal";
-import InviteCollaboratorModal from './InviteCollaboratorModal';
-import Header from './Header'; 
+import { useNavigate, useLocation } from 'react-router-dom';
+import styles from './CreatePinPage.module.css';
+import Header from './Header';
 import { createPin } from "../services/pinService";
-import { useLocation } from 'react-router-dom';
 import MapModal from './MapModal';
+import { useCurrentUserId } from '../context/AuthContext';
+import { findUser } from '../services/profileService';
 
 const CreatePinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUserId = useCurrentUserId();
 
-  // Состояния для полей формы
+  const [userNickname, setUserNickname] = useState<string>('');
+
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
   const [pinLongitude, setPinLongitude] = useState<number | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [pinName, setPinName] = useState('');
   const [pinInfo, setPinInfo] = useState('');
-  const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [collaborators, setCollaborators] = useState<string[]>([]); // ← заглушка: имена соавторов
-
   const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [pinCount, setPinCount] = useState(0);
+  // Загружаем никнейм пользователя из базы
+  useEffect(() => {
+    const loadUserNickname = async () => {
+      const userData = await findUser({ id: currentUserId });
+      if (userData?.nickTag) {
+        setUserNickname(userData.nickTag);
+      }
+    };
+    loadUserNickname();
+  }, [currentUserId]);
 
   useEffect(() => {
   if (location.state?.latitude && location.state?.longitude) {
@@ -64,56 +71,58 @@ const handleBack = () => {
     const newImages = [...images, file];
     setImages(newImages);
 
-    // показываем последнее добавленное
     setCurrentIndex(newImages.length - 1);
-
-    console.log("Pin photo updated | pin_ID");
   };
 
-  const handleAddPin = () => {
-    setIsAddPinModalOpen(true);
-    setPinCount(prev => prev + 1);
-  };
+  const handleSavePin = async () => {
+    if (pinLatitude === null || pinLongitude === null) {
+      setError('Выберите точку на карте');
+      return;
+    }
 
-  const handleInviteCollaborator = () => {
-    setIsInviteModalOpen(true);
-  };
+    if (!pinName.trim()) {
+      setError('Введите название пина');
+      return;
+    }
 
-  const handleAddCollaborator = () => {
-    // Заглушка: добавляем фиктивного коллаборатора
-    const newCollaborator = `Collaborator ${collaborators.length + 1}`;
-    setCollaborators(prev => [...prev, newCollaborator]);
-  };
+    setIsSaving(true);
+    setError(null);
 
+    try {
+      // 1. Создаём пин
+      const payload = {
+        name: pinName.trim(),
+        description: pinInfo.trim() || undefined,
+        latitude: pinLatitude,
+        longitude: pinLongitude,
+        ownerId: currentUserId,
+        coverImages: images
+      };
 
-   const handleSavePin = async () => {
-    console.log('[CreatePin] Current coordinates:', {
-      latitude: pinLatitude,
-      longitude: pinLongitude
-    });
-  
-  if (pinLatitude === null || pinLongitude === null) {
-  alert('Выберите точку на карте');
-    return;
-  }
+      const createdPin = await createPin(payload);
 
-  const payload = {
-    name: pinName,
-    description: pinInfo,
-    latitude: pinLatitude,
-    longitude: pinLongitude,
-    ownerId: '00000000-0000-0000-0000-000000000001', // временно, заглушка
-    coverImages: images
-  };
-
-    await createPin(payload);
+      if (createdPin) {
+        // Переходим на вкладку "Пины" в своём профиле
+        navigate('/profile?tab=pins');
+      } else {
+        setError('Не удалось создать пин. Попробуйте еще раз.');
+      }
+    } catch (err) {
+      console.error('[CreatePin] Error creating pin:', err);
+      setError('Ошибка при создании пина. Проверьте подключение.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Валидация для кнопки сохранения
-  const isSaveEnabled = pinName.trim().length > 0 && 
-                       pinName.length <= 50 && 
+  // Обязательно: название и координаты. Изображения пока необязательны (S3 не реализован)
+  const isSaveEnabled = pinName.trim().length > 0 &&
+                       pinName.length <= 50 &&
                        pinInfo.length <= 1000 &&
-                       images.length > 0;
+                       pinLatitude !== null &&
+                       pinLongitude !== null &&
+                       !isSaving;
   return (
 
     <div className={styles.createCollectionPage}>
@@ -122,7 +131,7 @@ const handleBack = () => {
       <main className={styles.collectionContent}>
         <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
-            <h1>Новый пин от @nickname</h1>
+            <h1>Новый пин от @{userNickname || '...'}</h1>
         </div>
 
 
@@ -295,25 +304,29 @@ const handleBack = () => {
             </section>
 
         </div>
-        
-        
-        <button 
-            type="button" 
+
+        {error && (
+          <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
+
+        {/* Подсказка что нужно заполнить */}
+        {!isSaveEnabled && !isSaving && (
+          <div style={{ color: '#888', marginBottom: '1rem', textAlign: 'center', fontSize: '14px' }}>
+            {!pinName.trim() && <div>Введите название пина</div>}
+            {(pinLatitude === null || pinLongitude === null) && <div>Выберите точку на карте</div>}
+          </div>
+        )}
+
+        <button
+            type="button"
             onClick={handleSavePin}
             disabled={!isSaveEnabled}
             className={styles.saveButton}
           >
-            Сохранить пин
+            {isSaving ? 'Сохранение...' : 'Сохранить пин'}
         </button>
-
-        {isAddPinModalOpen && (
-          <AddPinModal onClose={() => setIsAddPinModalOpen(false)} />
-        )}
-
-        {isInviteModalOpen && (
-          <InviteCollaboratorModal onClose={() => setIsInviteModalOpen(false)} />
-        )}
-
 
       </main>
       {isMapOpen && (

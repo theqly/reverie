@@ -11,10 +11,14 @@ query GetUserByNickTag($nickTag: String!) {
     followers {
       id
       nickname
+      nickTag
+      profilePicture
     }
     following {
       id
       nickname
+      nickTag
+      profilePicture
     }
   }
 }
@@ -32,10 +36,14 @@ query GetUserById($userId: UUID!) {
     followers {
       id
       nickname
+      nickTag
+      profilePicture
     }
     following {
       id
       nickname
+      nickTag
+      profilePicture
     }
   }
 }
@@ -52,6 +60,12 @@ query GetPinsByUserId($userId: UUID!, $viewerId: UUID, $limit: Int = 10, $offset
       id
       orderNumber
       imageUrl
+    }
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
     }
   }
 }
@@ -129,24 +143,8 @@ mutation UpdateBoard($id: UUID!, $input: UpdateBoardInput!) {
     description
     accessLevel
     ownerId
-    authorId
     ownerType
     createdAt
-    savedAt
-    pins {
-      id
-      name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
-      images {
-        id
-        orderNumber
-        imageUrl
-      }
-    }
     reactionId
     bookmarked
   }
@@ -160,10 +158,13 @@ query GetOwnBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
     description
     accessLevel
     ownerId
+    boardImageURL
     ownerType
     pins {
       id
       name
+      latitude
+      longitude
       images {
         id
         orderNumber
@@ -262,6 +263,15 @@ query GetFollowersById($userId: UUID!) {
   }
 }
 
+query GetFollowingById($userId: UUID!) {
+  followingOf(userId: $userId) {
+    id
+    nickname
+    nickTag
+    profilePicture
+  }
+}
+
 mutation CreateGroup($input: CreateGroupInput!){
   createGroup(input: $input) {
     id
@@ -276,6 +286,7 @@ mutation CreateBoard($input: CreateBoardInput!){
     id
     name
     description
+    boardImageURL
     accessLevel
     ownerId
     ownerType
@@ -306,6 +317,12 @@ query GetPinById($id: UUID!) {
       orderNumber
       imageUrl
     }
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
+    }
   }
 }
 
@@ -313,6 +330,7 @@ query GetBoardById($id: UUID!) {
   board(id: $id) {
     id
     name
+    boardImageURL
     description
     accessLevel
     ownerId
@@ -320,10 +338,17 @@ query GetBoardById($id: UUID!) {
     pins {
       id
       name
+      latitude
+      longitude
       images {
         id
         orderNumber
         imageUrl
+      }
+      owner {
+        id
+        nickname
+        profilePicture
       }
     }
     reactionId
@@ -352,9 +377,15 @@ mutation AddPinToBoard($pinId: UUID!, $boardId: UUID!) {
   addPinToBoard(pinId: $pinId, boardId: $boardId) {
     id
     name
+    boardImageURL
     pins {
       id
       name
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
     }
   }
 }
@@ -562,5 +593,88 @@ query IsPinBookmarked($id: UUID!) {
 query IsBoardBookmarked($id: UUID!) {
   board(id: $id) {
     bookmarked
+  }
+}
+
+query GetAllPins($viewerId: UUID, $limit: Int = 50, $offset: Int = 0) {
+  pins(viewerId: $viewerId, limit: $limit, offset: $offset) {
+    id
+    name
+    latitude
+    longitude
+    description
+    rating
+    images {
+      id
+      orderNumber
+      imageUrl
+    }
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
+    }
+  }
+}
+
+query GetAllBoards($viewerId: UUID, $limit: Int = 50, $offset: Int = 0) {
+  boards(viewerId: $viewerId, limit: $limit, offset: $offset) {
+    id
+    name
+    description
+    accessLevel
+    ownerId
+    ownerType
+    owner {
+      id
+      nickname
+      nickTag
+      profilePicture
+    }
+    pins {
+      id
+      name
+      latitude
+      longitude
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
+    }
+    reactionId
+    bookmarked
+  }
+}
+
+query GetFeedPins($userID: UUID!) {
+  feedPins(userID: $userID) {
+    pin_id
+    name
+    owner_id
+    description
+    latitude
+    longitude
+    rating
+    created_at
+    likes_count
+    comments_count
+    bookmarks_count
+  }
+}
+
+query GetFeedBoards($userID: UUID!) {
+  feedBoards(userID: $userID) {
+    board_id
+    name
+    owner_id
+    owner_type
+    access_level
+    created_at
+    likes_count
+    comments_count
+    bookmarks_count
+    pin_ids
   }
 }

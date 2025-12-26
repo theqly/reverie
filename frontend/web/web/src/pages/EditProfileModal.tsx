@@ -1,20 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import styles from "./EditProfileModal.module.css";
 
-const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
-  if (!isOpen) return null;
+interface EditProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: { name: string; nickname: string; bio: string; avatar: string }) => void;
+  initialData: { name: string; nickname?: string; bio: string; avatar: string };
+}
 
+const EditProfileModal = ({ isOpen, onClose, onSave, initialData }: EditProfileModalProps) => {
   const [name, setName] = useState(initialData.name);
   const [nickname, setNickname] = useState(initialData.nickname || "");
   const [bio, setBio] = useState(initialData.bio);
   const [avatar, setAvatar] = useState(initialData.avatar);
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
+  // Синхронизируем с initialData при открытии модалки
+  useEffect(() => {
+    if (isOpen) {
+      setName(initialData.name);
+      setNickname(initialData.nickname || "");
+      setBio(initialData.bio);
+      setAvatar(initialData.avatar);
+    }
+  }, [isOpen, initialData]);
+
+  if (!isOpen) return null;
+
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    const url = URL.createObjectURL(file);
-    setAvatar(url);
+    // Конвертируем в base64 для постоянного хранения
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setAvatar(base64String);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
