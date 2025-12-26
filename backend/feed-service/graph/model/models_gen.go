@@ -2,11 +2,60 @@
 
 package model
 
-type Pin struct {
-	ID string `json:"id"`
+import (
+	"github.com/google/uuid"
+)
+
+type Board struct {
+	BoardID        uuid.UUID   `json:"board_id"`
+	Name           string      `json:"name"`
+	AccessLevel    string      `json:"access_level"`
+	OwnerID        uuid.UUID   `json:"owner_id"`
+	OwnerType      string      `json:"owner_type"`
+	CreatedAt      string      `json:"created_at"`
+	SavedAt        string      `json:"saved_at"`
+	LikesCount     *int        `json:"likes_count,omitempty"`
+	CommentsCount  *int        `json:"comments_count,omitempty"`
+	BookmarksCount *int        `json:"bookmarks_count,omitempty"`
+	PinIds         []uuid.UUID `json:"pin_ids"`
+	GroupMemberIds []uuid.UUID `json:"group_member_ids"`
 }
 
-func (Pin) IsEntity() {}
+type Pin struct {
+	PinID            uuid.UUID  `json:"pin_id"`
+	Name             string     `json:"name"`
+	OwnerID          uuid.UUID  `json:"owner_id"`
+	Description      *string    `json:"description,omitempty"`
+	Latitude         *float64   `json:"latitude,omitempty"`
+	Longitude        *float64   `json:"longitude,omitempty"`
+	Address          *string    `json:"address,omitempty"`
+	Rating           *float64   `json:"rating,omitempty"`
+	CreatedAt        string     `json:"created_at"`
+	SavedAt          string     `json:"saved_at"`
+	AccessLevel      string     `json:"access_level"`
+	PlaceID          *uuid.UUID `json:"place_id,omitempty"`
+	PlaceName        *string    `json:"place_name,omitempty"`
+	PlaceLatitude    *float64   `json:"place_latitude,omitempty"`
+	PlaceLongitude   *float64   `json:"place_longitude,omitempty"`
+	PlaceAddress     *string    `json:"place_address,omitempty"`
+	PlacePurposeName *string    `json:"place_purpose_name,omitempty"`
+	PlaceType        *string    `json:"place_type,omitempty"`
+	LikesCount       *int       `json:"likes_count,omitempty"`
+	CommentsCount    *int       `json:"comments_count,omitempty"`
+	BookmarksCount   *int       `json:"bookmarks_count,omitempty"`
+}
 
 type Query struct {
+}
+
+type User struct {
+	UserID          uuid.UUID `json:"user_id"`
+	Nickname        string    `json:"nickname"`
+	NickTag         *string   `json:"nick_tag,omitempty"`
+	Email           string    `json:"email"`
+	Description     *string   `json:"description,omitempty"`
+	UserRating      *float64  `json:"user_rating,omitempty"`
+	Status          string    `json:"status"`
+	FollowersCount  *int      `json:"followers_count,omitempty"`
+	FollowingsCount *int      `json:"followings_count,omitempty"`
 }

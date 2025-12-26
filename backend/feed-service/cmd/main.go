@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"feed-service/graph/resolver"
 	"feed-service/graph/generated"
+	"feed-service/graph/resolver"
+	"feed-service/internal/os_client"
 	"feed-service/pkg/config"
-	"feed-service/pkg/db"
 	"feed-service/pkg/middleware"
+	"log"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -14,35 +16,47 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
+	"go.uber.org/zap"
 )
 
+func initLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	zap.ReplaceGlobals(logger)
+}
+
 func main() {
-	err := config.LoadConfig()
-	if err != nil {
-		log.Fatal("error loading config: %w", err)
+	initLogger()
+	osClient := os_client.NewClient()
+
+	// if err := config.LoadConfig(); err != nil {
+	// 	log.Fatalf("config loading error: %v", err)
+	// }
+
+	resolver := &resolver.Resolver{
+		OSClient: osClient,
 	}
 
-	err = db.Connect()
-	if err != nil {
-		log.Fatal("error loading config: %w", err)
-	}
-
-	schema := generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{DB: db.DB}})
+	schema := generated.NewExecutableSchema(generated.Config{Resolvers: resolver})
 
 	srv := setupServer(schema)
 
-	r := gin.Default()
+	router := gin.Default()
 
-	//r.Use(middleware.AuthMiddleware())
-	r.Use(middleware.CorsMiddleware())
+	router.Use(middleware.CorsMiddleware())
 
-	r.POST("/query", gin.WrapH(srv))
-	r.GET("/", gin.WrapH(playground.Handler("GraphQL", "/query")))
+	router.POST("/query", func(c *gin.Context) {
+		srv.ServeHTTP(c.Writer, c.Request)
+	})
 
-	err = r.Run(config.CFG.ServerAddress)
-	if err != nil {
-		log.Fatal("error running gin server: %w", err)
+	router.GET("/", func(c *gin.Context) {
+		playground.Handler("GraphQL playground", "/query").ServeHTTP(c.Writer, c.Request)
+	})
+
+	if err := router.Run(config.CFG.ServerAddress); err != nil {
+		log.Fatalf("server start error: %v", err)
 	}
 }
 
