@@ -808,7 +808,7 @@ export type AddPinToBoardMutationVariables = Exact<{
 }>;
 
 
-export type AddPinToBoardMutation = { __typename?: 'Mutation', addPinToBoard: { __typename?: 'Board', id: any, name: string, pins?: Array<{ __typename?: 'Pin', id: any, name: string }> | null } };
+export type AddPinToBoardMutation = { __typename?: 'Mutation', addPinToBoard: { __typename?: 'Board', accessLevel: AccessLevelType, authorId: any, bookmarked?: boolean | null, description?: string | null, id: any, name: string, ownerId: any, ownerType: OwnerType, pins?: Array<{ __typename?: 'Pin', id: any, name: string }> | null } };
 
 export type RemovePinFromBoardMutationVariables = Exact<{
   pinId: Scalars['UUID']['input'];
@@ -1149,6 +1149,12 @@ export const GetPinsByUserIdDocument = gql`
     longitude
     description
     rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
     images {
       id
       orderNumber
@@ -1425,11 +1431,19 @@ export const GetOwnBoardsByUserIdDocument = gql`
     description
     accessLevel
     ownerId
+    authorId
     boardImageURL
     ownerType
+    createdAt
+    savedAt
     pins {
       id
       name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
       images {
         id
         orderNumber
@@ -1748,7 +1762,10 @@ export const CreateBoardDocument = gql`
     boardImageURL
     accessLevel
     ownerId
+    authorId
     ownerType
+    createdAt
+    savedAt
     pins {
       id
       name
@@ -1798,6 +1815,12 @@ export const GetPinByIdDocument = gql`
     longitude
     description
     rating
+    createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
     images {
       id
       orderNumber
@@ -1848,10 +1871,18 @@ export const GetBoardByIdDocument = gql`
     description
     accessLevel
     ownerId
+    authorId
     ownerType
+    createdAt
+    savedAt
     pins {
       id
       name
+      owner {
+        id
+        nickname
+        profilePicture
+      }
       images {
         id
         orderNumber
@@ -1906,6 +1937,11 @@ export const CreatePinDocument = gql`
     description
     rating
     createdAt
+    owner {
+      id
+      nickname
+      profilePicture
+    }
     images {
       id
       orderNumber
@@ -1943,8 +1979,14 @@ export type CreatePinMutationOptions = Apollo.BaseMutationOptions<CreatePinMutat
 export const AddPinToBoardDocument = gql`
     mutation AddPinToBoard($pinId: UUID!, $boardId: UUID!) {
   addPinToBoard(pinId: $pinId, boardId: $boardId) {
+    accessLevel
+    authorId
+    bookmarked
+    description
     id
     name
+    ownerId
+    ownerType
     pins {
       id
       name
