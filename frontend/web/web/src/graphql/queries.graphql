@@ -353,14 +353,8 @@ mutation CreatePin($input: CreatePinInput!) {
 
 mutation AddPinToBoard($pinId: UUID!, $boardId: UUID!) {
   addPinToBoard(pinId: $pinId, boardId: $boardId) {
-    accessLevel
-    authorId
-    bookmarked
-    description
     id
     name
-    ownerId
-    ownerType
     pins {
       id
       name
