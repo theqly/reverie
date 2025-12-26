@@ -5,7 +5,10 @@ import {
   CreateBoardDocument,
   type CreateBoardInput,
   CreateGroupDocument,
-  type CreateGroupInput, GetBoardByIdDocument, GetBoardReactionIdDocument, IsBoardBookmarkedDocument,
+  type CreateGroupInput,
+  GetBoardByIdDocument,
+  GetBoardReactionIdDocument,
+  IsBoardBookmarkedDocument,
   OwnerType,
   UpdateBoardDocument,
   type UpdateBoardInput
@@ -95,6 +98,7 @@ export async function createCollection(
             accessLevel: AccessLevelType.Group,
             ownerId: newGroupId,
             ownerType: OwnerType.Group,
+            description: payload.info
           } as CreateBoardInput
         },
       });
@@ -122,6 +126,7 @@ export async function createCollection(
             boardImageURL: coverImageUrl, // ← ДОБАВЬ ЭТУ СТРОКУ
             ownerId: payload.collaborators[0],
             ownerType: OwnerType.User,
+            description: payload.info
           } as CreateBoardInput
         },
       });

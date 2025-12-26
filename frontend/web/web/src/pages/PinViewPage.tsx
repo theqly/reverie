@@ -54,7 +54,6 @@ const PinViewPage = () => {
       setError(null);
 
       try {
-        // 1. Пытаемся получить с бэка
         const backendPin = await getBackendPinById(pinId);
 
         if (backendPin) {
@@ -63,8 +62,6 @@ const PinViewPage = () => {
           return;
         }
 
-        // 2. Фолбек на моки
-        console.log("Используем моки для пина");
         const mockPin = getMockPinById(pinId);
         if (mockPin) {
           setPin(mockPin);
@@ -248,15 +245,9 @@ const PinViewPage = () => {
     {
       authorName: "alex_smith",
       authorAvatar: placeholder_1,
-      commentText: "Был там прошлым летом, незабываемые впечатления!",
-      commentDate: "5 часов назад"
+      commentText: "Отличное фото! Очень красивое место.",
+      commentDate: "2 часа назад",
     },
-    {
-      authorName: "travel_lover",
-      authorAvatar: placeholder_1,
-      commentText: "Спасибо за рекомендацию, обязательно посещу!",
-      commentDate: "1 день назад"
-    }
   ];
 
   // Извлекаем URL изображения с правильной обработкой

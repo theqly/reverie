@@ -156,10 +156,6 @@ const Feed = () => {
       )
     : collections;
 
-  /* =======================
-     Render
-  ======================= */
-
   return (
     <div>
       <Header />

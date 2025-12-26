@@ -73,8 +73,6 @@ const CollectionViewPage = () => {
           return;
         }
 
-        // 2. Фолбэк на моки
-        console.log("Используем моки для коллекции");
         const mockCollection = getCollectionById(collectionId);
         if (mockCollection) {
           setCollection(mockCollection);
