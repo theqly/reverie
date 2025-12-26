@@ -756,3 +756,54 @@
     padding: 14px 20px;
   }
 }
+
+/* Добавьте эти стили в ваш PinViewPage.module.css */
+
+.emptyMapPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 16px;
+  border: 2px dashed #e0e0e0;
+}
+
+.placeholderContent {
+  text-align: center;
+  padding: 2rem;
+  max-width: 300px;
+}
+
+.placeholderText {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+
+
+.addPinButton{
+  height: 40px;
+  cursor: pointer;
+  background-color: transparent;
+  width: 250px;
+  text-align: left;
+  padding-left: 40px;
+  font-size: 16px;
+
+  background-image: url('../assets/plus.svg');
+  background-size: 30px 30px;
+  background-position: left center ;
+  
+  background-repeat: no-repeat;
+  border: none;
+  margin-left: 15px;
+}
+
+.addPinButton:hover {
+  background-size: 35px 35px;
+  padding-left: 45px;
+}

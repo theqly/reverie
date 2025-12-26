@@ -557,7 +557,8 @@ ul.follow_options li:last-child {
   margin-bottom: 20px;
 }
 
-.newBoardBtn:hover{
+.newBoardBtn:hover,
+.newPinBtn:hover {
   background-size: 35px 35px;
   padding-left: 45px;
 }
