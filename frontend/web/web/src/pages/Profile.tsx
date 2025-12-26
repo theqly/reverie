@@ -25,11 +25,8 @@ import {
   getBookmarksByUser,
 } from '../services/profileService';
 
-import { getCityFromCoordinates } from '../services/geoService';
 
 type TabType = 'collections' | 'pins' | 'likes' | 'bookmarks';
-
-const USER_ID = '00000000-0000-0000-0000-000000000001';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -73,53 +70,32 @@ const Profile = () => {
   const [bookmarkedPins, setBookmarkedPins] = useState<any[]>([]);
   const [bookmarkedCollections, setBookmarkedCollections] = useState<any[]>([]);
 
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /* =======================
-     Utils
+     Навигация
   ======================= */
 
-  const enrichPinsWithLocation = async (sourcePins: any[]) => {
-    return Promise.all(
-      sourcePins.map(async (pin) => {
-        let location = '';
-
-        if (pin.latitude && pin.longitude) {
-          try {
-            location = await getCityFromCoordinates(
-              pin.latitude,
-              pin.longitude
-            );
-          } catch (e) {
-            console.warn('Не удалось определить город', e);
-          }
-        }
-
-        return {
-          ...pin,
-          location,
-        };
-      })
-    );
+  const handleBack = () => {
+    navigate(-1);
   };
 
-  /* =======================
-     Navigation
-  ======================= */
-
-  const handleBack = () => navigate(-1);
   const handleCreatePin = () => navigate('/pin/create');
   const handleCreateCollection = () => navigate('/collection/create');
 
-  const handlePinClick = (pinId: string) =>
+  const handlePinClick = (pinId: string) => {
     navigate(`/pin/${pinId}`);
+  };
 
-  const handleCollectionClick = (collectionId: string) =>
+  const handleCollectionClick = (collectionId: string) => {
     navigate(`/collection/${collectionId}`);
+  };
 
   /* =======================
-     Data loading
+     Загрузка данных
+     (ТОЧНО как в Feed)
   ======================= */
 
   const handleGetPins = async () => {
@@ -128,20 +104,21 @@ const Profile = () => {
 
     try {
       const response = await getPinsByUser({
-        viewerId: USER_ID,
-        userId: USER_ID,
+        viewerId: '000', // временно
+        userId: '000',   // временно
         limit: 20,
         offset: 0,
       });
 
-      const sourcePins =
-        response && response.length > 0 ? response : mockPins;
-
-      const enriched = await enrichPinsWithLocation(sourcePins);
-      setPins(enriched);
+      if (response && response.length > 0) {
+        setPins(response);
+      } else {
+        console.log('[Profile] Использовали моки пинов');
+        setPins(mockPins);
+      }
     } catch (err) {
       console.error('[Profile] getPins error:', err);
-      setPins(await enrichPinsWithLocation(mockPins));
+      setPins(mockPins);
       setError('Не удалось загрузить пины');
     } finally {
       setLoading(false);
@@ -154,14 +131,17 @@ const Profile = () => {
 
     try {
       const response = await getOwnBoardsByUser({
-        userId: USER_ID,
+        userId: '000', // временно
         limit: 20,
         offset: 0,
       });
 
-      setCollections(
-        response && response.length > 0 ? response : mockCollections
-      );
+      if (response && response.length > 0) {
+        setCollections(response);
+      } else {
+        console.log('[Profile] Использовали моки подборок');
+        setCollections(mockCollections);
+      }
     } catch (err) {
       console.error('[Profile] getCollections error:', err);
       setCollections(mockCollections);
@@ -172,93 +152,135 @@ const Profile = () => {
   };
 
   const handleGetLikes = async () => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const response = await getLikesByUser({
-        userId: USER_ID,
-        pinsLimit: 20,
-        pinsOffset: 0,
-        boardsLimit: 10,
-        boardsOffset: 0,
-      });
+  try {
+    const response = await getLikesByUser({
+      userId: '000', // временно
+      pinsLimit: 20,
+      pinsOffset: 0,
+      boardsLimit: 10,
+      boardsOffset: 0,
+    });
 
-      const pinsSrc = response?.pins?.length
-        ? response.pins
-        : mockPins;
-
-      setLikedPins(await enrichPinsWithLocation(pinsSrc));
-      setLikedCollections(response?.boards || mockCollections);
-    } catch (err) {
-      console.error('[Profile] getLikes error:', err);
-      setLikedPins(await enrichPinsWithLocation(mockPins));
+    if (response) {
+      setLikedPins(response.pins || []);
+      setLikedCollections(response.boards || []);
+    } else {
+      console.log('[Profile] Использовали моки лайков');
+      setLikedPins(mockPins);
       setLikedCollections(mockCollections);
-      setError('Не удалось загрузить лайки');
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    console.error('[Profile] getLikes error:', err);
+    setLikedPins(mockPins);
+    setLikedCollections(mockCollections);
+    setError('Не удалось загрузить лайки');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleGetBookmarks = async () => {
-    setLoading(true);
-    setError(null);
+const handleGetBookmarks = async () => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      const response = await getBookmarksByUser({
-        userId: USER_ID,
-        pinsLimit: 20,
-        pinsOffset: 0,
-        boardsLimit: 10,
-        boardsOffset: 0,
-      });
+  try {
+    const response = await getBookmarksByUser({
+      userId: '000', // временно
+      pinsLimit: 20,
+      pinsOffset: 0,
+      boardsLimit: 10,
+      boardsOffset: 0,
+    });
 
-      const pinsSrc = response?.pins?.length
-        ? response.pins
-        : mockPins;
-
-      setBookmarkedPins(await enrichPinsWithLocation(pinsSrc));
-      setBookmarkedCollections(response?.boards || mockCollections);
-    } catch (err) {
-      console.error('[Profile] getBookmarks error:', err);
-      setBookmarkedPins(await enrichPinsWithLocation(mockPins));
+    if (response) {
+      setBookmarkedPins(response.pins || []);
+      setBookmarkedCollections(response.boards || []);
+    } else {
+      console.log('[Profile] Использовали моки закладок');
+      setBookmarkedPins(mockPins);
       setBookmarkedCollections(mockCollections);
-      setError('Не удалось загрузить закладки');
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    console.error('[Profile] getBookmarks error:', err);
+    setBookmarkedPins(mockPins);
+    setBookmarkedCollections(mockCollections);
+    setError('Не удалось загрузить закладки');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   /* =======================
      Effects
   ======================= */
 
   useEffect(() => {
-    if (activeTab === 'pins') handleGetPins();
-    if (activeTab === 'collections') handleGetCollections();
-    if (activeTab === 'likes') handleGetLikes();
-    if (activeTab === 'bookmarks') handleGetBookmarks();
+    if (activeTab === 'pins') {
+      handleGetPins();
+    }
+
+    if (activeTab === 'collections') {
+      handleGetCollections();
+    }
+
+    if (activeTab === 'likes') {
+    handleGetLikes();
+    }
+
+    if (activeTab === 'bookmarks') {
+      handleGetBookmarks();
+    }
   }, [activeTab]);
 
   /* =======================
-     Transform for grids
+     Mixed feed (likes / bookmarks)
   ======================= */
+  const generateMixedFeed = (
+    collections: any[],
+    pins: any[]
+  ) => {
+    const COLLECTIONS_PER_BLOCK = 2;
+    const PINS_PER_BLOCK = 5;
 
-  const transformPinsForGrid = (pinsData: any[]) =>
-    pinsData.map(pin => ({
-      ...pin,
-      image: placeholder_1,
-      title: pin.name || pin.title,
-      location: pin.location,
-    }));
+    //console.log('collections:', collections);
 
-  const transformCollectionsForGrid = (collectionsData: any[]) =>
-    collectionsData.map(col => ({
-      ...col,
-      image: placeholder_1,
-      title: col.name || col.title,
-      pinsCount: col.pinsCount || 0,
-    }));
+
+    const colls = [...collections];
+    const ps = [...pins];
+
+    const feed: { type: 'collections' | 'pins'; items: any[] }[] = [];
+    let next: 'collections' | 'pins' = 'collections';
+
+    while (colls.length || ps.length) {
+      if (next === 'collections' && colls.length) {
+        feed.push({
+          type: 'collections',
+          items: colls.splice(0, COLLECTIONS_PER_BLOCK),
+        });
+        next = 'pins';
+      } else if (next === 'pins' && ps.length) {
+        feed.push({
+          type: 'pins',
+          items: ps.splice(0, PINS_PER_BLOCK),
+        });
+        next = 'collections';
+      } else {
+        next = colls.length ? 'collections' : 'pins';
+      }
+    }
+
+    return feed;
+  };
+
+
+  const likesFeed = generateMixedFeed(likedCollections, likedPins);
+  const bookmarksFeed = generateMixedFeed(bookmarkedCollections, bookmarkedPins);
+
 
   /* =======================
      Render
@@ -275,18 +297,83 @@ const Profile = () => {
         </div>
 
         <section className={styles.main_content}>
-          <div style={{ display: 'flex', width: '100%' }}>
+          <div style={{ display: "flex", width: "100%" }}>
+
+            {/* Левая часть — профиль */}
             <div className={styles.profile}>
               <img src={profileData.avatar} className={styles.avatar} />
+
               <div className={styles.info}>
                 <div className={styles.name}>{profileData.name}</div>
+
+                <ul className={styles.follow_options}>
+                  <li>
+                    <button
+                      className={styles.followLink}
+                      onClick={() => setFollowersOpen(true)}
+                    >
+                      <p>1247</p> подписчиков
+                    </button>
+                  </li>
+
+                  <li>
+                    <button
+                      className={styles.followLink}
+                      onClick={() => setFollowingOpen(true)}
+                    >
+                      <p>450</p> подписок
+                    </button>
+                  </li>
+                </ul>
               </div>
             </div>
+
+            {/* Правая часть — кнопки */}
+            <div
+              className={styles.btn_container}
+              style={{ display: "flex" }}
+            >
+              <button
+                className={styles.edit_btn}
+                onClick={() => setEditOpen(true)}
+              >
+                Редактировать профиль
+              </button>
+
+              <button
+                className={styles.settingsBtn}
+                onClick={() => setSettingsOpen(true)}
+              />
+
+              <button
+                className={styles.shareBtn}
+                onClick={() => setShareOpen(true)}
+              />
+            </div>
+
           </div>
 
           <div className={styles.bio}>{profileData.bio}</div>
+
+          <div style={{ display: "flex" }}>
+            <button
+              className={styles.editBtn}
+              onClick={() => setFollowing(prev => !prev)}
+            >
+              {isFollowing ? 'Отписаться' : 'Подписаться'}
+            </button>
+
+            <button
+              className={styles.reportBtn}
+              onClick={() => setReportOpen(true)}
+            >
+              !
+            </button>
+          </div>
         </section>
 
+
+        {/* Tabs */}
         <div className={styles.tabs}>
           {(['collections', 'pins', 'likes', 'bookmarks'] as TabType[]).map(tab => (
             <button
@@ -312,11 +399,18 @@ const Profile = () => {
         <div className={styles.tabContent}>
           {activeTab === 'collections' && (
             <>
-              <button onClick={handleCreateCollection} className={styles.newBoardBtn}>
+              <button
+                onClick={handleCreateCollection}
+                className={styles.newBoardBtn}
+              >
                 Создать подборку
               </button>
+
               <CollectionGrid
-                collections={transformCollectionsForGrid(collections)}
+                collections={collections.map(col => ({
+                  ...col,
+                  authorAvatar: col.authorAvatar || placeholder_1,
+                }))}
                 onCollectionClick={handleCollectionClick}
               />
             </>
@@ -324,54 +418,89 @@ const Profile = () => {
 
           {activeTab === 'pins' && (
             <>
-              <button onClick={handleCreatePin} className={styles.newPinBtn}>
+              <button
+                onClick={handleCreatePin}
+                className={styles.newPinBtn}
+              >
                 Создать пин
               </button>
-              <PinGrid
-                pins={transformPinsForGrid(pins)}
-                onPinClick={handlePinClick}
-              />
+
+              <PinGrid pins={pins} onPinClick={handlePinClick} />
             </>
           )}
 
           {activeTab === 'likes' && (
-            <PinGrid
-              pins={transformPinsForGrid(likedPins)}
-              onPinClick={handlePinClick}
-            />
+            <div className={styles.likesFeed}>
+              {likesFeed.map((block, idx) => (
+                <div key={idx} className={styles.feedBlock}>
+                  {block.type === 'collections' ? (
+                    <CollectionGrid
+                      collections={block.items}
+                      onCollectionClick={handleCollectionClick}
+                    />
+                  ) : (
+                    <PinGrid
+                      pins={block.items}
+                      onPinClick={handlePinClick}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           )}
 
           {activeTab === 'bookmarks' && (
-            <PinGrid
-              pins={transformPinsForGrid(bookmarkedPins)}
-              onPinClick={handlePinClick}
-            />
+            <div className={styles.likesFeed}>
+              {bookmarksFeed.map((block, idx) => (
+                <div key={idx} className={styles.feedBlock}>
+                  {block.type === 'collections' ? (
+                    <CollectionGrid
+                      collections={block.items}
+                      onCollectionClick={handleCollectionClick}
+                    />
+                  ) : (
+                    <PinGrid
+                      pins={block.items}
+                      onPinClick={handlePinClick}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
+
+
+        {/* Modals */}
         <EditProfileModal
           isOpen={isEditOpen}
           onClose={() => setEditOpen(false)}
           onSave={setProfileData}
           initialData={profileData}
         />
+
         <SettingsModal
           isOpen={isSettingsOpen}
           onClose={() => setSettingsOpen(false)}
         />
+
         <ShareModal
           isOpen={isShareOpen}
           onClose={() => setShareOpen(false)}
         />
+
         <ReportModal
           isOpen={isReportOpen}
           onClose={() => setReportOpen(false)}
           onSubmit={data => console.log('Жалоба:', data)}
         />
+
         <FollowersModal
           isOpen={isFollowersOpen}
           onClose={() => setFollowersOpen(false)}
         />
+
         <FollowingModal
           isOpen={isFollowingOpen}
           onClose={() => setFollowingOpen(false)}
