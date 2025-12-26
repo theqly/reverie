@@ -499,11 +499,13 @@ const handleGetBookmarks = async () => {
         <FollowersModal
           isOpen={isFollowersOpen}
           onClose={() => setFollowersOpen(false)}
+          followers={[]}
         />
 
         <FollowingModal
           isOpen={isFollowingOpen}
           onClose={() => setFollowingOpen(false)}
+          following={[]}
         />
       </main>
     </div>

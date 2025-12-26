@@ -7,7 +7,7 @@ import PinGrid from './PinGrid';
 import CollectionGrid from './CollectionGrid';
 
 import { mockPins, mockCollections } from '../utils/mockData';
-import { transformPins, transformBoards, type DisplayPin, type DisplayCollection } from '../utils/transformers';
+import { transformPins, transformBoards, transformMockPins, transformMockCollections, type DisplayPin, type DisplayCollection } from '../utils/transformers';
 import { getAllPins, getAllBoards } from '../services/profileService';
 import { useCurrentUserId } from '../context/AuthContext';
 import { loadLocationsForItems, loadLocationsForBoards } from '../services/geoService';
@@ -80,11 +80,11 @@ const Feed = () => {
           })));
         });
       } else {
-        setPins(mockPins);
+        setPins(transformMockPins(mockPins));
       }
     } catch (err) {
       console.error('[Feed] getPins error:', err);
-      setPins(mockPins);
+      setPins(transformMockPins(mockPins));
       setError('Не удалось загрузить пины');
     } finally {
       setLoading(false);
@@ -115,11 +115,11 @@ const Feed = () => {
           })));
         });
       } else {
-        setCollections(mockCollections);
+        setCollections(transformMockCollections(mockCollections));
       }
     } catch (err) {
       console.error('[Feed] getBoards error:', err);
-      setCollections(mockCollections);
+      setCollections(transformMockCollections(mockCollections));
       setError('Не удалось загрузить подборки');
     } finally {
       setLoading(false);
@@ -135,7 +135,7 @@ const Feed = () => {
 
     try {
       const following = await getFollowing(currentUserId);
-      const ids = new Set(following.map((user: { id: string }) => user.id));
+      const ids = new Set<string>(following.map((user: { id: string }) => user.id));
       setFollowingIds(ids);
     } catch (err) {
       console.error('[Feed] loadFollowing error:', err);

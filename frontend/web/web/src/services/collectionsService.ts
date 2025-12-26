@@ -97,8 +97,7 @@ export async function createCollection(
             boardImageURL: coverImageUrl,
             accessLevel: AccessLevelType.Group,
             ownerId: newGroupId,
-            ownerType: OwnerType.Group,
-            description: payload.info
+            ownerType: OwnerType.Group
           } as CreateBoardInput
         },
       });
@@ -123,10 +122,9 @@ export async function createCollection(
             name: payload.name,
             description: payload.info || undefined,
             accessLevel: AccessLevelType.Public,
-            boardImageURL: coverImageUrl, // ← ДОБАВЬ ЭТУ СТРОКУ
+            boardImageURL: coverImageUrl,
             ownerId: payload.collaborators[0],
-            ownerType: OwnerType.User,
-            description: payload.info
+            ownerType: OwnerType.User
           } as CreateBoardInput
         },
       });

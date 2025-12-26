@@ -82,7 +82,7 @@ const CollectionViewPage = () => {
           });
 
           setCollectionPins(initialPins);
-          setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
+          setLikesCount((board as any).rating ?? (board as any).likes ?? board.likes_count ?? FALLBACK_LIKES);
           setLoading(false);
 
           // Затем фоном подгружаем локации
@@ -209,7 +209,7 @@ const CollectionViewPage = () => {
     try {
       const newComment = await addCommentToBoard({
         boardId: collectionId,
-        ownerId: currentUserId,
+        userId: currentUserId,
         message,
       });
       if (newComment) {
@@ -245,7 +245,7 @@ const CollectionViewPage = () => {
   const handleBookmark = async (nextBookmarked: boolean) => {
     setBookmarked(nextBookmarked);
     try {
-      await toggleBookmarkToBoard(collectionId!, currentUserId);
+      await toggleBookmarkToBoard({ boardId: collectionId!, userId: currentUserId });
     } catch (error) {
       console.error("Failed to toggle board bookmark", error);
     }

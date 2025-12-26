@@ -23,3 +23,8 @@ export interface MockCollection {
 
 export const mockPins: MockPin[];
 export const mockCollections: MockCollection[];
+
+export function getPinById(id: string | number): MockPin | undefined;
+export function getAllPins(): MockPin[];
+export function getCollectionById(id: string | number): MockCollection | undefined;
+export function getCollectionPins(collectionId: string | number): MockPin[];

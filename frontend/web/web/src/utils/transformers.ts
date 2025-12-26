@@ -98,3 +98,73 @@ export function transformPins(pins: Pin[]): DisplayPin[] {
 export function transformBoards(boards: Board[]): DisplayCollection[] {
   return boards.map(transformBoard);
 }
+
+export function transformMockPin(mockPin: {
+  id: number;
+  image: string;
+  title: string;
+  location: string;
+  author: string;
+  authorAvatar: string;
+  coords?: [number, number];
+}): DisplayPin {
+  return {
+    id: String(mockPin.id),
+    title: mockPin.title,
+    image: mockPin.image,
+    location: mockPin.location,
+    author: mockPin.author,
+    authorAvatar: mockPin.authorAvatar,
+    latitude: mockPin.coords?.[0] || 0,
+    longitude: mockPin.coords?.[1] || 0,
+    ownerId: '',
+  };
+}
+
+export function transformMockCollection(mockCollection: {
+  id: number;
+  image: string;
+  title: string;
+  pinsCount?: number;
+  pinCount?: number;
+  author: string;
+  authorAvatar: string;
+  location?: string;
+}): DisplayCollection {
+  return {
+    id: String(mockCollection.id),
+    title: mockCollection.title,
+    image: mockCollection.image,
+    location: mockCollection.location || '',
+    pinsCount: mockCollection.pinsCount || mockCollection.pinCount || 0,
+    author: mockCollection.author,
+    authorAvatar: mockCollection.authorAvatar,
+    pins: [],
+    ownerId: '',
+  };
+}
+
+export function transformMockPins(mockPins: Array<{
+  id: number;
+  image: string;
+  title: string;
+  location: string;
+  author: string;
+  authorAvatar: string;
+  coords?: [number, number];
+}>): DisplayPin[] {
+  return mockPins.map(transformMockPin);
+}
+
+export function transformMockCollections(mockCollections: Array<{
+  id: number;
+  image: string;
+  title: string;
+  pinsCount?: number;
+  pinCount?: number;
+  author: string;
+  authorAvatar: string;
+  location?: string;
+}>): DisplayCollection[] {
+  return mockCollections.map(transformMockCollection);
+}

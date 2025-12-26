@@ -4,6 +4,7 @@ import styles from './CollectionGridItem.module.css';
 interface Collection {
   id: string | number;
   image?: string;
+  boardImageURL?: string;
   title: string;
   location?: string;
   pinsCount?: number;

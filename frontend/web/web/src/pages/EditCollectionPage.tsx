@@ -62,14 +62,14 @@ const EditCollectionPage = () => {
         const board = await getBackendCollectionById(id);
 
         if (board) {
-          setOriginalCollection(board);
-          setCollectionName(board.title || board.name || '');
+          setOriginalCollection(board as any);
+          setCollectionName((board as any).title || board.name || '');
           setCollectionInfo(board.description || '');
-          setCollaborators(board.collaborators || []);
+          setCollaborators((board as any).collaborators || []);
           return;
         }
 
-        const mock = getMockCollectionById(parseInt(id));
+        const mock = getMockCollectionById(parseInt(id)) as any;
         if (mock) {
           setOriginalCollection(mock);
           setCollectionName(mock.title || '');
@@ -79,7 +79,7 @@ const EditCollectionPage = () => {
           setError(`Подборка с ID ${id} не найдена`);
         }
       } catch (e) {
-        const mock = getMockCollectionById(parseInt(id));
+        const mock = getMockCollectionById(parseInt(id)) as any;
         if (mock) {
           setOriginalCollection(mock);
           setCollectionName(mock.title || '');

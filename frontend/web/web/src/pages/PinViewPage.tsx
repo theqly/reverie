@@ -18,6 +18,7 @@ import { getOwnBoardsByUser } from "../services/profileService";
 
 const FALLBACK_LIKES = 226;
 const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
+const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
 
 // Интерфейс для подборки
 interface Collection {
@@ -58,7 +59,7 @@ const PinViewPage = () => {
 
         if (backendPin) {
           setPin(backendPin);
-          setLikesCount(backendPin.rating ?? backendPin.likes ?? FALLBACK_LIKES);
+          setLikesCount((backendPin as any).rating ?? (backendPin as any).likes ?? backendPin.likes_count ?? FALLBACK_LIKES);
           return;
         }
 
@@ -160,7 +161,7 @@ const PinViewPage = () => {
     setLikesCount(prev => nextLiked ? prev + 1 : Math.max(prev - 1, 0));
 
     try {
-      await reactToPin({ pinId, userId: TEMP_USER_ID });
+      await reactToPin({ pinId: pinId!, reactionId: LIKE_REACTION_ID, userId: TEMP_USER_ID });
     } catch (error) {
       console.error("Failed to toggle pin reaction", error);
     }
@@ -169,7 +170,7 @@ const PinViewPage = () => {
   const handleBookmark = async (nextBookmarked: boolean) => {
     setBookmarked(nextBookmarked);
     try {
-      await toggleBookmarkToPin(pinId!, TEMP_USER_ID);
+      await toggleBookmarkToPin({ pinId: pinId!, userId: TEMP_USER_ID });
     } catch (error) {
       console.error("Failed to toggle bookmark", error);
     }

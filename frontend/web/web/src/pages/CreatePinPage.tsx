@@ -328,15 +328,6 @@ const handleBack = () => {
             {isSaving ? 'Сохранение...' : 'Сохранить пин'}
         </button>
 
-        {isAddPinModalOpen && (
-          <AddPinModal onClose={() => setIsAddPinModalOpen(false)} />
-        )}
-
-        {isInviteModalOpen && (
-          <InviteCollaboratorModal onClose={() => setIsInviteModalOpen(false)} />
-        )}
-
-
       </main>
       {isMapOpen && (
       <MapModal
