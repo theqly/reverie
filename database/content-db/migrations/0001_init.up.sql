@@ -12,6 +12,7 @@ CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) NOT NULL,
     description TEXT,
+     board_image_url TEXT,
     access_level_id INTEGER NOT NULL,
     owner_id UUID NOT NULL,
     author_id UUID NOT NULL,
@@ -178,6 +179,11 @@ INSERT INTO access_levels (type) VALUES
 INSERT INTO owner_types (type) VALUES
     ('user'),
     ('group');
+
+INSERT INTO reaction (id, type, description)
+VALUES
+    ('8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f', 'like', 'User likes the content')
+ON CONFLICT (type) DO NOTHING;
 
 CREATE INDEX idx_members_user_id ON members(user_id);
 CREATE INDEX idx_members_group_id ON members(group_id);

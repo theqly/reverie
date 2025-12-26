@@ -1,6 +1,15 @@
 // const GRAPHQL_URL = 'http://localhost:4000/graphql';
 const GRAPHQL_URL = '/api';   // TODO: убрать, когда 07-12-2025 frontend-main вольют в main, где будет фикс проблемы, для которой сейчас этот костыль
 
+import {
+  getAccessToken,
+  isAccessTokenExpired,
+} from '../auth/tokenStorage';
+
+import {
+  refreshAccessToken,
+  redirectToLogin,
+} from '../auth/authService';
 
 import {
   ApolloClient,
@@ -23,17 +32,32 @@ const httpLink = new HttpLink({
 });
 
 
-// Добавляет токен авторизации к запросу
-const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem('authToken');
+const authLink = setContext(async (_, { headers }) => {
+  const accessToken = getAccessToken();
+  if (!accessToken) {
+    redirectToLogin();
+    return { headers };
+  }
+
+  if (isAccessTokenExpired()) {
+    try {
+      await refreshAccessToken();
+    } catch (error) {
+      redirectToLogin();
+      return { headers };
+    }
+  }
+
+  const freshAccessToken = getAccessToken();
 
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : '',
+      Authorization: `Bearer ${freshAccessToken}`,
     },
   };
 });
+
 
 const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   if (graphQLErrors) {

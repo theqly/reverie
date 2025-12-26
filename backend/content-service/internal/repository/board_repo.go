@@ -201,6 +201,7 @@ func (r *BoardRepository) Update(ctx context.Context, updated models.Board) erro
 		Where("id = ?", updated.ID).
 		Updates(map[string]interface{}{
 			"name":            updated.Name,
+			"board_image_url": updated.BoardImageURL,
 			"access_level_id": updated.AccessLevelID,
 		}).Error
 
@@ -486,23 +487,46 @@ func (r *BoardRepository) AddCommentToBoard(ctx context.Context, boardID uuid.UU
 func (r *BoardRepository) DeleteCommentToBoardByID(ctx context.Context, commentID uuid.UUID) error {
 	logger := zap.L().With(zap.String("repository", "DeleteCommentToBoardByID"))
 
-	err := r.db.WithContext(ctx).
-		Where("id = ?", commentID).
-		Delete(&models.BoardComment{}).Error
+	var boardID uuid.UUID
 
-	if err == nil && r.publisher != nil {
-		go func(commentID uuid.UUID) {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var comment struct {
+			ID      uuid.UUID `gorm:"column:id"`
+			BoardID uuid.UUID `gorm:"column:board_id"`
+		}
+
+		if err := tx.Select("id, board_id").
+			Where("id = ?", commentID).
+			First(&comment).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&models.BoardComment{}, "id = ?", commentID).Error; err != nil {
+			return err
+		}
+
+		boardID = comment.BoardID
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if r.publisher != nil {
+		go func(boardID, commentID uuid.UUID) {
 			event := events1.BoardCommentDeleted{
 				BaseEvent: kafka.NewBaseEvent(),
+				BoardID:   boardID.String(),
 				CommentID: commentID.String(),
 			}
 			if err := r.publisher.PublishBoardCommentDeleted(context.Background(), event); err != nil {
-				logger.Info("failed to publish board.comment.deleted event: %v", zap.String("err", err.Error()))
+				logger.Error("failed to publish board.comment.deleted event", zap.Error(err))
 			}
-		}(commentID)
+		}(boardID, commentID)
 	}
 
-	return err
+	return nil
 }
 
 func (r *BoardRepository) UpdateCommentToBoard(ctx context.Context, commentID uuid.UUID, newMessage string) (*models.BoardComment, error) {

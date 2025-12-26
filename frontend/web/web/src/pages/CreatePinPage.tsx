@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreatePinPage.module.css'; // ← ИМПОРТ СТИЛЕЙ
-import logo from '../assets/Reverie.svg';
 import AddPinModal from "./AddPinModal";
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header'; 
-import { createPin } from "../services/pinService";
+import { createPinWithImages, type CreatePinPayload } from "../services/pinService";
 import { useLocation } from 'react-router-dom';
 import MapModal from './MapModal';
+import { validateImageFile } from '../services/imageService';
+import { useToast } from './ToastProvider';
+
 
 const CreatePinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
+
 
   // Состояния для полей формы
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
@@ -25,7 +29,13 @@ const CreatePinPage = () => {
 
   const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Новые состояния для загрузки
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pinCount, setPinCount] = useState(0);
 
   useEffect(() => {
@@ -61,28 +71,38 @@ const handleBack = () => {
     // ограничение 10 изображений
     if (images.length >= 10) return;
 
+    // Валидация файла
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setUploadError(validation.error || 'Недопустимый файл');
+      return;
+    }
+    
+    setUploadError(null);
     const newImages = [...images, file];
     setImages(newImages);
 
     // показываем последнее добавленное
     setCurrentIndex(newImages.length - 1);
 
-    console.log("Pin photo updated | pin_ID");
+    console.log("Pin photo added | total:", newImages.length);
   };
 
-  const handleAddPin = () => {
+  // Временно не используются - для будущей функциональности
+  const _handleAddPin = () => {
     setIsAddPinModalOpen(true);
     setPinCount(prev => prev + 1);
   };
+  void _handleAddPin;
 
-  const handleInviteCollaborator = () => {
+  const _handleInviteCollaborator = () => {
     setIsInviteModalOpen(true);
   };
+  void _handleInviteCollaborator;
 
-  const handleAddCollaborator = () => {
-    // Заглушка: добавляем фиктивного коллаборатора
-    const newCollaborator = `Collaborator ${collaborators.length + 1}`;
-    setCollaborators(prev => [...prev, newCollaborator]);
+  const handleAddCollaborator = (name: string) => {
+    // Добавляем коллаборатора с переданным именем
+    setCollaborators(prev => [...prev, name]);
   };
 
 
@@ -92,25 +112,62 @@ const handleBack = () => {
       longitude: pinLongitude
     });
   
-  if (pinLatitude === null || pinLongitude === null) {
-  alert('Выберите точку на карте');
-    return;
-  }
+    if (pinLatitude === null || pinLongitude === null) {
+      alert('Выберите точку на карте');
+      return;
+    }
 
-  const payload = {
-    name: pinName,
-    description: pinInfo,
-    latitude: pinLatitude,
-    longitude: pinLongitude,
-    ownerId: '00000000-0000-0000-0000-000000000001', // временно, заглушка
-    coverImages: images
-  };
+    if (images.length === 0) {
+      alert('Добавьте хотя бы одно изображение');
+      return;
+    }
 
-    await createPin(payload);
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    const payload: CreatePinPayload = {
+      name: pinName,
+      description: pinInfo,
+      latitude: pinLatitude,
+      longitude: pinLongitude,
+      ownerId: '00000000-0000-0000-0000-000000000001', // временно, заглушка
+      coverImages: images
+    };
+
+    try {
+      const result = await createPinWithImages(payload, (fileIndex, progress) => {
+        // Рассчитываем общий прогресс
+        const totalProgress = ((fileIndex + progress.percentage / 100) / images.length) * 100;
+        setUploadProgress(Math.round(totalProgress));
+      });
+
+      if (result.pin) {
+        showToast("Успешное сохранение!");
+
+        console.log('Пин создан:', result.pin);
+        console.log('Загружено изображений:', result.uploadedImages.length);
+        
+        if (result.errors.length > 0) {
+          console.warn('Ошибки при загрузке изображений:', result.errors);
+        }
+        
+        // Переходим на страницу созданного пина или обратно
+        navigate(`/feed`);
+      } else {
+        setUploadError('Не удалось создать пин');
+      }
+    } catch (error: any) {
+      console.error('Ошибка при создании пина:', error);
+      setUploadError(error.message || 'Произошла ошибка');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Валидация для кнопки сохранения
-  const isSaveEnabled = pinName.trim().length > 0 && 
+  const isSaveEnabled = !isUploading &&
+                       pinName.trim().length > 0 && 
                        pinName.length <= 50 && 
                        pinInfo.length <= 1000 &&
                        images.length > 0;
@@ -296,6 +353,38 @@ const handleBack = () => {
 
         </div>
         
+        {/* Показываем ошибку загрузки */}
+        {uploadError && (
+          <div className={styles.errorMessage} style={{ marginBottom: '1rem', color: 'red' }}>
+            {uploadError}
+          </div>
+        )}
+        
+        {/* Показываем прогресс загрузки */}
+        {isUploading && (
+          <div className={styles.uploadProgress} style={{ marginBottom: '1rem' }}>
+            <div>Загрузка изображений: {uploadProgress}%</div>
+            <div 
+              style={{ 
+                width: '100%', 
+                height: '8px', 
+                backgroundColor: '#e0e0e0', 
+                borderRadius: '4px',
+                marginTop: '0.5rem'
+              }}
+            >
+              <div 
+                style={{ 
+                  width: `${uploadProgress}%`, 
+                  height: '100%', 
+                  backgroundColor: '#4CAF50', 
+                  borderRadius: '4px',
+                  transition: 'width 0.3s ease'
+                }}
+              />
+            </div>
+          </div>
+        )}
         
         <button 
             type="button" 
@@ -303,7 +392,7 @@ const handleBack = () => {
             disabled={!isSaveEnabled}
             className={styles.saveButton}
           >
-            Сохранить пин
+            {isUploading ? 'Сохранение...' : 'Сохранить пин'}
         </button>
 
         {isAddPinModalOpen && (
@@ -311,7 +400,11 @@ const handleBack = () => {
         )}
 
         {isInviteModalOpen && (
-          <InviteCollaboratorModal onClose={() => setIsInviteModalOpen(false)} />
+          <InviteCollaboratorModal 
+            onClose={() => setIsInviteModalOpen(false)}
+            onAddCollaborator={handleAddCollaborator}
+            existingCollaborators={collaborators}
+          />
         )}
 
 

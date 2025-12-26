@@ -62,6 +62,7 @@ type BoardCommentUpdated struct {
 // опенсерч должен только количество менять
 type BoardCommentDeleted struct {
 	BaseEvent
+	BoardID   string `json:"board_id"`
 	CommentID string `json:"comment_id"`
 }
 

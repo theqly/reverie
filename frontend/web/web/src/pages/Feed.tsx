@@ -8,6 +8,9 @@ import CollectionGrid from './CollectionGrid';
 
 import { mockPins, mockCollections } from '../utils/mockData';
 import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
+import { getCityFromCoordinates } from '../services/geoService';
+
+import placeholder_1 from '../assets/placeholder1.jpg';
 
 const Feed = () => {
   const navigate = useNavigate();
@@ -22,7 +25,7 @@ const Feed = () => {
   const [error, setError] = useState<string | null>(null);
 
   /* =======================
-     Навигация
+     Navigation
   ======================= */
 
   const handlePlusClick = () => {
@@ -47,7 +50,7 @@ const Feed = () => {
   };
 
   /* =======================
-     Загрузка данных
+     Data loading
   ======================= */
 
   const handleGetPins = async () => {
@@ -56,19 +59,39 @@ const Feed = () => {
 
     try {
       const response = await getPinsByUser({
-        viewerId: '00000000-0000-0000-0000-000000000001', // временно
-        userId: '00000000-0000-0000-0000-000000000001', // временно
-
+        viewerId: '00000000-0000-0000-0000-000000000001',
+        userId: '00000000-0000-0000-0000-000000000001',
         limit: 20,
         offset: 0,
       });
 
-      if (response && response.length > 0) {
-        setPins(response);
-      } else {
-        console.log("Использовали моки");
-        setPins(mockPins);
-      }
+      const sourcePins =
+        response && response.length > 0 ? response : mockPins;
+
+      // 🔥 здесь получаем город по координатам
+      const pinsWithLocation = await Promise.all(
+        sourcePins.map(async (pin) => {
+          let location = '';
+
+          if (pin.latitude && pin.longitude) {
+            try {
+              location = await getCityFromCoordinates(
+                pin.latitude,
+                pin.longitude
+              );
+            } catch (e) {
+              console.warn('Не удалось определить город', e);
+            }
+          }
+
+          return {
+            ...pin,
+            location, // ← готовая строка города
+          };
+        })
+      );
+
+      setPins(pinsWithLocation);
     } catch (err) {
       console.error('[Feed] getPins error:', err);
       setPins(mockPins);
@@ -84,7 +107,7 @@ const Feed = () => {
 
     try {
       const response = await getOwnBoardsByUser({
-        userId: '00000000-0000-0000-0000-000000000001', // временно
+        userId: '00000000-0000-0000-0000-000000000001',
         limit: 20,
         offset: 0,
       });
@@ -92,8 +115,6 @@ const Feed = () => {
       if (response && response.length > 0) {
         setCollections(response);
       } else {
-        console.log("Использовали моки");
-
         setCollections(mockCollections);
       }
     } catch (err) {
@@ -106,7 +127,7 @@ const Feed = () => {
   };
 
   /* =======================
-     Эффекты
+     Effects
   ======================= */
 
   useEffect(() => {
@@ -120,24 +141,20 @@ const Feed = () => {
   }, [activeTab]);
 
   /* =======================
-     Фильтрация
+     Filters
   ======================= */
 
   const filteredPins = onlySubscriptions
-    ? pins.filter(pin =>
+    ? pins.filter((pin) =>
         ['jane_anderson', 'alex_smith'].includes(pin.author)
       )
     : pins;
 
   const filteredCollections = onlySubscriptions
-    ? collections.filter(col =>
+    ? collections.filter((col) =>
         ['jane_anderson', 'hana_tanaka'].includes(col.author)
       )
     : collections;
-
-  /* =======================
-     Render
-  ======================= */
 
   return (
     <div>
@@ -195,12 +212,17 @@ const Feed = () => {
               <input
                 type="checkbox"
                 checked={onlySubscriptions}
-                onChange={e => setOnlySubscriptions(e.target.checked)}
+                onChange={(e) =>
+                  setOnlySubscriptions(e.target.checked)
+                }
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 {onlySubscriptions && (
-                  <svg className={styles.checkIcon} viewBox="0 0 24 24">
+                  <svg
+                    className={styles.checkIcon}
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                   </svg>
                 )}
@@ -212,19 +234,36 @@ const Feed = () => {
           </div>
         </section>
 
-        {loading && <p className={styles.loading}>Загрузка…</p>}
-        {error && <p className={styles.error}>{error}</p>}
+        {loading && (
+          <p className={styles.loading}>Загрузка…</p>
+        )}
+        {error && (
+          <p className={styles.error}>{error}</p>
+        )}
 
         {activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
-            <PinGrid pins={filteredPins} onPinClick={handlePinClick} />
+            <PinGrid
+              pins={filteredPins.map((pin) => ({
+                ...pin,
+                image: placeholder_1,
+                title: pin.name,
+                location: pin.location, // ✅ город
+              }))}
+              onPinClick={handlePinClick}
+            />
           </div>
         )}
 
         {activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
             <CollectionGrid
-              collections={filteredCollections}
+              collections={filteredCollections.map((col) => ({
+                ...col,
+                image: placeholder_1,
+                title: col.name,
+                pinsCount: 0,
+              }))}
               onCollectionClick={handleCollectionClick}
             />
           </div>

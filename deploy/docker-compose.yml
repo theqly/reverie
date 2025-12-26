@@ -17,10 +17,9 @@ services:
       - reverie-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PROFILE_POSTGRES_USER} -d ${PROFILE_POSTGRES_DB} -h localhost || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 25
-      start_period: 5s
 
   content-db:
     image: postgres:15
@@ -37,30 +36,9 @@ services:
       - reverie-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${CONTENT_POSTGRES_USER} -d ${CONTENT_POSTGRES_DB} -h localhost || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 25
-      start_period: 5s
-
-  feed-db:
-    image: postgres:15
-    container_name: feed_db
-    environment:
-      POSTGRES_USER: ${FEED_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${FEED_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${FEED_POSTGRES_DB}
-    ports:
-      - "${FEED_DB_PORT}:${INNER_DB_PORT}"
-    volumes:
-      - feed_data:/var/lib/postgresql/data
-    networks:
-      - reverie-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${FEED_POSTGRES_USER} -d ${FEED_POSTGRES_DB} -h localhost || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 25
-      start_period: 5s
 
   # DB migrators runners
 
@@ -87,18 +65,6 @@ services:
     networks:
       - reverie-network
     entrypoint: ["migrate", "-path=/app/migrations", "-database=postgres://${CONTENT_POSTGRES_USER}:${CONTENT_POSTGRES_PASSWORD}@content-db:${INNER_DB_PORT}/${CONTENT_POSTGRES_DB}?sslmode=disable", "up"]
-
-  feed-db-migrator:
-    build:
-      context: ../database/feed-db
-      dockerfile: Dockerfile.migrator
-    container_name: feed_db_migrator
-    depends_on:
-      feed-db:
-        condition: service_healthy
-    networks:
-      - reverie-network
-    entrypoint: ["migrate", "-path=/app/migrations", "-database=postgres://${FEED_POSTGRES_USER}:${FEED_POSTGRES_PASSWORD}@feed-db:${INNER_DB_PORT}/${FEED_POSTGRES_DB}?sslmode=disable", "up"]
 
   # Backend
 
@@ -159,31 +125,52 @@ services:
     #  retries: 10
     #  start_period: 5s
 
-  feed-service:
-    build:
-      context: ../backend/feed-service
-      dockerfile: Dockerfile
-    container_name: feed_service
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${FEED_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${FEED_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${FEED_POSTGRES_DB}
-      POSTGRES_HOST: feed-db
-      PORT: ${INNER_SERVICE_PORT}
-    depends_on:
-      feed-db:
-        condition: service_healthy
-    ports:
-      - "${FEED_PORT}:${INNER_SERVICE_PORT}"
-    networks:
-      - reverie-network
+  #feed-service:
+  #  build:
+  #    context: ../backend/feed-service
+  #    dockerfile: Dockerfile
+  #  container_name: feed_service
+  #  restart: unless-stopped
+  #  environment:
+  #    PORT: ${INNER_SERVICE_PORT}
+  #  ports:
+  #    - "${FEED_PORT}:${INNER_SERVICE_PORT}"
+  #  networks:
+  #    - reverie-network
     #healthcheck:
     #  test: ["CMD-SHELL", "wget --spider --quiet http://localhost:${INNER_SERVICE_PORT}/healthz || exit 1"]
     #  interval: 5s
     #  timeout: 5s
     #  retries: 10
     #  start_period: 5s
+
+  lamifare:
+    build:
+      context: ../backend/lamifare
+      dockerfile: Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: lamifare
+    restart: unless-stopped
+    environment:
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_GROUP: ${KAFKA_GROUP}
+      OPENSEARCH_URL: ${OPENSEARCH_HOSTS}
+      PORT: ${INNER_SERVICE_PORT}
+    ports:
+      - "${LAMIFARE_PORT}:${INNER_SERVICE_PORT}"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    networks:
+      - reverie-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:${INNER_SERVICE_PORT}/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
 
   # Infra
 
@@ -246,6 +233,9 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
     ports:
       - "${KEYCLOAK_PORT}:${INNER_SERVICE_PORT}"
     depends_on:
@@ -285,7 +275,9 @@ services:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    #  - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -297,36 +289,23 @@ services:
       - "${OPENSEARCH_PA_PORT}:${OPENSEARCH_PA_PORT}"
     networks:
       - reverie-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${OPENSEARCH_HTTP_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:3
     container_name: opensearch-dashboards
     environment:
       - OPENSEARCH_HOSTS=["${OPENSEARCH_HOSTS}"]
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
     ports:
       - "${OPENSEARCH_DASHBOARD_PORT}:${OPENSEARCH_DASHBOARD_PORT}"
     depends_on:
-      - opensearch
-    networks:
-      - reverie-network
-
-  data-prepper:
-    image: opensearchproject/data-prepper:2.5.0
-    container_name: data-prepper
-    depends_on:
-      - opensearch
-      - kafka
-    environment:
-      OPENSEARCH_HOSTS: '["${OPENSEARCH_HOSTS}"]'
-      OPENSEARCH_USERNAME: admin
-      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
-      OPENSEARCH_SSL: "true"
-      OPENSEARCH_SSL_CERTIFICATE_VERIFICATION: "false"
-    volumes:
-      - ./opensearch/pipelines.yaml:/usr/share/data-prepper/pipelines/pipelines.yaml
-      - ./opensearch/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml
-    ports:
-      - "${DATA_PREPPER_PORT}:${DATA_PREPPER_PORT}"
+      opensearch:
+        condition: service_healthy
     networks:
       - reverie-network
 

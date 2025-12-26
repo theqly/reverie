@@ -48,12 +48,6 @@ query GetPinsByUserId($userId: UUID!, $viewerId: UUID, $limit: Int = 10, $offset
     longitude
     description
     rating
-    createdAt
-    owner {
-      id
-      nickname
-      profilePicture
-    }
     images {
       id
       orderNumber
@@ -166,18 +160,11 @@ query GetOwnBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
     description
     accessLevel
     ownerId
-    authorId
+    boardImageURL
     ownerType
-    createdAt
-    savedAt
     pins {
       id
       name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
       images {
         id
         orderNumber
@@ -290,20 +277,13 @@ mutation CreateBoard($input: CreateBoardInput!){
     id
     name
     description
+    boardImageURL
     accessLevel
     ownerId
-    authorId
     ownerType
-    createdAt
-    savedAt
     pins {
       id
       name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
       images {
         id
         orderNumber
@@ -323,12 +303,6 @@ query GetPinById($id: UUID!) {
     longitude
     description
     rating
-    createdAt
-    owner {
-      id
-      nickname
-      profilePicture
-    }
     images {
       id
       orderNumber
@@ -341,21 +315,14 @@ query GetBoardById($id: UUID!) {
   board(id: $id) {
     id
     name
+    boardImageURL
     description
     accessLevel
     ownerId
-    authorId
     ownerType
-    createdAt
-    savedAt
     pins {
       id
       name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
       images {
         id
         orderNumber
@@ -376,11 +343,6 @@ mutation CreatePin($input: CreatePinInput!) {
     description
     rating
     createdAt
-    owner {
-      id
-      nickname
-      profilePicture
-    }
     images {
       id
       orderNumber
@@ -586,4 +548,28 @@ mutation BookmarkToPin($pinId: UUID!, $userId: UUID!) {
 
 mutation BookmarkToBoard($boardId: UUID!, $userId: UUID!) {
   bookmarkToBoard(boardId: $boardId, userId: $userId)
+}
+
+query GetPinReactionId($id: UUID!) {
+  pin(id: $id) {
+    reactionId
+  }
+}
+
+query GetBoardReactionId($id: UUID!) {
+  board(id: $id) {
+    reactionId
+  }
+}
+
+query IsPinBookmarked($id: UUID!) {
+  pin(id: $id) {
+    bookmarked
+  }
+}
+
+query IsBoardBookmarked($id: UUID!) {
+  board(id: $id) {
+    bookmarked
+  }
 }
