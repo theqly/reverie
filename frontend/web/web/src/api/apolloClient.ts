@@ -6,10 +6,7 @@ import {
   isAccessTokenExpired,
 } from '../auth/tokenStorage';
 
-import {
-  refreshAccessToken,
-  redirectToLogin,
-} from '../auth/authService';
+import { refreshAccessToken } from '../auth/authService';
 
 import {
   ApolloClient,
@@ -34,16 +31,18 @@ const httpLink = new HttpLink({
 
 const authLink = setContext(async (_, { headers }) => {
   const accessToken = getAccessToken();
+
+  // Если нет токена — просто продолжаем без авторизации
   if (!accessToken) {
-    redirectToLogin();
     return { headers };
   }
 
+  // Если токен истёк — пробуем обновить, но не редиректим
   if (isAccessTokenExpired()) {
     try {
       await refreshAccessToken();
     } catch (error) {
-      redirectToLogin();
+      console.warn('Token refresh failed, continuing without auth');
       return { headers };
     }
   }
@@ -53,7 +52,7 @@ const authLink = setContext(async (_, { headers }) => {
   return {
     headers: {
       ...headers,
-      Authorization: `Bearer ${freshAccessToken}`,
+      Authorization: freshAccessToken ? `Bearer ${freshAccessToken}` : undefined,
     },
   };
 });
@@ -68,8 +67,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
       );
 
       if (extensions?.code === 'UNAUTHENTICATED') {
-        console.log('Пользователь не авторизован');
-        window.location.href = '/login';
+        console.log('Пользователь не авторизован — используем моки или публичные данные');
       }
     });
   }

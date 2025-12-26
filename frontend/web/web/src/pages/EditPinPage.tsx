@@ -5,25 +5,52 @@ import Header from './Header';
 import MapModal from './MapModal';
 import { getPinById as getMockPinById } from '../utils/mockData';
 import { useToast } from './ToastProvider';
-import { updatePin, getPinById as getBackendPinById } from "../services/pinService";
+import {
+  updatePin,
+  getPinById as getBackendPinById,
+  addImagesToPinById,
+  deletePinImage
+} from "../services/pinService";
+import { validateImageFile } from '../services/imageService';
 import { useCurrentUserId } from '../context/AuthContext';
+
+// Интерфейс для существующих изображений с бэкенда
+interface ExistingImage {
+  id: string;
+  imageUrl: string;
+  orderNumber: number;
+}
 
 const EditPinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
   const currentUserId = useCurrentUserId();
-  const { showToast } = useToast();
 
+  // Состояния
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
   const [pinLongitude, setPinLongitude] = useState<number | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [pinName, setPinName] = useState('');
   const [pinInfo, setPinInfo] = useState('');
-  const [images, setImages] = useState<File[]>([]);
+
+  // Изображения: новые (File) и существующие (с бэкенда)
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const { showToast } = useToast();
+
+  // Состояния для загрузки
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Общее количество изображений (существующие + новые)
+  const totalImages = existingImages.length + newImages.length;
 
   // Загрузка данных пина по ID
   useEffect(() => {
@@ -48,17 +75,28 @@ const EditPinPage = () => {
             setPinLongitude(backendPin.longitude);
           }
 
-          // TODO: Загрузка существующих изображений
+          // Загрузка существующих изображений
+          if (backendPin.images && backendPin.images.length > 0) {
+            const sortedImages = [...backendPin.images].sort(
+              (a: any, b: any) => (a.orderNumber ?? 0) - (b.orderNumber ?? 0)
+            );
+            setExistingImages(sortedImages.map((img: any) => ({
+              id: img.id,
+              imageUrl: img.imageUrl,
+              orderNumber: img.orderNumber ?? 0
+            })));
+          }
           return;
         }
 
         // 2. Фолбек на моки
+        console.log("Используем моки для загрузки данных пина");
         const mockPin = getMockPinById(parseInt(id));
 
         if (mockPin) {
           setPinName(mockPin.title || '');
           setPinInfo(mockPin.description || '');
-          
+
           if (mockPin.coords && mockPin.coords.length === 2) {
             setPinLatitude(mockPin.coords[0]);
             setPinLongitude(mockPin.coords[1]);
@@ -71,12 +109,13 @@ const EditPinPage = () => {
         console.error("Ошибка при загрузке пина:", e);
 
         // 3. Фолбек на моки при ошибке
+        console.log("Ошибка при загрузке, используем моки");
         const mockPin = getMockPinById(parseInt(id));
 
         if (mockPin) {
           setPinName(mockPin.title || '');
           setPinInfo(mockPin.description || '');
-          
+
           if (mockPin.coords && mockPin.coords.length === 2) {
             setPinLatitude(mockPin.coords[0]);
             setPinLongitude(mockPin.coords[1]);
@@ -102,44 +141,83 @@ const EditPinPage = () => {
   }, [location.state]);
 
   const handleSavePin = async () => {
+    console.log('[EditPin] Current coordinates:', {
+      latitude: pinLatitude,
+      longitude: pinLongitude
+    });
+
     if (pinLatitude === null || pinLongitude === null) {
       alert('Выберите точку на карте');
       return;
     }
 
-    if (!id) {
-      showToast("ID пина не указан", true);
+    if (totalImages === 0) {
+      alert('Добавьте хотя бы одно изображение');
       return;
     }
 
-    // UpdatePinInput согласно схеме GraphQL
-    const updateInput = {
-      userId: currentUserId,
-      name: pinName,
-      description: pinInfo,
-      latitude: pinLatitude,
-      longitude: pinLongitude,
-    };
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
 
     try {
-      const updatedPin = await updatePin(id, updateInput);
+      // 1. Обновляем основные данные пина
+      const updatedPin = await updatePin(id!, {
+        name: pinName,
+        description: pinInfo,
+        latitude: pinLatitude,
+        longitude: pinLongitude,
+        userId: currentUserId
+      });
 
-      if (updatedPin) {
-        showToast("Успешное сохранение!");
-        handleBack();
-      } else {
-        showToast("Ошибка при сохранении", true);
+      if (!updatedPin) {
+        throw new Error('Не удалось обновить пин');
       }
-    } catch (error) {
-      console.error("Ошибка при обновлении пина:", error);
+
+      // 2. Удаляем помеченные для удаления изображения
+      for (const imageId of deletedImageIds) {
+        await deletePinImage(imageId);
+      }
+
+      // 3. Загружаем новые изображения
+      if (newImages.length > 0) {
+        const startOrder = existingImages.length + 1;
+        const uploadResult = await addImagesToPinById(
+          id!,
+          newImages,
+          startOrder,
+          (fileIndex, progress) => {
+            const totalProgress = ((fileIndex + progress.percentage / 100) / newImages.length) * 100;
+            setUploadProgress(Math.round(totalProgress));
+          }
+        );
+
+        if (uploadResult.errors.length > 0) {
+          console.warn('Ошибки при загрузке изображений:', uploadResult.errors);
+        }
+
+        if (uploadResult.images.length > 0) {
+          setExistingImages(prev => [...prev, ...uploadResult.images]);
+          setNewImages([]);
+        }
+      }
+
+      console.log("Пин успешно обновлён:", updatedPin);
+      showToast("Успешное сохранение!");
+      handleBack();
+    } catch (error: any) {
+      console.error("Ошибка при обновлении пина:", error.message);
+      setUploadError(error.message || 'Ошибка при сохранении');
       showToast("Ошибка при сохранении", true);
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleBack = () => {
     const searchParams = new URLSearchParams(location.search);
     const from = searchParams.get('from');
-    
+
     if (from) {
       navigate(`/${from}`);
     } else if (document.referrer && document.referrer.includes(window.location.origin)) {
@@ -150,17 +228,61 @@ const EditPinPage = () => {
     }
   };
 
+  // Добавление нового изображения
   const handleAddImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || images.length >= 10) return;
-    setImages([...images, file]);
-    setCurrentIndex(images.length);
+    if (!file) return;
+
+    if (totalImages >= 10) return;
+
+    // Валидация файла
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setUploadError(validation.error || 'Недопустимый файл');
+      return;
+    }
+
+    setUploadError(null);
+    const updatedNewImages = [...newImages, file];
+    setNewImages(updatedNewImages);
+    setCurrentIndex(existingImages.length + updatedNewImages.length - 1);
   };
 
-  const isSaveEnabled = pinName.trim().length > 0 &&
+  // Удаление изображения
+  const handleDeleteImage = (index: number) => {
+    if (index < existingImages.length) {
+      // Удаляем существующее изображение
+      const imageToDelete = existingImages[index];
+      setDeletedImageIds(prev => [...prev, imageToDelete.id]);
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      // Удаляем новое изображение
+      const newImageIndex = index - existingImages.length;
+      setNewImages(prev => prev.filter((_, i) => i !== newImageIndex));
+    }
+
+    // Корректируем индекс
+    if (currentIndex >= totalImages - 1) {
+      setCurrentIndex(Math.max(0, totalImages - 2));
+    }
+  };
+
+  // Получение URL текущего изображения для превью
+  const getCurrentImageUrl = (): string | null => {
+    if (currentIndex < existingImages.length) {
+      return existingImages[currentIndex]?.imageUrl || null;
+    } else {
+      const newImageIndex = currentIndex - existingImages.length;
+      const file = newImages[newImageIndex];
+      return file ? URL.createObjectURL(file) : null;
+    }
+  };
+
+  const isSaveEnabled = !isUploading &&
+                       pinName.trim().length > 0 &&
                        pinName.length <= 50 &&
                        pinInfo.length <= 1000 &&
-                       images.length > 0;
+                       totalImages > 0;
 
   // Показываем загрузку
   if (loading) {
@@ -201,7 +323,7 @@ const EditPinPage = () => {
         </div>
 
         <div className={styles.gridWrapper}>
-          <label htmlFor="collection-name" className={styles.name_label}>Название:</label> 
+          <label htmlFor="collection-name" className={styles.name_label}>Название:</label>
 
           <div className={styles.name_input_block}>
             <input
@@ -250,12 +372,12 @@ const EditPinPage = () => {
               htmlFor="gallery-input"
               className={styles.galleryWrapper}
             >
-              {images.length === 0 ? (
+              {totalImages === 0 ? (
                 <div className={styles.coverPlaceholder}>+</div>
               ) : (
                 <>
                   <img
-                    src={URL.createObjectURL(images[currentIndex])}
+                    src={getCurrentImageUrl() || ''}
                     className={styles.galleryImage}
                     alt="preview"
                   />
@@ -266,11 +388,7 @@ const EditPinPage = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      const newImages = images.filter((_, i) => i !== currentIndex);
-                      setImages(newImages);
-                      if (currentIndex >= newImages.length) {
-                        setCurrentIndex(newImages.length - 1);
-                      }
+                      handleDeleteImage(currentIndex);
                     }}
                   >
                     ✕
@@ -290,7 +408,7 @@ const EditPinPage = () => {
                     </button>
                   )}
 
-                  {currentIndex < images.length - 1 && (
+                  {currentIndex < totalImages - 1 && (
                     <button
                       type="button"
                       className={styles.navRight}
@@ -306,7 +424,7 @@ const EditPinPage = () => {
 
                   <div
                     className={`${styles.counter} ${
-                      images.length === 10 ? styles.counterMax : ""
+                      totalImages === 10 ? styles.counterMax : ""
                     }`}
                   >
                     {currentIndex + 1} / 10
@@ -319,7 +437,7 @@ const EditPinPage = () => {
               htmlFor="gallery-input"
               className={styles.uploadButton}
             >
-              {images.length === 0 ? "Загрузить фото" : "Добавить ещё фото"}
+              {totalImages === 0 ? "Загрузить фото" : "Добавить ещё фото"}
             </label>
 
             <input
@@ -328,6 +446,7 @@ const EditPinPage = () => {
               accept="image/*"
               onChange={handleAddImage}
               className={styles.hiddenInput}
+              disabled={totalImages >= 10}
             />
 
             <button
@@ -337,7 +456,7 @@ const EditPinPage = () => {
             >
               Найти на карте
             </button>
-            
+
             {pinLatitude !== null && pinLongitude !== null && (
               <div className={styles.coordsInfo}>
                 <div>
@@ -350,17 +469,50 @@ const EditPinPage = () => {
             )}
           </section>
         </div>
-        
+
+        {/* Показываем ошибку загрузки */}
+        {uploadError && (
+          <div className={styles.errorMessage} style={{ marginBottom: '1rem', color: 'red' }}>
+            {uploadError}
+          </div>
+        )}
+
+        {/* Показываем прогресс загрузки */}
+        {isUploading && (
+          <div className={styles.uploadProgress} style={{ marginBottom: '1rem' }}>
+            <div>Сохранение изменений: {uploadProgress}%</div>
+            <div
+              style={{
+                width: '100%',
+                height: '8px',
+                backgroundColor: '#e0e0e0',
+                borderRadius: '4px',
+                marginTop: '0.5rem'
+              }}
+            >
+              <div
+                style={{
+                  width: `${uploadProgress}%`,
+                  height: '100%',
+                  backgroundColor: '#4CAF50',
+                  borderRadius: '4px',
+                  transition: 'width 0.3s ease'
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={handleSavePin}
           disabled={!isSaveEnabled}
           className={styles.saveButton}
         >
-          Сохранить изменения
+          {isUploading ? 'Сохранение...' : 'Сохранить изменения'}
         </button>
       </main>
-      
+
       {isMapOpen && (
         <MapModal
           onClose={() => setIsMapOpen(false)}

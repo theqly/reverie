@@ -143,24 +143,8 @@ mutation UpdateBoard($id: UUID!, $input: UpdateBoardInput!) {
     description
     accessLevel
     ownerId
-    authorId
     ownerType
     createdAt
-    savedAt
-    pins {
-      id
-      name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
-      images {
-        id
-        orderNumber
-        imageUrl
-      }
-    }
     reactionId
     bookmarked
   }
@@ -393,9 +377,15 @@ mutation AddPinToBoard($pinId: UUID!, $boardId: UUID!) {
   addPinToBoard(pinId: $pinId, boardId: $boardId) {
     id
     name
+    boardImageURL
     pins {
       id
       name
+      images {
+        id
+        orderNumber
+        imageUrl
+      }
     }
   }
 }

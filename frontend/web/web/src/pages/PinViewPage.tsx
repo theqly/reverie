@@ -15,6 +15,9 @@ import { toggleBookmarkToPin } from "../services/bookmarksService";
 import { isPinLiked, isPinBookmarked } from "../services/pinService";
 // Добавляем импорт сервиса для работы с подборками
 import { getOwnBoardsByUser } from "../services/profileService";
+import { addPinToBoard } from "../services/collectionsService";
+import { useCurrentUserId } from "../context/AuthContext";
+import { useToast } from "./ToastProvider";
 
 const FALLBACK_LIKES = 226;
 const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
@@ -32,6 +35,8 @@ interface Collection {
 const PinViewPage = () => {
   const navigate = useNavigate();
   const { pinId } = useParams();
+  const currentUserId = useCurrentUserId();
+  const { showToast } = useToast();
 
   const [pin, setPin] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -202,17 +207,24 @@ const PinViewPage = () => {
   };
 
   // Обработчик выбора подборки
-  const handleSelectCollection = (collectionId: string, collectionName: string) => {
-    // Здесь будет логика добавления пина в выбранную подборку
+  const handleSelectCollection = async (collectionId: string, collectionName: string) => {
+    if (!pinId) return;
+
     console.log(`Добавляем пин ${pinId} в подборку ${collectionName} (${collectionId})`);
-    
-    // TODO: Реализовать API вызов для добавления пина в подборку
-    
-    // Можно показать уведомление об успешном добавлении
-    //alert(`Пин добавлен в подборку "${collectionName}"`);
-    
-    // Закрываем модальное окно
-    handleCloseModal();
+
+    try {
+      const result = await addPinToBoard(pinId, collectionId);
+
+      if (result) {
+        showToast(`Пин добавлен в подборку "${collectionName}"`);
+        handleCloseModal();
+      } else {
+        showToast('Не удалось добавить пин в подборку', true);
+      }
+    } catch (error) {
+      console.error('[handleSelectCollection] Error:', error);
+      showToast('Ошибка при добавлении пина в подборку', true);
+    }
   };
 
   if (loading) return (
@@ -320,6 +332,7 @@ const PinViewPage = () => {
                 initialBookmarked={bookmarked}
                 onLike={handleLike}
                 onBookmark={handleBookmark}
+                isOwnContent={currentUserId !== null && (pin?.author?.id === currentUserId || pin?.owner_id === currentUserId)}
               />
             </div>
             <button 

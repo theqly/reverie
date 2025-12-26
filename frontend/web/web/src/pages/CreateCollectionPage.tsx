@@ -49,6 +49,11 @@ const handleBack = () => {
   };
 
   const handleSaveCollection = async () => {
+    if (!currentUserId) {
+      console.error('User not authenticated');
+      return;
+    }
+
     const payload = {
       name: collectionName,
       info: collectionInfo,
@@ -56,13 +61,21 @@ const handleBack = () => {
       collaborators: [currentUserId]
     };
 
-    await createCollection(payload);
+    const result = await createCollection(payload);
+
+    if (result.success) {
+      // Переходим на страницу профиля после создания
+      navigate('/profile');
+    } else {
+      console.error('Failed to create collection:', result.error);
+    }
   };
 
 
   // Валидация для кнопки сохранения
-  const isSaveEnabled = collectionName.trim().length > 0 && 
-                       collectionName.length <= 50 && 
+  const isSaveEnabled = currentUserId !== null &&
+                       collectionName.trim().length > 0 &&
+                       collectionName.length <= 50 &&
                        collectionInfo.length <= 1000;
 
   return (

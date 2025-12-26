@@ -11,7 +11,8 @@ import {
   IsBoardBookmarkedDocument,
   OwnerType,
   UpdateBoardDocument,
-  type UpdateBoardInput
+  type UpdateBoardInput,
+  AddPinToBoardDocument
 } from "@/graphql/generated/graphql.ts";
 
 import {
@@ -94,7 +95,6 @@ export async function createCollection(
           input: {
             name: payload.name,
             description: payload.info || undefined,
-            boardImageURL: coverImageUrl,
             accessLevel: AccessLevelType.Group,
             ownerId: newGroupId,
             ownerType: OwnerType.Group
@@ -122,7 +122,6 @@ export async function createCollection(
             name: payload.name,
             description: payload.info || undefined,
             accessLevel: AccessLevelType.Public,
-            boardImageURL: coverImageUrl,
             ownerId: payload.collaborators[0],
             ownerType: OwnerType.User
           } as CreateBoardInput
@@ -168,32 +167,40 @@ export async function createCollection(
  * });
  */
 export async function updateCollection(collectionId: string, input: UpdateBoardInput) : Promise< Board | null > {
+  try {
+    const updateInput: any = {
+      userId: input.userId,
+    };
 
-  const updateInput: any = {
-    userId: input.userId,
-  };
+    if (input.accessLevel !== undefined) {
+      updateInput.accessLevel = input.accessLevel;
+    }
 
-  if (input.accessLevel !== undefined) {
-    updateInput.accessLevel = input.accessLevel;
+    if (input.name !== undefined) {
+      updateInput.name = input.name;
+    }
+
+    if (input.description !== undefined) {
+      updateInput.description = input.description;
+    }
+
+    console.log('[updateCollection] Sending mutation with:', { id: collectionId, input: updateInput });
+
+    const updatedBoardResult = await apolloClient.mutate({
+      mutation: UpdateBoardDocument,
+      variables: {
+        id: collectionId,
+        input: updateInput as UpdateBoardInput
+      },
+    });
+
+    console.log('[updateCollection] Result:', updatedBoardResult);
+
+    return updatedBoardResult.data?.updateBoard || null;
+  } catch (error) {
+    console.error('[updateCollection] Error:', error);
+    throw error;
   }
-
-  if (input.name !== undefined) {
-    updateInput.name = input.name;
-  }
-
-  if (input.description !== undefined) {
-    updateInput.description = input.description;
-  }
-
-  const updatedBoardResult = await apolloClient.mutate({
-    mutation: UpdateBoardDocument,
-    variables: {
-      id: collectionId,
-      input: updateInput as UpdateBoardInput
-    },
-  });
-
-  return updatedBoardResult.data?.updateBoard || null;
 }
 
 /**
@@ -244,5 +251,29 @@ export async function isBoardBookmarked(id: string): Promise<boolean> {
   } catch (error) {
     console.error('Failed to fetch pin:', error);
     return false;
+  }
+}
+
+/**
+ * Добавляет пин в подборку
+ * @param pinId - ID пина
+ * @param boardId - ID подборки
+ * @returns Board с обновлённым списком пинов или null в случае ошибки
+ */
+export async function addPinToBoard(pinId: string, boardId: string): Promise<Board | null> {
+  try {
+    const result = await apolloClient.mutate({
+      mutation: AddPinToBoardDocument,
+      variables: {
+        pinId,
+        boardId
+      },
+    });
+
+    console.log('[addPinToBoard] Result:', result);
+    return result.data?.addPinToBoard || null;
+  } catch (error) {
+    console.error('[addPinToBoard] Error:', error);
+    return null;
   }
 }

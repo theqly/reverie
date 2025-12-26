@@ -13,10 +13,12 @@ import { getCityFromCoordinates } from "../services/geoService";
 import { getCollectionById, getCollectionPins } from "../utils/mockData";
 
 // backend
-import { getPinById as getBoardById } from "../services/collectionsService";
+import { getPinById as getBoardById, addPinToBoard } from "../services/collectionsService";
+import { getPinsByUser } from "../services/profileService";
 
 // реакции
 import { countReactionsToBoard, reactToBoard } from "../services/reactionsService";
+import { useToast } from "./ToastProvider";
 import { isBoardLiked, isBoardBookmarked } from "../services/collectionsService";
 import { toggleBookmarkToBoard } from "../services/bookmarksService";
 import { getCommentsByBoard, addCommentToBoard } from "../services/commentService";
@@ -25,10 +27,18 @@ import { useCurrentUserId } from "../context/AuthContext";
 const FALLBACK_LIKES = 0;
 const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
 
+// Интерфейс для пина пользователя
+interface UserPin {
+  id: string;
+  name: string;
+  imageUrl?: string;
+}
+
 const CollectionViewPage = () => {
   const navigate = useNavigate();
   const { collectionId } = useParams();
   const currentUserId = useCurrentUserId();
+  const { showToast } = useToast();
 
   const [collection, setCollection] = useState<any>(null);
   const [collectionPins, setCollectionPins] = useState<any[]>([]);
@@ -42,6 +52,12 @@ const CollectionViewPage = () => {
   // комментарии
   const [comments, setComments] = useState<any[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
+
+  // состояния для модального окна добавления пина
+  const [showAddPinModal, setShowAddPinModal] = useState(false);
+  const [userPins, setUserPins] = useState<UserPin[]>([]);
+  const [loadingUserPins, setLoadingUserPins] = useState(false);
+  const [errorUserPins, setErrorUserPins] = useState<string | null>(null);
 
   /* ------------------ загрузка коллекции ------------------ */
   useEffect(() => {
@@ -255,6 +271,97 @@ const CollectionViewPage = () => {
     navigate(-1);
   };
 
+  /* ------------------ загрузка пинов пользователя для модалки ------------------ */
+  const loadUserPins = async () => {
+    if (!currentUserId) {
+      setErrorUserPins('Необходимо авторизоваться');
+      return;
+    }
+
+    setLoadingUserPins(true);
+    setErrorUserPins(null);
+
+    try {
+      const response = await getPinsByUser({
+        userId: currentUserId,
+        limit: 50,
+        offset: 0,
+      });
+
+      if (response && response.length > 0) {
+        // Фильтруем пины, которые уже есть в подборке
+        const existingPinIds = new Set(collectionPins.map(p => p.id));
+        const availablePins: UserPin[] = response
+          .filter((pin: any) => !existingPinIds.has(pin.id))
+          .map((pin: any) => ({
+            id: pin.id,
+            name: pin.name,
+            imageUrl: pin.images?.[0]?.imageUrl || placeholder_1,
+          }));
+        setUserPins(availablePins);
+      } else {
+        setUserPins([]);
+      }
+    } catch (err) {
+      console.error('[CollectionViewPage] loadUserPins error:', err);
+      setErrorUserPins('Не удалось загрузить ваши пины');
+      setUserPins([]);
+    } finally {
+      setLoadingUserPins(false);
+    }
+  };
+
+  // Загружаем пины пользователя при открытии модалки
+  useEffect(() => {
+    if (showAddPinModal) {
+      loadUserPins();
+    }
+  }, [showAddPinModal]);
+
+  const handleOpenAddPinModal = () => {
+    setShowAddPinModal(true);
+  };
+
+  const handleCloseAddPinModal = () => {
+    setShowAddPinModal(false);
+    setErrorUserPins(null);
+  };
+
+  const handleSelectPinToAdd = async (pinId: string, pinName: string) => {
+    if (!collectionId) return;
+
+    try {
+      const result = await addPinToBoard(pinId, collectionId);
+
+      if (result) {
+        showToast(`Пин "${pinName}" добавлен в подборку`);
+
+        // Добавляем пин в локальный список
+        const addedPin = userPins.find(p => p.id === pinId);
+        if (addedPin) {
+          setCollectionPins(prev => [...prev, {
+            id: addedPin.id,
+            title: addedPin.name,
+            name: addedPin.name,
+            image: addedPin.imageUrl || placeholder_1,
+            location: '',
+            author: 'You',
+            authorAvatar: placeholder_1,
+          }]);
+          // Убираем из списка доступных пинов
+          setUserPins(prev => prev.filter(p => p.id !== pinId));
+        }
+
+        handleCloseAddPinModal();
+      } else {
+        showToast('Не удалось добавить пин', true);
+      }
+    } catch (error) {
+      console.error('[handleSelectPinToAdd] Error:', error);
+      showToast('Ошибка при добавлении пина', true);
+    }
+  };
+
   /* ------------------ loading / error ------------------ */
   if (loading) {
     return (
@@ -322,12 +429,21 @@ const CollectionViewPage = () => {
               initialBookmarked={bookmarked}
               onLike={handleLike}
               onBookmark={handleBookmark}
+              isOwnContent={currentUserId !== null && (collection?.ownerId === currentUserId || collection?.authorId === currentUserId)}
             />
           </div>
 
-          <h3 className={styles.pinsTitle}>
-            Места в подборке ({collectionPins.length})
-          </h3>
+          <div className={styles.pinsTitleRow}>
+            <h3 className={styles.pinsTitle}>
+              Места в подборке ({collectionPins.length})
+            </h3>
+            <button
+              className={styles.addPinBtn}
+              onClick={handleOpenAddPinModal}
+            >
+              + Добавить пин
+            </button>
+          </div>
 
           <div className={styles.pinsWrapper}>
             <PinGrid
@@ -356,6 +472,72 @@ const CollectionViewPage = () => {
           </div>
         )}
       </div>
+
+      {/* Модальное окно для добавления пина в подборку */}
+      {showAddPinModal && (
+        <div className={styles.modalOverlay} onClick={handleCloseAddPinModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Выберите пин для добавления</h3>
+              <button
+                className={styles.modalCloseBtn}
+                onClick={handleCloseAddPinModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              {loadingUserPins ? (
+                <div className={styles.modalLoading}>Загрузка ваших пинов...</div>
+              ) : errorUserPins ? (
+                <div className={styles.modalError}>
+                  <p>{errorUserPins}</p>
+                  <button
+                    onClick={loadUserPins}
+                    className={styles.retryButton}
+                  >
+                    Повторить попытку
+                  </button>
+                </div>
+              ) : userPins.length === 0 ? (
+                <div className={styles.modalEmpty}>
+                  <p>Нет доступных пинов для добавления</p>
+                  <button
+                    onClick={() => {
+                      handleCloseAddPinModal();
+                      navigate('/pin/create');
+                    }}
+                    className={styles.createCollectionButton}
+                  >
+                    Создать новый пин
+                  </button>
+                </div>
+              ) : (
+                <ul className={styles.collectionsList}>
+                  {userPins.map((pin) => (
+                    <li
+                      key={pin.id}
+                      className={styles.collectionItem}
+                      onClick={() => handleSelectPinToAdd(pin.id, pin.name)}
+                    >
+                      <img
+                        src={pin.imageUrl || placeholder_1}
+                        alt={pin.name}
+                        className={styles.pinThumbnail}
+                      />
+                      <div className={styles.collectionInfo}>
+                        <span className={styles.collectionName}>{pin.name}</span>
+                      </div>
+                      <div className={styles.collectionAction}>+</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

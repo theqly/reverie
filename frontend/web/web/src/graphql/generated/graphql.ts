@@ -798,7 +798,7 @@ export type UpdateBoardMutationVariables = Exact<{
 }>;
 
 
-export type UpdateBoardMutation = { __typename?: 'Mutation', updateBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, authorId: any, ownerType: OwnerType, createdAt: any, savedAt: any, reactionId?: any | null, bookmarked?: boolean | null, pins?: Array<{ __typename?: 'Pin', id: any, name: string, owner: { __typename?: 'User', id: any, nickname: string, profilePicture?: string | null }, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null }> | null } };
+export type UpdateBoardMutation = { __typename?: 'Mutation', updateBoard: { __typename?: 'Board', id: any, name: string, description?: string | null, accessLevel: AccessLevelType, ownerId: any, ownerType: OwnerType, createdAt: any, reactionId?: any | null, bookmarked?: boolean | null } };
 
 export type GetOwnBoardsByUserIdQueryVariables = Exact<{
   userId: Scalars['UUID']['input'];
@@ -1494,24 +1494,8 @@ export const UpdateBoardDocument = gql`
     description
     accessLevel
     ownerId
-    authorId
     ownerType
     createdAt
-    savedAt
-    pins {
-      id
-      name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
-      images {
-        id
-        orderNumber
-        imageUrl
-      }
-    }
     reactionId
     bookmarked
   }

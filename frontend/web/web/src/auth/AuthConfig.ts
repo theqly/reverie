@@ -6,7 +6,7 @@ interface AuthConfig {
 }
 
 export const authConfig: AuthConfig = {
-  keycloakUrl: 'http://localhost:9090',
+  keycloakUrl: 'http://localhost:8180',
   realm: 'reverie-realm',
   clientId: 'frontend',
   redirectUri: 'http://localhost:5173/auth/callback',

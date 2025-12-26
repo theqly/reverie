@@ -17,12 +17,14 @@ import {
 import { type UpdateBoardInput, AccessLevelType } from '@/graphql/generated/graphql';
 import { validateImageFile } from '../services/imageService';
 import placeholder from "../assets/placeholder1.jpg";
+import { useCurrentUserId } from '../context/AuthContext';
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
   const { showToast } = useToast();
+  const currentUserId = useCurrentUserId();
 
   const [collectionName, setCollectionName] = useState('');
   const [collectionInfo, setCollectionInfo] = useState('');
@@ -103,23 +105,35 @@ const EditCollectionPage = () => {
   const handleSaveCollection = async () => {
     if (!id || !originalCollection) return;
 
+    const userId = originalCollection.ownerId || currentUserId;
+    if (!userId) {
+      showToast('Ошибка: не удалось определить пользователя', true);
+      return;
+    }
+
     setIsSaving(true);
     setUploadError(null);
 
     try {
       const payload: UpdateBoardInput = {
-        userId: originalCollection.ownerId,
+        userId,
         name: collectionName.trim(),
         description: collectionInfo.trim(),
         accessLevel: AccessLevelType.Public,
       };
 
-      // Обложка принципиально НЕ обновляется
-      await updateCollection(id, payload);
+      console.log('[EditCollection] Updating with payload:', payload);
+      const result = await updateCollection(id, payload);
+      console.log('[EditCollection] Update result:', result);
 
-      showToast('Успешное сохранение!');
-      handleBack();
+      if (result) {
+        showToast('Успешное сохранение!');
+        handleBack();
+      } else {
+        showToast('Ошибка при сохранении', true);
+      }
     } catch (e: any) {
+      console.error('[EditCollection] Error:', e);
       setUploadError(e.message || 'Ошибка при сохранении');
       showToast('Ошибка при сохранении', true);
     } finally {

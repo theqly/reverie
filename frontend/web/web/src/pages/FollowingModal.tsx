@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./FollowersModal.module.css";
 import placeholder from "../assets/placeholder.jpg";
@@ -35,15 +35,22 @@ const FollowingModal: React.FC<FollowingModalProps> = ({
   const currentUserId = useCurrentUserId();
 
   const [search, setSearch] = useState("");
-  // Локальное состояние для отслеживания подписок/отписок
-  const [followingState, setFollowingState] = useState<Set<string>>(
-    new Set(currentUserFollowing)
-  );
 
-  // Обновляем состояние при изменении props
-  React.useEffect(() => {
-    setFollowingState(new Set(currentUserFollowing));
-  }, [currentUserFollowing]);
+  // Локальное отслеживание изменений (отписки во время сессии)
+  const [unfollowedDuringSession, setUnfollowedDuringSession] = useState<Set<string>>(new Set());
+  const [followedDuringSession, setFollowedDuringSession] = useState<Set<string>>(new Set());
+
+  // Вычисляем актуальный статус подписки
+  const isFollowingUser = (userId: string): boolean => {
+    // Если отписались во время сессии - не подписаны
+    if (unfollowedDuringSession.has(userId)) return false;
+    // Если подписались во время сессии - подписаны
+    if (followedDuringSession.has(userId)) return true;
+    // Для своего профиля: все в списке - подписки
+    if (isOwnProfile) return true;
+    // Для чужого профиля: проверяем currentUserFollowing
+    return currentUserFollowing.includes(userId);
+  };
 
   if (!isOpen) return null;
 
@@ -55,11 +62,12 @@ const FollowingModal: React.FC<FollowingModalProps> = ({
     if (userId === currentUserId) return;
 
     try {
-      const isCurrentlyFollowing = followingState.has(userId);
+      const isCurrentlyFollowing = isFollowingUser(userId);
 
       if (isCurrentlyFollowing) {
         await unfollowUser(userId, currentUserId);
-        setFollowingState(prev => {
+        setUnfollowedDuringSession(prev => new Set(prev).add(userId));
+        setFollowedDuringSession(prev => {
           const newSet = new Set(prev);
           newSet.delete(userId);
           return newSet;
@@ -70,7 +78,12 @@ const FollowingModal: React.FC<FollowingModalProps> = ({
         onFollowChange?.(userId, false);
       } else {
         await followUser(userId, currentUserId);
-        setFollowingState(prev => new Set(prev).add(userId));
+        setFollowedDuringSession(prev => new Set(prev).add(userId));
+        setUnfollowedDuringSession(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
         onFollowChange?.(userId, true);
       }
     } catch (error) {
@@ -122,10 +135,10 @@ const FollowingModal: React.FC<FollowingModalProps> = ({
                 <button
                   onClick={() => handleToggleFollow(user.id)}
                   className={`${styles.followBtn} ${
-                    followingState.has(user.id) ? styles.unfollow : styles.follow
+                    isFollowingUser(user.id) ? styles.unfollow : styles.follow
                   }`}
                 >
-                  {followingState.has(user.id) ? "Отписаться" : "Подписаться"}
+                  {isFollowingUser(user.id) ? "Отписаться" : "Подписаться"}
                 </button>
               )}
             </div>

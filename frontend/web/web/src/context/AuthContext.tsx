@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAccessToken } from '../auth/tokenStorage';
+import { getAccessToken, isAccessTokenExpired, clearTokens } from '../auth/tokenStorage';
 import { redirectToLogin, logout as authLogout } from '../auth/authService';
 
 interface AuthContextType {
@@ -36,12 +36,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = getAccessToken();
-    if (token) {
+    // Проверяем что токен есть И не истёк
+    if (token && !isAccessTokenExpired()) {
       const payload = parseJwt(token);
       if (payload?.sub) {
         setUserId(payload.sub);
         setIsAuthenticated(true);
       }
+    } else if (token) {
+      // Токен есть но истёк - очищаем
+      clearTokens();
     }
     setIsLoading(false);
   }, []);

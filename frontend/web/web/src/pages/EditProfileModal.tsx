@@ -29,7 +29,14 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }: EditProfileM
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAvatar(URL.createObjectURL(file));
+
+    // Конвертируем в base64 для постоянного хранения
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setAvatar(base64String);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = () => {

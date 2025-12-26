@@ -318,11 +318,44 @@
 }
 
 .pinsTitle{
-    margin: 40px 20px 10px 20px;
+    margin: 0;
     font-size: 25px;
     font-weight: 600;
     text-align: start;
+}
 
+.pinsTitleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 40px 20px 10px 20px;
+    gap: 16px;
+}
+
+.addPinBtn {
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.addPinBtn:hover {
+    background-color: #0056cc;
+}
+
+.pinThumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .pinsGrid {
