@@ -160,6 +160,7 @@ query GetOwnBoardsByUserId($userId: UUID!, $limit: Int = 10, $offset: Int = 0) {
     description
     accessLevel
     ownerId
+    boardImageURL
     ownerType
     pins {
       id
@@ -276,6 +277,7 @@ mutation CreateBoard($input: CreateBoardInput!){
     id
     name
     description
+    boardImageURL
     accessLevel
     ownerId
     ownerType
@@ -313,6 +315,7 @@ query GetBoardById($id: UUID!) {
   board(id: $id) {
     id
     name
+    boardImageURL
     description
     accessLevel
     ownerId

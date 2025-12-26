@@ -31,18 +31,19 @@ type AddImageInput struct {
 }
 
 type Board struct {
-	ID          uuid.UUID       `json:"id"`
-	Name        string          `json:"name"`
-	Description *string         `json:"description,omitempty"`
-	AccessLevel AccessLevelType `json:"accessLevel"`
-	OwnerID     uuid.UUID       `json:"ownerId"`
-	AuthorID    uuid.UUID       `json:"authorId"`
-	OwnerType   OwnerType       `json:"ownerType"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	SavedAt     time.Time       `json:"savedAt"`
-	Pins        []*Pin          `json:"pins,omitempty"`
-	ReactionID  *uuid.UUID      `json:"reactionId,omitempty"`
-	Bookmarked  *bool           `json:"bookmarked,omitempty"`
+	ID            uuid.UUID       `json:"id"`
+	Name          string          `json:"name"`
+	BoardImageURL *string         `json:"boardImageURL,omitempty"`
+	Description   *string         `json:"description,omitempty"`
+	AccessLevel   AccessLevelType `json:"accessLevel"`
+	OwnerID       uuid.UUID       `json:"ownerId"`
+	AuthorID      uuid.UUID       `json:"authorId"`
+	OwnerType     OwnerType       `json:"ownerType"`
+	CreatedAt     time.Time       `json:"createdAt"`
+	SavedAt       time.Time       `json:"savedAt"`
+	Pins          []*Pin          `json:"pins,omitempty"`
+	ReactionID    *uuid.UUID      `json:"reactionId,omitempty"`
+	Bookmarked    *bool           `json:"bookmarked,omitempty"`
 }
 
 type CommentToBoard struct {
@@ -62,11 +63,12 @@ type CommentToPin struct {
 }
 
 type CreateBoardInput struct {
-	Name        string          `json:"name"`
-	Description *string         `json:"description,omitempty"`
-	AccessLevel AccessLevelType `json:"accessLevel"`
-	OwnerID     uuid.UUID       `json:"ownerId"`
-	OwnerType   OwnerType       `json:"ownerType"`
+	Name          string          `json:"name"`
+	Description   *string         `json:"description,omitempty"`
+	BoardImageURL *string         `json:"boardImageURL,omitempty"`
+	AccessLevel   AccessLevelType `json:"accessLevel"`
+	OwnerID       uuid.UUID       `json:"ownerId"`
+	OwnerType     OwnerType       `json:"ownerType"`
 }
 
 type CreateGroupInput struct {
@@ -136,10 +138,11 @@ type Reaction struct {
 }
 
 type UpdateBoardInput struct {
-	Name        *string          `json:"name,omitempty"`
-	Description *string          `json:"description,omitempty"`
-	AccessLevel *AccessLevelType `json:"accessLevel,omitempty"`
-	UserID      uuid.UUID        `json:"userId"`
+	Name          *string          `json:"name,omitempty"`
+	Description   *string          `json:"description,omitempty"`
+	BoardImageURL *string          `json:"boardImageURL,omitempty"`
+	AccessLevel   *AccessLevelType `json:"accessLevel,omitempty"`
+	UserID        uuid.UUID        `json:"userId"`
 }
 
 type UpdatePinInput struct {

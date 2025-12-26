@@ -5,13 +5,17 @@ import styles from './CollectionGridItem.module.css';
 const CollectionGridItem = ({ collection, onClick }) => {
   const {
     id,
-    image,
+    image, // Это может быть undefined или отсутствовать
+    boardImageURL, // Добавляем эту строку
     title,
     location,
     pinsCount,
     author = "jane_anderson",
     authorAvatar = placeholder_1
   } = collection;
+
+  // Используем boardImageURL если он есть, иначе image, иначе placeholder
+  const imageUrl = boardImageURL || image || placeholder_1;
 
   const handleClick = () => {
     if (onClick) {
@@ -23,7 +27,8 @@ const CollectionGridItem = ({ collection, onClick }) => {
     <div key={id} className={styles.collectionCard} onClick={handleClick}>
       <div style={{ display: "flex" }}>
         <div className={styles.imgWrapper}>
-          <img src={image} alt={title} className={styles.img1} />
+          {/* Используем imageUrl вместо image */}
+          <img src={imageUrl} alt={title} className={styles.img1} />
         </div>
         
         <div className={styles.collectionLabelWrapper}>
