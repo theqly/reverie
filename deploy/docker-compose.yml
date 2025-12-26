@@ -220,7 +220,7 @@ services:
 
   # keycloak
   keycloak:
-    image: quay.io/keycloak/keycloak:20.0.0
+    image: quay.io/keycloak/keycloak:24.0.0
     container_name: keycloak
     command: ["start-dev", "--import-realm"]
     environment:
@@ -242,6 +242,7 @@ services:
       - keycloak-db
     volumes:
       - ./keycloak/data:/opt/keycloak/data/import
+      - ./keycloak/plugins/jars/reverie-event-listener.jar:/opt/keycloak/providers/reverie-event-listener.jar
     networks:
       - reverie-network
 
@@ -253,7 +254,7 @@ services:
       POSTGRES_USER: ${KEYCLOAK_POSTGRES_USER}
       POSTGRES_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD}
     volumes:
-      - keycloak_postgres_db_data:/var/lib/postgresql/data
+      - keycloak_data:/var/lib/postgresql/data
     ports:
       - "${KEYCLOAK_DB_PORT}:${INNER_DB_PORT}"
     networks:
@@ -329,7 +330,7 @@ volumes:
   profile_data:
   content_data:
   feed_data:
-  keycloak_postgres_db_data:
+  keycloak_data:
   rover_data:
     external: true
   opensearch_data:

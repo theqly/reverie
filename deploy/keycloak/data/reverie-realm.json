@@ -6,6 +6,13 @@
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
 
+  "eventsEnabled": true,
+  "eventsListeners": [
+    "jboss-logging",
+    "reverie-registration-listener"
+  ],
+  "adminEventsEnabled": true,
+
   "clients": [
     {
       "clientId": "frontend",
