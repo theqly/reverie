@@ -10,7 +10,6 @@ import MapModal from './MapModal';
 import { validateImageFile } from '../services/imageService';
 import { useToast } from './ToastProvider';
 
-
 const CreatePinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();

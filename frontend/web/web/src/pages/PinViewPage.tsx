@@ -7,12 +7,14 @@ import placeholder_1 from "../assets/placeholder1.jpg";
 import ReactionBlock from "./ReactionBlock";
 import CommentSection from "./CommentSection";
 
+
 // mock + backend
 import { getPinById as getMockPinById } from "../utils/mockData";
 import { getPinById as getBackendPinById } from "../services/pinService";
 import { countReactionsToPin, reactToPin } from "../services/reactionsService";
 import { toggleBookmarkToPin } from "../services/bookmarksService";
 import { isPinLiked, isPinBookmarked } from "../services/pinService";
+//  import { addPinToBoard } from "../services/addPinToBoardService";
 // Добавляем импорт сервиса для работы с подборками
 import { getOwnBoardsByUser } from "../services/profileService";
 
@@ -201,18 +203,46 @@ const PinViewPage = () => {
   };
 
   // Обработчик выбора подборки
-  const handleSelectCollection = (collectionId: string, collectionName: string) => {
-    // Здесь будет логика добавления пина в выбранную подборку
-    console.log(`Добавляем пин ${pinId} в подборку ${collectionName} (${collectionId})`);
+// Импортируем функцию addPinToBoard
+
+// В компоненте, где вызывается handleSelectCollection:
+const handleSelectCollection = async (collectionId: string, collectionName: string) => {
+  if (!pinId) {
+    console.error("Не указан pinId для добавления в подборку");
+    return;
+  }
+
+  console.log(`Добавляем пин ${pinId} в подборку ${collectionName} (${collectionId})`);
+  
+  try {
+    // Вызываем API для добавления пина в подборку
+    //const result = await addPinToBoard(pinId, collectionId);
     
-    // TODO: Реализовать API вызов для добавления пина в подборку
-    
-    // Можно показать уведомление об успешном добавлении
-    //alert(`Пин добавлен в подборку "${collectionName}"`);
-    
-    // Закрываем модальное окно
-    handleCloseModal();
-  };
+    if (result) {
+      console.log("Пин успешно добавлен в подборку");
+      
+      // Можно показать уведомление пользователю
+      // Пример с кастомным уведомлением:
+      //alert(`Пин успешно добавлен в подборку "${collectionName}"`);
+      
+      // Или использовать toast/notification компонент:
+      // showNotification('success', `Пин добавлен в "${collectionName}"`);
+      
+      // Если нужно обновить состояние
+      // Например, если есть локальное состояние с подборками пользователя
+      // updateCollectionsState(collectionId, pinId);
+    } else {
+      console.error("Не удалось добавить пин в подборку");
+      alert("Не удалось добавить пин в подборку. Попробуйте еще раз.");
+    }
+  } catch (error) {
+    console.error("Ошибка при добавлении пина в подборку:", error);
+    alert("Произошла ошибка при добавлении пина в подборку.");
+  }
+  
+  // Закрываем модальное окно
+  handleCloseModal();
+};
 
   if (loading) return (
     <div className={styles.pageWrapper}>
