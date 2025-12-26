@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import styles from './ReactionBlock.module.css';
 
-const ReactionBlock = ({ 
+interface ReactionBlockProps {
+  initialLikes?: number;
+  initialLiked?: boolean;
+  initialBookmarked?: boolean;
+  onLike?: (liked: boolean) => void;
+  onBookmark?: (bookmarked: boolean) => void;
+}
+
+const ReactionBlock = ({
   initialLikes = 226,
   initialLiked = false,
   initialBookmarked = false,
   onLike,
   onBookmark
-}) => {
+}: ReactionBlockProps) => {
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);

@@ -72,8 +72,28 @@
 .followBtn {
   padding: 6px 12px;
   border-radius: 6px;
-  background: #eee;
+  border: none;
   cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.follow {
+  background: #007bff;
+  color: white;
+}
+
+.follow:hover {
+  background: #0056b3;
+}
+
+.unfollow {
+  background: #eee;
+  color: #333;
+}
+
+.unfollow:hover {
+  background: #ddd;
 }
 
 .noResults {

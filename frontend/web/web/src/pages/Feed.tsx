@@ -7,25 +7,28 @@ import PinGrid from './PinGrid';
 import CollectionGrid from './CollectionGrid';
 
 import { mockPins, mockCollections } from '../utils/mockData';
-import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
-import { getCityFromCoordinates } from '../services/geoService';
-
-import placeholder_1 from '../assets/placeholder1.jpg';
+import { transformPins, transformBoards, type DisplayPin, type DisplayCollection } from '../utils/transformers';
+import { getAllPins, getAllBoards } from '../services/profileService';
+import { useCurrentUserId } from '../context/AuthContext';
+import { loadLocationsForItems, loadLocationsForBoards } from '../services/geoService';
+import { getFollowing } from '../services/followService';
 
 const Feed = () => {
   const navigate = useNavigate();
+  const currentUserId = useCurrentUserId();
 
   const [activeTab, setActiveTab] = useState<'pins' | 'collections'>('pins');
   const [onlySubscriptions, setOnlySubscriptions] = useState(false);
 
-  const [pins, setPins] = useState<any[]>([]);
-  const [collections, setCollections] = useState<any[]>([]);
+  const [pins, setPins] = useState<DisplayPin[]>([]);
+  const [collections, setCollections] = useState<DisplayCollection[]>([]);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /* =======================
-     Navigation
+     Навигация
   ======================= */
 
   const handlePlusClick = () => {
@@ -50,7 +53,7 @@ const Feed = () => {
   };
 
   /* =======================
-     Data loading
+     Загрузка данных
   ======================= */
 
   const handleGetPins = async () => {
@@ -58,40 +61,27 @@ const Feed = () => {
     setError(null);
 
     try {
-      const response = await getPinsByUser({
-        viewerId: '00000000-0000-0000-0000-000000000001',
-        userId: '00000000-0000-0000-0000-000000000001',
-        limit: 20,
+      const response = await getAllPins({
+        viewerId: currentUserId,
+        limit: 50,
         offset: 0,
       });
 
-      const sourcePins =
-        response && response.length > 0 ? response : mockPins;
+      if (response && response.length > 0) {
+        // Сначала показываем пины БЕЗ локаций (мгновенно)
+        const displayPins = transformPins(response);
+        setPins(displayPins);
 
-      // 🔥 здесь получаем город по координатам
-      const pinsWithLocation = await Promise.all(
-        sourcePins.map(async (pin) => {
-          let location = '';
-
-          if (pin.latitude && pin.longitude) {
-            try {
-              location = await getCityFromCoordinates(
-                pin.latitude,
-                pin.longitude
-              );
-            } catch (e) {
-              console.warn('Не удалось определить город', e);
-            }
-          }
-
-          return {
+        // Затем загружаем все локации и обновляем состояние ОДИН раз
+        loadLocationsForItems(displayPins).then(locations => {
+          setPins(prev => prev.map(pin => ({
             ...pin,
-            location, // ← готовая строка города
-          };
-        })
-      );
-
-      setPins(pinsWithLocation);
+            location: locations.get(pin.id) || pin.location,
+          })));
+        });
+      } else {
+        setPins(mockPins);
+      }
     } catch (err) {
       console.error('[Feed] getPins error:', err);
       setPins(mockPins);
@@ -106,19 +96,29 @@ const Feed = () => {
     setError(null);
 
     try {
-      const response = await getOwnBoardsByUser({
-        userId: '00000000-0000-0000-0000-000000000001',
-        limit: 20,
+      const response = await getAllBoards({
+        viewerId: currentUserId,
+        limit: 50,
         offset: 0,
       });
 
       if (response && response.length > 0) {
-        setCollections(response);
+        // Сначала показываем коллекции БЕЗ локаций (мгновенно)
+        const displayCollections = transformBoards(response);
+        setCollections(displayCollections);
+
+        // Затем загружаем все локации и обновляем состояние ОДИН раз
+        loadLocationsForBoards(displayCollections).then(locations => {
+          setCollections(prev => prev.map(col => ({
+            ...col,
+            location: locations.get(col.id) || col.location,
+          })));
+        });
       } else {
         setCollections(mockCollections);
       }
     } catch (err) {
-      console.error('[Feed] getCollections error:', err);
+      console.error('[Feed] getBoards error:', err);
       setCollections(mockCollections);
       setError('Не удалось загрузить подборки');
     } finally {
@@ -127,8 +127,31 @@ const Feed = () => {
   };
 
   /* =======================
-     Effects
+     Загрузка подписок
   ======================= */
+
+  const loadFollowing = async () => {
+    if (!currentUserId) return;
+
+    try {
+      const following = await getFollowing(currentUserId);
+      const ids = new Set(following.map((user: { id: string }) => user.id));
+      setFollowingIds(ids);
+    } catch (err) {
+      console.error('[Feed] loadFollowing error:', err);
+    }
+  };
+
+  /* =======================
+     Эффекты
+  ======================= */
+
+  // Загружаем подписки при включении фильтра
+  useEffect(() => {
+    if (onlySubscriptions && currentUserId && followingIds.size === 0) {
+      loadFollowing();
+    }
+  }, [onlySubscriptions, currentUserId]);
 
   useEffect(() => {
     if (activeTab === 'pins') {
@@ -138,23 +161,23 @@ const Feed = () => {
     if (activeTab === 'collections') {
       handleGetCollections();
     }
-  }, [activeTab]);
+  }, [activeTab, currentUserId]);
 
   /* =======================
-     Filters
+     Фильтрация
   ======================= */
 
   const filteredPins = onlySubscriptions
-    ? pins.filter((pin) =>
-        ['jane_anderson', 'alex_smith'].includes(pin.author)
-      )
+    ? pins.filter(pin => followingIds.has(pin.ownerId))
     : pins;
 
   const filteredCollections = onlySubscriptions
-    ? collections.filter((col) =>
-        ['jane_anderson', 'hana_tanaka'].includes(col.author)
-      )
+    ? collections.filter(col => followingIds.has(col.ownerId))
     : collections;
+
+  /* =======================
+     Render
+  ======================= */
 
   return (
     <div>
@@ -207,22 +230,18 @@ const Feed = () => {
             </div>
           </div>
 
-          <div className={styles.checkboxContainer}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={onlySubscriptions}
-                onChange={(e) =>
-                  setOnlySubscriptions(e.target.checked)
-                }
-                className={styles.hiddenCheckbox}
+          {currentUserId && (
+            <div className={styles.checkboxContainer}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={onlySubscriptions}
+                  onChange={e => setOnlySubscriptions(e.target.checked)}
+                  className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 {onlySubscriptions && (
-                  <svg
-                    className={styles.checkIcon}
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className={styles.checkIcon} viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                   </svg>
                 )}
@@ -231,39 +250,23 @@ const Feed = () => {
                 Только подписки
               </span>
             </label>
-          </div>
+            </div>
+          )}
         </section>
 
-        {loading && (
-          <p className={styles.loading}>Загрузка…</p>
-        )}
-        {error && (
-          <p className={styles.error}>{error}</p>
-        )}
+        {loading && <p className={styles.loading}>Загрузка…</p>}
+        {error && <p className={styles.error}>{error}</p>}
 
         {activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
-            <PinGrid
-              pins={filteredPins.map((pin) => ({
-                ...pin,
-                image: placeholder_1,
-                title: pin.name,
-                location: pin.location, // ✅ город
-              }))}
-              onPinClick={handlePinClick}
-            />
+            <PinGrid pins={filteredPins} onPinClick={handlePinClick} />
           </div>
         )}
 
         {activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
             <CollectionGrid
-              collections={filteredCollections.map((col) => ({
-                ...col,
-                image: placeholder_1,
-                title: col.name,
-                pinsCount: 0,
-              }))}
+              collections={filteredCollections}
               onCollectionClick={handleCollectionClick}
             />
           </div>

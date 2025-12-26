@@ -1,18 +1,22 @@
 import { useState } from "react";
 import styles from "./ShareModal.module.css";
 
-const ShareModal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
+interface ShareModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-  const profileUrl = window.location.href;
-
+const ShareModal = ({ isOpen, onClose }: ShareModalProps) => {
   const [copied, setCopied] = useState(false);
+  const profileUrl = window.location.href;
 
   const copyLink = () => {
     navigator.clipboard.writeText(profileUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className={styles.overlay} onClick={onClose}>

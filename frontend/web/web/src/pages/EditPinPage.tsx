@@ -2,60 +2,28 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import styles from './CreatePinPage.module.css';
 import Header from './Header';
-import AddPinModal from "./AddPinModal";
-import InviteCollaboratorModal from './InviteCollaboratorModal';
 import MapModal from './MapModal';
 import { getPinById as getMockPinById } from '../utils/mockData';
 import { useToast } from './ToastProvider';
-import { 
-  updatePin, 
-  getPinById as getBackendPinById,
-  addImagesToPinById,
-  deletePinImage
-} from "../services/pinService";
-import { validateImageFile } from '../services/imageService';
-
-// Интерфейс для существующих изображений с бэкенда
-interface ExistingImage {
-  id: string;
-  imageUrl: string;
-  orderNumber: number;
-}
+import { updatePin, getPinById as getBackendPinById } from "../services/pinService";
+import { useCurrentUserId } from '../context/AuthContext';
 
 const EditPinPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
+  const currentUserId = useCurrentUserId();
+  const { showToast } = useToast();
 
-  // Состояния
   const [pinLatitude, setPinLatitude] = useState<number | null>(null);
   const [pinLongitude, setPinLongitude] = useState<number | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [pinName, setPinName] = useState('');
   const [pinInfo, setPinInfo] = useState('');
-  const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [collaborators, setCollaborators] = useState<string[]>([]);
-  
-  // Изображения: новые (File) и существующие (с бэкенда)
-  const [newImages, setNewImages] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
-  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [pinCount, setPinCount] = useState(0);
-  const { showToast } = useToast();
-  
-  // Состояния для загрузки
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-
-  // Общее количество изображений (существующие + новые)
-  const totalImages = existingImages.length + newImages.length;
 
   // Загрузка данных пина по ID
   useEffect(() => {
@@ -71,31 +39,20 @@ const EditPinPage = () => {
 
         if (backendPin) {
           // Заполняем форму данными с бэкенда
-          setPinName(backendPin.name || backendPin.title || '');
+          setPinName(backendPin.name || '');
           setPinInfo(backendPin.description || '');
-          
+
           // Устанавливаем координаты из данных бэкенда
-          if (backendPin.coords && backendPin.coords.length === 2) {
-            setPinLatitude(backendPin.coords[0]);
-            setPinLongitude(backendPin.coords[1]);
-          } else if (backendPin.latitude && backendPin.longitude) {
+          if (backendPin.latitude != null && backendPin.longitude != null) {
             setPinLatitude(backendPin.latitude);
             setPinLongitude(backendPin.longitude);
           }
-          
-          // Загрузка существующих изображений
-          if (backendPin.images && backendPin.images.length > 0) {
-            setExistingImages(backendPin.images.map((img: any) => ({
-              id: img.id,
-              imageUrl: img.imageUrl,
-              orderNumber: img.orderNumber
-            })));
-          }
+
+          // TODO: Загрузка существующих изображений
           return;
         }
 
         // 2. Фолбек на моки
-        console.log("Используем моки для загрузки данных пина");
         const mockPin = getMockPinById(parseInt(id));
 
         if (mockPin) {
@@ -114,7 +71,6 @@ const EditPinPage = () => {
         console.error("Ошибка при загрузке пина:", e);
 
         // 3. Фолбек на моки при ошибке
-        console.log("Ошибка при загрузке, используем моки");
         const mockPin = getMockPinById(parseInt(id));
 
         if (mockPin) {
@@ -146,77 +102,37 @@ const EditPinPage = () => {
   }, [location.state]);
 
   const handleSavePin = async () => {
-    console.log('[EditPin] Current coordinates:', {
-      latitude: pinLatitude,
-      longitude: pinLongitude
-    });
-    
     if (pinLatitude === null || pinLongitude === null) {
       alert('Выберите точку на карте');
       return;
     }
 
-    if (totalImages === 0) {
-      alert('Добавьте хотя бы одно изображение');
+    if (!id) {
+      showToast("ID пина не указан", true);
       return;
     }
 
-    setIsUploading(true);
-    setUploadProgress(0);
-    setUploadError(null);
-    
+    // UpdatePinInput согласно схеме GraphQL
+    const updateInput = {
+      userId: currentUserId,
+      name: pinName,
+      description: pinInfo,
+      latitude: pinLatitude,
+      longitude: pinLongitude,
+    };
+
     try {
-      // 1. Обновляем основные данные пина
-      const updatedPin = await updatePin(id!, {
-        name: pinName,
-        description: pinInfo,
-        latitude: pinLatitude,
-        longitude: pinLongitude,
-        userId: '00000000-0000-0000-0000-000000000001' // TODO: взять из контекста/авторизации
-      });
+      const updatedPin = await updatePin(id, updateInput);
 
-      if (!updatedPin) {
-        throw new Error('Не удалось обновить пин');
+      if (updatedPin) {
+        showToast("Успешное сохранение!");
+        handleBack();
+      } else {
+        showToast("Ошибка при сохранении", true);
       }
-
-      // 2. Удаляем помеченные для удаления изображения
-      for (const imageId of deletedImageIds) {
-        await deletePinImage(imageId);
-      }
-
-      // 3. Загружаем новые изображения
-      if (newImages.length > 0) {
-        const startOrder = existingImages.length + 1;
-        const uploadResult = await addImagesToPinById(
-          id!,
-          newImages,
-          startOrder,
-          (fileIndex, progress) => {
-            const totalProgress = ((fileIndex + progress.percentage / 100) / newImages.length) * 100;
-            setUploadProgress(Math.round(totalProgress));
-          }
-        );
-
-        if (uploadResult.errors.length > 0) {
-          console.warn('Ошибки при загрузке изображений:', uploadResult.errors);
-        }
-
-        if (uploadResult.images.length > 0) {
-          setExistingImages(prev => [...prev, ...uploadResult.images]);
-          setNewImages([]);
-        }
-      }
-
-      console.log("Пин успешно обновлён:", updatedPin);
-      showToast("Успешное сохранение!");
-      handleBack();
-    } catch (error: any) {
-      //console.error("Ошибка при обновлении пина:", error.message);
-      //setUploadError(error.message || 'Ошибка при сохранении');
-      showToast("Успешное сохранение!");
-      navigate(`/feed`);
-    } finally {
-      setIsUploading(false);
+    } catch (error) {
+      console.error("Ошибка при обновлении пина:", error);
+      showToast("Ошибка при сохранении", true);
     }
   };
 
@@ -234,78 +150,17 @@ const EditPinPage = () => {
     }
   };
 
-  // Добавление нового изображения
   const handleAddImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (totalImages >= 10) return;
-
-    // Валидация файла
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      setUploadError(validation.error || 'Недопустимый файл');
-      return;
-    }
-
-    setUploadError(null);
-    const updatedNewImages = [...newImages, file];
-    setNewImages(updatedNewImages);
-    setCurrentIndex(existingImages.length + updatedNewImages.length - 1);
+    if (!file || images.length >= 10) return;
+    setImages([...images, file]);
+    setCurrentIndex(images.length);
   };
 
-  // Удаление изображения
-  const handleDeleteImage = (index: number) => {
-    if (index < existingImages.length) {
-      // Удаляем существующее изображение
-      const imageToDelete = existingImages[index];
-      setDeletedImageIds(prev => [...prev, imageToDelete.id]);
-      setExistingImages(prev => prev.filter((_, i) => i !== index));
-    } else {
-      // Удаляем новое изображение
-      const newImageIndex = index - existingImages.length;
-      setNewImages(prev => prev.filter((_, i) => i !== newImageIndex));
-    }
-    
-    // Корректируем индекс
-    if (currentIndex >= totalImages - 1) {
-      setCurrentIndex(Math.max(0, totalImages - 2));
-    }
-  };
-
-  // Получение URL текущего изображения для превью
-  const getCurrentImageUrl = (): string | null => {
-    if (currentIndex < existingImages.length) {
-      return existingImages[currentIndex]?.imageUrl || null;
-    } else {
-      const newImageIndex = currentIndex - existingImages.length;
-      const file = newImages[newImageIndex];
-      return file ? URL.createObjectURL(file) : null;
-    }
-  };
-
-  // Временно не используются - для будущей функциональности
-  const _handleAddPin = () => {
-    setIsAddPinModalOpen(true);
-    setPinCount(prev => prev + 1);
-  };
-  void _handleAddPin;
-
-  const _handleInviteCollaborator = () => {
-    setIsInviteModalOpen(true);
-  };
-  void _handleInviteCollaborator;
-
-  const handleAddCollaborator = (name: string) => {
-    // Добавляем коллаборатора с переданным именем
-    setCollaborators(prev => [...prev, name]);
-  };
-
-  const isSaveEnabled = !isUploading &&
-                       pinName.trim().length > 0 && 
-                       pinName.length <= 50 && 
+  const isSaveEnabled = pinName.trim().length > 0 &&
+                       pinName.length <= 50 &&
                        pinInfo.length <= 1000 &&
-                       totalImages > 0;
+                       images.length > 0;
 
   // Показываем загрузку
   if (loading) {
@@ -395,12 +250,12 @@ const EditPinPage = () => {
               htmlFor="gallery-input"
               className={styles.galleryWrapper}
             >
-              {totalImages === 0 ? (
+              {images.length === 0 ? (
                 <div className={styles.coverPlaceholder}>+</div>
               ) : (
                 <>
                   <img
-                    src={getCurrentImageUrl() || ''}
+                    src={URL.createObjectURL(images[currentIndex])}
                     className={styles.galleryImage}
                     alt="preview"
                   />
@@ -411,7 +266,11 @@ const EditPinPage = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      handleDeleteImage(currentIndex);
+                      const newImages = images.filter((_, i) => i !== currentIndex);
+                      setImages(newImages);
+                      if (currentIndex >= newImages.length) {
+                        setCurrentIndex(newImages.length - 1);
+                      }
                     }}
                   >
                     ✕
@@ -431,7 +290,7 @@ const EditPinPage = () => {
                     </button>
                   )}
 
-                  {currentIndex < totalImages - 1 && (
+                  {currentIndex < images.length - 1 && (
                     <button
                       type="button"
                       className={styles.navRight}
@@ -447,7 +306,7 @@ const EditPinPage = () => {
 
                   <div
                     className={`${styles.counter} ${
-                      totalImages === 10 ? styles.counterMax : ""
+                      images.length === 10 ? styles.counterMax : ""
                     }`}
                   >
                     {currentIndex + 1} / 10
@@ -460,7 +319,7 @@ const EditPinPage = () => {
               htmlFor="gallery-input"
               className={styles.uploadButton}
             >
-              {totalImages === 0 ? "Загрузить фото" : "Добавить ещё фото"}
+              {images.length === 0 ? "Загрузить фото" : "Добавить ещё фото"}
             </label>
 
             <input
@@ -469,7 +328,6 @@ const EditPinPage = () => {
               accept="image/*"
               onChange={handleAddImage}
               className={styles.hiddenInput}
-              disabled={totalImages >= 10}
             />
 
             <button
@@ -493,59 +351,14 @@ const EditPinPage = () => {
           </section>
         </div>
         
-        {/* Показываем ошибку загрузки */}
-        {uploadError && (
-          <div className={styles.errorMessage} style={{ marginBottom: '1rem', color: 'red' }}>
-            {uploadError}
-          </div>
-        )}
-        
-        {/* Показываем прогресс загрузки */}
-        {isUploading && (
-          <div className={styles.uploadProgress} style={{ marginBottom: '1rem' }}>
-            <div>Сохранение изменений: {uploadProgress}%</div>
-            <div 
-              style={{ 
-                width: '100%', 
-                height: '8px', 
-                backgroundColor: '#e0e0e0', 
-                borderRadius: '4px',
-                marginTop: '0.5rem'
-              }}
-            >
-              <div 
-                style={{ 
-                  width: `${uploadProgress}%`, 
-                  height: '100%', 
-                  backgroundColor: '#4CAF50', 
-                  borderRadius: '4px',
-                  transition: 'width 0.3s ease'
-                }}
-              />
-            </div>
-          </div>
-        )}
-        
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={handleSavePin}
           disabled={!isSaveEnabled}
           className={styles.saveButton}
         >
-          {isUploading ? 'Сохранение...' : 'Сохранить изменения'}
+          Сохранить изменения
         </button>
-
-        {isAddPinModalOpen && (
-          <AddPinModal onClose={() => setIsAddPinModalOpen(false)} />
-        )}
-
-        {isInviteModalOpen && (
-          <InviteCollaboratorModal 
-            onClose={() => setIsInviteModalOpen(false)}
-            onAddCollaborator={handleAddCollaborator}
-            existingCollaborators={collaborators}
-          />
-        )}
       </main>
       
       {isMapOpen && (

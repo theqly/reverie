@@ -1,37 +1,65 @@
-import React from 'react';
 import placeholder_1 from '../assets/placeholder1.jpg';
-import styles from './PinGridItem.module.css'; 
-import placeholder from '../assets/placeholder3.jpg';
+import styles from './PinGridItem.module.css';
 
+interface Pin {
+  id: string | number;
+  image?: string;
+  title: string;
+  location?: string;
+  author?: string;
+  authorAvatar?: string;
+}
 
-const PinGridItem = ({ pin, onClick }) => {
+interface PinGridItemProps {
+  pin: Pin;
+  onClick?: (id: string | number) => void;
+}
+
+const PinGridItem = ({ pin, onClick }: PinGridItemProps) => {
   const {
     id,
+    image,
     title,
     location = "Paris",
     author = "jane_anderson",
-    authorAvatar = placeholder_1,
-    images
+    authorAvatar = placeholder_1
   } = pin;
 
-  const imageSrc = images?.[0]?.imageUrl || placeholder;
+  const handleClick = () => {
+    if (onClick) {
+      onClick(id);
+    }
+  };
 
   return (
-    <div className={styles.pin} onClick={onClick}>
+    <div key={id} className={styles.pin} onClick={handleClick}>
       <div className={styles.pinImageWrapper}>
-        <img src={imageSrc} alt={title} className={styles.pinImage} />
+        <img src={image} alt={title} className={styles.pinImage} />
+        
+        {/* Верхний правый угол — локация */}
+        <div className={styles.pinLocation}>
+          {location}
+        </div>
 
-        <div className={styles.pinLocation}>{location}</div>
-        <div className={styles.pinTitle}>{title}</div>
+        {/* Нижний центр — название */}
+        <div className={styles.pinTitle}>
+          {title}
+        </div>
       </div>
 
+      {/* Имя автора под картинкой */}
       <div className={styles.pinAuthorWrapper}>
-        <img src={authorAvatar} className={styles.pinAuthorAvatar} />
-        <div className={styles.pinAuthor}>{author}</div>
+        <img
+          src={authorAvatar}
+          alt={`Аватар ${author}`}
+          className={styles.pinAuthorAvatar}
+        />
+        <div className={styles.pinAuthor}>
+          {author}
+        </div>
       </div>
     </div>
   );
 };
-
 
 export default PinGridItem;

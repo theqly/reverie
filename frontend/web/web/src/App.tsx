@@ -9,12 +9,10 @@ import EditPinPage from './pages/EditPinPage';
 import MapPage from './pages/MapPage';
 import LikedPins from './pages/LikedPins';
 import Profile from './pages/Profile';
-import LoginRedirect from './pages/LoginRedirect';
+import LoginPage from './pages/LoginPage';
 import PinViewPage from './pages/PinViewPage';
 import Feed from './pages/Feed';
 import CollectionViewPage from './pages/CollectionViewPage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-
 
 import { ToastProvider } from './pages/ToastProvider';
 
@@ -27,7 +25,7 @@ function App() {
           <Route path="/collection/create" element={<CreateCollectionPage />} />
           <Route path="/pin/create" element={<CreatePinPage />} />
           <Route path="/pin/edit/:id" element={<EditPinPage />} />
-          <Route path="/login" element={<LoginRedirect />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/feed" element={<Feed />} />
 
           <Route path="/pin/:pinId" element={<PinViewPage />} />
@@ -37,8 +35,7 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/likes/feed" element={<LikedPins />} />
           <Route path="/profile" element={<Profile />} />
-
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/profile/:nickTag" element={<Profile />} />
         </Routes>
       </ToastProvider>
     </Router>

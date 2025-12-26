@@ -1,12 +1,7 @@
-// src/components/MapPicker.tsx
 import { useEffect, useRef, useState } from 'react';
 
-/* -------------------------------------
-   1. ЗАГРУЗКА СКРИПТА ЯНДЕКС КАРТ (1 раз)
--------------------------------------- */
 const loadYandexScript = () => {
   return new Promise<void>((resolve, reject) => {
-    // скрипт уже есть — больше ничего не грузим
     if (document.querySelector('script[data-ymaps]')) {
       resolve();
       return;
@@ -24,44 +19,39 @@ const loadYandexScript = () => {
   });
 };
 
-/* -------------------------------------
-   2. TYPING
--------------------------------------- */
 declare global {
   interface Window {
     ymaps?: any;
   }
 }
 
-interface MapPickerProps {
-  onSelect: (coords: [number, number]) => void;
-  initialCoords?: [number, number];
-  zoom?: number;
-  width?: string | number;
-  height?: string | number;
-  readOnly?: boolean; // Если true - только просмотр, маркер не двигается
+interface Pin {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
 }
 
-/* -------------------------------------
-   3. COMPONENT
--------------------------------------- */
-const MapPicker: React.FC<MapPickerProps> = ({
-  onSelect,
-  initialCoords = [55.751244, 37.618423],
-  zoom = 12,
+interface MapViewerProps {
+  pins: Pin[];
+  onPinClick?: (pinId: string) => void;
+  width?: string | number;
+  height?: string | number;
+}
+
+const MapViewer: React.FC<MapViewerProps> = ({
+  pins,
+  onPinClick,
   width = '100%',
-  height = '100vh',
-  readOnly = false,
+  height = '400px',
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
-  const placemarkRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
     let destroyed = false;
 
-    /* ждем появления window.ymaps */
     const waitForYmaps = () =>
       new Promise<void>((resolve) => {
         const check = () => {
@@ -80,45 +70,60 @@ const MapPicker: React.FC<MapPickerProps> = ({
           if (destroyed) return;
           if (!mapRef.current) return;
 
-          // предотвращение повторной инициализации
-          if (mapInstanceRef.current) return;
+          // Удаляем старую карту если есть
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.destroy();
+            mapInstanceRef.current = null;
+          }
+
+          let center: [number, number] = [55.751244, 37.618423];
+          const zoom = 10;
+
+          if (pins.length > 0) {
+            // Берем центр по первому пину или среднее
+            const validPins = pins.filter(p => p.latitude && p.longitude);
+            if (validPins.length > 0) {
+              const avgLat = validPins.reduce((sum, p) => sum + p.latitude, 0) / validPins.length;
+              const avgLon = validPins.reduce((sum, p) => sum + p.longitude, 0) / validPins.length;
+              center = [avgLat, avgLon];
+            }
+          }
 
           const map = new window.ymaps.Map(mapRef.current, {
-            center: initialCoords,
+            center,
             zoom,
             controls: ['zoomControl'],
           });
 
           mapInstanceRef.current = map;
 
-          // Создаём начальный маркер если есть координаты (не дефолтные)
-          const hasValidCoords = initialCoords[0] !== 55.751244 || initialCoords[1] !== 37.618423;
-          if (hasValidCoords || readOnly) {
-            placemarkRef.current = new window.ymaps.Placemark(
-              initialCoords,
-              {},
-              { preset: 'islands#redIcon' }
+          // Добавляем пины
+          pins.forEach((pin) => {
+            if (!pin.latitude || !pin.longitude) return;
+
+            const placemark = new window.ymaps.Placemark(
+              [pin.latitude, pin.longitude],
+              {
+                balloonContentHeader: pin.name,
+                hintContent: pin.name,
+              },
+              { preset: 'islands#redDotIcon' }
             );
-            map.geoObjects.add(placemarkRef.current);
-          }
 
-          // Выбор точки (только если не readOnly)
-          if (!readOnly) {
-            map.events.add('click', (e: any) => {
-              const coords: [number, number] = e.get('coords');
+            if (onPinClick) {
+              placemark.events.add('click', () => {
+                onPinClick(pin.id);
+              });
+            }
 
-              if (!placemarkRef.current) {
-                placemarkRef.current = new window.ymaps.Placemark(
-                  coords,
-                  {},
-                  { preset: 'islands#redIcon' }
-                );
-                map.geoObjects.add(placemarkRef.current);
-              } else {
-                placemarkRef.current.geometry.setCoordinates(coords);
-              }
+            map.geoObjects.add(placemark);
+          });
 
-              onSelect(coords);
+          // Автоматически подстраиваем масштаб под все пины
+          if (pins.length > 1) {
+            map.setBounds(map.geoObjects.getBounds(), {
+              checkZoomRange: true,
+              zoomMargin: 50,
             });
           }
 
@@ -136,11 +141,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
       if (mapInstanceRef.current) {
         mapInstanceRef.current.destroy();
         mapInstanceRef.current = null;
-        placemarkRef.current = null;
       }
     };
-    // важно: зависимости пустые — карта строится 1 раз!
-  }, []);
+  }, [pins, onPinClick]);
 
   return (
     <div
@@ -148,7 +151,8 @@ const MapPicker: React.FC<MapPickerProps> = ({
       style={{
         width,
         height,
-        border: '1px solid #ccc',
+        borderRadius: '12px',
+        overflow: 'hidden',
         position: 'relative',
       }}
     >
@@ -160,6 +164,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
             left: '50%',
             transform: 'translate(-50%, -50%)',
             margin: 0,
+            color: '#666',
           }}
         >
           Загрузка карты...
@@ -169,4 +174,4 @@ const MapPicker: React.FC<MapPickerProps> = ({
   );
 };
 
-export default MapPicker;
+export default MapViewer;
