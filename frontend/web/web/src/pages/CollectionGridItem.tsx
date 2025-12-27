@@ -9,6 +9,7 @@ const CollectionGridItem = ({ collection, onClick }) => {
     boardImageURL, // Добавляем эту строку
     title,
     location,
+    description,
     pinsCount,
     author = "jane_anderson",
     authorAvatar = placeholder_1
@@ -32,15 +33,17 @@ const CollectionGridItem = ({ collection, onClick }) => {
         </div>
         
         <div className={styles.collectionLabelWrapper}>
-          <div className={styles.collectionTitle}>{title}</div>
+          <div className={styles.collectionH}>{title}</div>
+          <div className={styles.collectionTitle}>{description}</div>
+
           
-          {/* Показываем только если location есть */}
+          
           {location && (
             <div className={styles.collectionLocation}>{location}</div>
           )}
 
           <div className={styles.collectionPinsCount}>
-            {pinsCount} pins →
+            Смотреть подборку →
           </div>
         </div>
       </div>

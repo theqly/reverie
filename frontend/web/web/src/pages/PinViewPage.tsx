@@ -6,6 +6,8 @@ import styles from "./PinViewPage.module.css";
 import placeholder_1 from "../assets/placeholder1.jpg";
 import ReactionBlock from "./ReactionBlock";
 import CommentSection from "./CommentSection";
+import { useToast } from './ToastProvider';
+
 
 
 // mock + backend
@@ -14,7 +16,7 @@ import { getPinById as getBackendPinById } from "../services/pinService";
 import { countReactionsToPin, reactToPin } from "../services/reactionsService";
 import { toggleBookmarkToPin } from "../services/bookmarksService";
 import { isPinLiked, isPinBookmarked } from "../services/pinService";
-//  import { addPinToBoard } from "../services/addPinToBoardService";
+import { addPinToBoard } from "../services/addPinToBoardService";
 // Добавляем импорт сервиса для работы с подборками
 import { getOwnBoardsByUser } from "../services/profileService";
 
@@ -41,6 +43,8 @@ const PinViewPage = () => {
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const { showToast } = useToast();
+
 
   // Состояния для модального окна и подборок
   const [showCollectionsModal, setShowCollectionsModal] = useState(false);
@@ -216,10 +220,12 @@ const handleSelectCollection = async (collectionId: string, collectionName: stri
   
   try {
     // Вызываем API для добавления пина в подборку
-    //const result = await addPinToBoard(pinId, collectionId);
+    const result = await addPinToBoard(pinId, collectionId);
     
     if (result) {
-      console.log("Пин успешно добавлен в подборку");
+      //console.log("Пин успешно добавлен в подборку");
+      showToast(`Пин добавлен в подборку!`);
+
       
       // Можно показать уведомление пользователю
       // Пример с кастомным уведомлением:

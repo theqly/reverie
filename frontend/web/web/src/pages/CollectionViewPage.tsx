@@ -13,7 +13,14 @@ import PinGrid from "./PinGrid";
 import { getCollectionById, getCollectionPins } from "../utils/mockData";
 
 // backend
-import { getPinById as getBoardById } from "../services/collectionsService";
+import { 
+  getPinById as getBoardById,
+  getPinById as getPinByIdService // Добавляем сервис для получения пина по ID
+} from "../services/collectionsService";
+
+
+// сервис для получения полной информации о пине
+import { getPinById as getFullPinInfo } from "../services/pinService";
 
 // реакции
 import { countReactionsToBoard, reactToBoard } from "../services/reactionsService";
@@ -30,7 +37,6 @@ const generateRandomMoscowCoords = (): [number, number] => {
   const moscowLng = 37.6173;
   const radius = 0.3; // Радиус в градусах
   
-  // Генерация случайного смещения
   const randomOffsetLat = (Math.random() - 0.5) * 2 * radius;
   const randomOffsetLng = (Math.random() - 0.5) * 2 * radius;
   
@@ -38,19 +44,6 @@ const generateRandomMoscowCoords = (): [number, number] => {
     moscowLat + randomOffsetLat,
     moscowLng + randomOffsetLng
   ];
-};
-
-// Функция для генерации пинов с рандомными координатами
-const generatePinsWithRandomCoords = (pins: any[]) => {
-  return pins.map(pin => ({
-    ...pin,
-    coordinates: pin.coordinates || generateRandomMoscowCoords(),
-    // Добавляем дополнительную информацию для отображения на карте
-    mapInfo: {
-      title: pin.title || pin.description?.substring(0, 30) || "Место",
-      description: pin.description || "Описание отсутствует"
-    }
-  }));
 };
 
 const CollectionViewPage = () => {
@@ -61,38 +54,114 @@ const CollectionViewPage = () => {
   const [collectionPins, setCollectionPins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingPins, setLoadingPins] = useState(false);
 
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+
+    const getPinImageUrl = (pin: any) => {
+    if (pin.image) return pin.image;
+    if (pin.images && pin.images[0] && pin.images[0].imageUrl) {
+      return pin.images[0].imageUrl;
+    }
+    if (pin.imageUrl) {
+      return pin.imageUrl;
+    }
+    return placeholder_1;
+  };
   
-  // Для карты - вычисляем средние координаты всех пинов
+  // Для карты
   const mapCenterCoords = useMemo(() => {
     if (collectionPins.length === 0) {
-      return [55.7558, 37.6173]; // Москва по умолчанию
+      return [55.7558, 37.6173];
     }
     
-    // Вычисляем средние координаты всех пинов
-    const sumLat = collectionPins.reduce((sum, pin) => sum + (pin.coordinates?.[0] || 55.7558), 0);
-    const sumLng = collectionPins.reduce((sum, pin) => sum + (pin.coordinates?.[1] || 37.6173), 0);
+    const validPins = collectionPins.filter(pin => 
+      pin.latitude && pin.longitude
+    );
+    
+    if (validPins.length === 0) return [55.7558, 37.6173];
+    
+    const sumLat = validPins.reduce((sum, pin) => sum + pin.latitude, 0);
+    const sumLng = validPins.reduce((sum, pin) => sum + pin.longitude, 0);
     
     return [
-      sumLat / collectionPins.length,
-      sumLng / collectionPins.length
+      sumLat / validPins.length,
+      sumLng / validPins.length
     ];
   }, [collectionPins]);
 
   // Получаем все координаты пинов для отображения на карте
   const pinsForMap = useMemo(() => {
     return collectionPins
-      .filter(pin => pin.coordinates && Array.isArray(pin.coordinates))
+      .filter(pin => pin.latitude && pin.longitude)
       .map(pin => ({
         id: pin.id,
-        coordinates: pin.coordinates as [number, number],
-        title: pin.mapInfo?.title || pin.title || "Место",
-        description: pin.mapInfo?.description || pin.description || ""
+        coordinates: [pin.latitude, pin.longitude] as [number, number],
+        title: pin.name || pin.title || "Место",
+        description: pin.description || "",
+        image: getPinImageUrl(pin) // Добавляем изображение для карты
       }));
   }, [collectionPins]);
+
+  /* ------------------ Функция для загрузки деталей пина ------------------ */
+  const loadPinDetails = async (pinId: string): Promise<any> => {
+    try {
+      const fullPin = await getFullPinInfo(pinId);
+      
+      if (fullPin) {
+        return {
+          id: pinId,
+          name: fullPin.name || fullPin.title || "Без названия",
+          description: fullPin.description || "",
+          image: getFullPinImageUrl(fullPin),
+          author: fullPin.author || fullPin.owner?.nickname || "jane_anderson",
+          authorAvatar: placeholder_1,
+          likes: fullPin.rating || fullPin.likes || 0,
+          latitude: fullPin.latitude,
+          longitude: fullPin.longitude,
+          createdAt: fullPin.createdAt,
+          images: fullPin.images || [],
+          rating: fullPin.rating,
+          // Сохраняем полный объект пина
+          fullData: fullPin
+        };
+      }
+    } catch (error) {
+      console.error(`Ошибка загрузки пина ${pinId}:`, error);
+    }
+    
+    // Если не удалось загрузить, возвращаем базовую информацию
+    return {
+      id: pinId,
+      name: "Без названия",
+      description: "",
+      image: placeholder_1,
+      author: "jane_anderson",
+      authorAvatar: placeholder_1,
+      likes: 0,
+      latitude: null,
+      longitude: null
+    };
+  };
+
+  /* ------------------ Загрузка деталей всех пинов ------------------ */
+  const loadAllPinDetails = async (pinIds: string[]) => {
+    setLoadingPins(true);
+    
+    try {
+      // Загружаем детали для каждого пина параллельно
+      const pinPromises = pinIds.map(pinId => loadPinDetails(pinId));
+      const pinsWithDetails = await Promise.all(pinPromises);
+      
+      setCollectionPins(pinsWithDetails);
+    } catch (error) {
+      console.error("Ошибка загрузки деталей пинов:", error);
+    } finally {
+      setLoadingPins(false);
+    }
+  };
 
   /* ------------------ загрузка коллекции ------------------ */
   useEffect(() => {
@@ -112,76 +181,81 @@ const CollectionViewPage = () => {
 
         if (board) {
           setCollection(board);
+          setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
           
-          // Преобразуем пины для корректного отображения
-          let pins = Array.isArray(board.pins) 
-            ? board.pins.map(pin => ({
+          // Извлекаем ID пинов из подборки
+          const pinIds = Array.isArray(board.pins) 
+            ? board.pins
+                .map((pin: any) => pin.id || pin.pinId)
+                .filter((id: string) => id) // Фильтруем пустые ID
+            : [];
+          
+          // Если есть пины - загружаем их детали
+          if (pinIds.length > 0) {
+            await loadAllPinDetails(pinIds);
+          } else {
+            setCollectionPins([]);
+          }
+          
+          return;
+        }
+
+        // 2. Если бэкенд не ответил, пробуем моки
+        const mockCollection = getCollectionById(collectionId);
+        if (mockCollection) {
+          setCollection(mockCollection);
+          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
+          
+          const mockPins = getCollectionPins(collectionId) || [];
+          if (mockPins.length > 0) {
+            // Для моков тоже можно загрузить детали, если есть ID
+            const mockPinIds = mockPins
+              .map((pin: any) => pin.id)
+              .filter((id: string) => id);
+            
+            if (mockPinIds.length > 0) {
+              await loadAllPinDetails(mockPinIds);
+            } else {
+              // Если нет ID, используем моковые данные
+              const formattedPins = mockPins.map((pin: any) => ({
                 ...pin,
-                id: pin.id || pin.pinId,
                 image: getPinImageUrl(pin),
                 author: pin.author || "jane_anderson",
                 authorAvatar: placeholder_1,
                 description: pin.description || "",
                 likes: pin.likes || 0,
-                coordinates: pin.coordinates || null
-              }))
-            : [];
-          
-          // Добавляем случайные координаты для пинов, у которых их нет
-          pins = generatePinsWithRandomCoords(pins);
-          
-          setCollectionPins(pins);
-          setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
-          return;
-        }
-
-        const mockCollection = getCollectionById(collectionId);
-        if (mockCollection) {
-          setCollection(mockCollection);
-          
-          const mockPins = getCollectionPins(collectionId) || [];
-          const formattedPins = mockPins.map(pin => ({
-            ...pin,
-            image: getPinImageUrl(pin),
-            author: pin.author || "jane_anderson",
-            authorAvatar: placeholder_1,
-            description: pin.description || "",
-            likes: pin.likes || 0,
-            coordinates: pin.coordinates || null
-          }));
-          
-          // Добавляем случайные координаты для пинов, у которых их нет
-          const pinsWithCoords = generatePinsWithRandomCoords(formattedPins);
-          
-          setCollectionPins(pinsWithCoords);
-          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
+                latitude: pin.latitude || null,
+                longitude: pin.longitude || null
+              }));
+              setCollectionPins(formattedPins);
+            }
+          } else {
+            setCollectionPins([]);
+          }
         } else {
           setError(`Коллекция с ID ${collectionId} не найдена`);
         }
       } catch (e) {
         console.error("Ошибка загрузки коллекции:", e);
         
-        // 3. Фолбэк на моки при ошибке
+        // Фолбэк на моки при ошибке
         const mockCollection = getCollectionById(collectionId);
         if (mockCollection) {
           setCollection(mockCollection);
+          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
           
           const mockPins = getCollectionPins(collectionId) || [];
-          const formattedPins = mockPins.map(pin => ({
+          const formattedPins = mockPins.map((pin: any) => ({
             ...pin,
             image: getPinImageUrl(pin),
             author: pin.author || "jane_anderson",
             authorAvatar: placeholder_1,
             description: pin.description || "",
             likes: pin.likes || 0,
-            coordinates: pin.coordinates || null
+            latitude: pin.latitude || null,
+            longitude: pin.longitude || null
           }));
-          
-          // Добавляем случайные координаты для пинов, у которых их нет
-          const pinsWithCoords = generatePinsWithRandomCoords(formattedPins);
-          
-          setCollectionPins(pinsWithCoords);
-          setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
+          setCollectionPins(formattedPins);
         } else {
           setError("Не удалось загрузить коллекцию");
         }
@@ -229,29 +303,50 @@ const CollectionViewPage = () => {
     loadReactions();
   }, [collectionId]);
 
-  // Генерация тестовых пинов (можно использовать для демо)
-  const generateDemoPins = () => {
-    const demoPinsCount = 5; // Количество демо-пинов
-    const demoPins = [];
-    
-    for (let i = 0; i < demoPinsCount; i++) {
-      demoPins.push({
-        id: `demo-pin-${i}`,
-        title: `Демо-место ${i + 1}`,
-        description: `Пример описания для демо-места ${i + 1}`,
-        image: placeholder_1,
-        author: "demo_user",
-        authorAvatar: placeholder_1,
-        likes: Math.floor(Math.random() * 100),
-        coordinates: generateRandomMoscowCoords(),
-        mapInfo: {
-          title: `Демо-место ${i + 1}`,
-          description: `Это демо-описание для теста карты`
-        }
-      });
+  // Вспомогательная функция для получения URL изображения пина
+
+
+  // Функция для получения полного URL изображения из деталей пина
+  const getFullPinImageUrl = (fullPin: any) => {
+    if (fullPin.images && fullPin.images[0] && fullPin.images[0].imageUrl) {
+      return fullPin.images[0].imageUrl;
     }
-    
-    return demoPins;
+    if (fullPin.imageUrl) {
+      return fullPin.imageUrl;
+    }
+    if (fullPin.image) {
+      return fullPin.image;
+    }
+    return placeholder_1;
+  };
+
+  // Вспомогательная функция для получения URL изображения коллекции
+  const getCollectionImageUrl = (): string => {
+    if (collection?.image || collection?.boardImageURL || collection?.coverImage) {
+      return collection.image || collection.boardImageURL || collection.coverImage;
+    }
+    if (collection?.images && collection.images[0] && collection.images[0].imageUrl) {
+      return collection.images[0].imageUrl;
+    }
+    if (collection?.coverImageUrl) {
+      return collection.coverImageUrl;
+    }
+    return placeholder;
+  };
+
+  // Получаем название коллекции
+  const getCollectionName = () => {
+    return collection?.name || collection?.title || "Без названия";
+  };
+
+  // Получаем описание коллекции
+  const getCollectionDescription = () => {
+    return collection?.description || "";
+  };
+
+  // Получаем автора коллекции
+  const getCollectionAuthor = () => {
+    return collection?.author || collection?.authorName || "jane_anderson";
   };
 
   const handleLike = async (nextLiked: boolean) => {
@@ -291,60 +386,16 @@ const CollectionViewPage = () => {
     }
   };
 
-  // Вспомогательная функция для получения URL изображения пина
-  const getPinImageUrl = (pin: any) => {
-    if (pin.images && pin.images[0] && pin.images[0].imageUrl) {
-      return pin.images[0].imageUrl;
-    }
-    if (pin.imageUrl) {
-      return pin.imageUrl;
-    }
-    if (pin.image) {
-      return pin.image;
-    }
-    return placeholder_1;
-  };
-
-  // Вспомогательная функция для получения URL изображения коллекции
-  const getCollectionImageUrl = (): string => {
-    if (collection?.image || collection?.boardImageURL || collection?.coverImage) {
-      return collection.image || collection.boardImageURL || collection.coverImage;
-    }
-    if (collection?.images && collection.images[0] && collection.images[0].imageUrl) {
-      return collection.images[0].imageUrl;
-    }
-    if (collection?.coverImageUrl) {
-      return collection.coverImageUrl;
-    }
-    return placeholder; // fallback placeholder
-  };
-
-  // Получаем название коллекции
-  const getCollectionName = () => {
-    return collection?.name || collection?.title || "Без названия";
-  };
-
-  // Получаем описание коллекции
-  const getCollectionDescription = () => {
-    return collection?.description || "";
-  };
-
-  // Получаем автора коллекции
-  const getCollectionAuthor = () => {
-    return collection?.author || collection?.authorName || "jane_anderson";
-  };
-
-  // Обработчик для демо-режима (если нужно добавить тестовые пины)
-  const handleAddDemoPins = () => {
-    const demoPins = generateDemoPins();
-    setCollectionPins(prev => [...prev, ...demoPins]);
+  // Обработчик клика по пину - открываем полную страницу
+  const handlePinClick = (pinId: string) => {
+    navigate(`/pin/${pinId}?from=collection/${collectionId}`);
   };
 
   if (loading) {
     return (
       <div className={styles.pageWrapper}>
         <Header />
-        <div className={styles.loading}>Загрузка...</div>
+        <div className={styles.loading}>Загрузка коллекции...</div>
       </div>
     );
   }
@@ -399,7 +450,6 @@ const CollectionViewPage = () => {
               className={styles.settingsBtn}
               onClick={() => navigate(`/collection/edit/${collectionId}`)}
             />
-          
           </div>
 
           <div className={styles.pinCard}>
@@ -424,13 +474,24 @@ const CollectionViewPage = () => {
 
           <h3 className={styles.pinsTitle}>
             Места в подборке ({collectionPins.length})
+            {loadingPins && <span className={styles.loadingBadge}>Загрузка...</span>}
           </h3>
 
           <div className={styles.pinsWrapper}>
-            <PinGrid
-              pins={collectionPins}
-              onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
-            />
+            {loadingPins ? (
+              <div className={styles.loadingPins}>
+                <p>Загружаем детали мест...</p>
+              </div>
+            ) : collectionPins.length === 0 ? (
+              <div className={styles.emptyPins}>
+                <p>В этой подборке пока нет мест</p>
+              </div>
+            ) : (
+              <PinGrid
+                pins={collectionPins}
+                onPinClick={handlePinClick}
+              />
+            )}
           </div>
 
           <CommentSection comments={comments} title="Комментарии" />
@@ -438,7 +499,11 @@ const CollectionViewPage = () => {
 
         {/* Правая колонка для карты */}
         <div className={styles.mapWrapperFixed}>
-          {pinsForMap.length === 0 ? (
+          {loadingPins ? (
+            <div className={styles.loadingMap}>
+              <p>Загружаем карту...</p>
+            </div>
+          ) : pinsForMap.length === 0 ? (
             <div className={styles.emptyMapPlaceholder}>
               <div className={styles.placeholderContent}>
                 <p className={styles.placeholderText}>
@@ -448,23 +513,7 @@ const CollectionViewPage = () => {
                   className={styles.addPinButton}
                   onClick={() => navigate(`/pin/create?collectionId=${collectionId}`)}
                 >
-                  Добавить первый пин
-                </button>
-                {/* Кнопка для быстрого добавления демо-пинов */}
-                <button 
-                  className={styles.demoButton}
-                  onClick={handleAddDemoPins}
-                  style={{
-                    marginTop: '10px',
-                    padding: '8px 12px',
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Посмотреть демо-карту
+                  Добавить первое место
                 </button>
               </div>
             </div>
@@ -473,7 +522,6 @@ const CollectionViewPage = () => {
               readOnly
               onSelect={() => {}}
               initialCoords={mapCenterCoords as [number, number]}
-              // Передаем массив пинов для отображения нескольких меток
               pins={pinsForMap}
             />
           )}
