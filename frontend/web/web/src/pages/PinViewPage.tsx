@@ -239,7 +239,7 @@ const handleSelectCollection = async (collectionId: string, collectionName: stri
       // updateCollectionsState(collectionId, pinId);
     } else {
       console.error("Не удалось добавить пин в подборку");
-      alert("Не удалось добавить пин в подборку. Попробуйте еще раз.");
+      alert("Подборка уже содержит этот пин");
     }
   } catch (error) {
     console.error("Ошибка при добавлении пина в подборку:", error);
