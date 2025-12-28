@@ -1,4 +1,5 @@
 input CreateUserInput {
+  userId: UUID!
   nickname: String!
   email: String!
   nick_tag: String!
@@ -7,6 +8,7 @@ input CreateUserInput {
 }
 
 input UpdateUserInput {
+  userId: UUID!
   nickname: String
   email: String
   nick_tag: String

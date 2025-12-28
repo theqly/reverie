@@ -12,11 +12,12 @@ import (
 )
 
 type CreateUserInput struct {
-	Nickname       string  `json:"nickname"`
-	Email          string  `json:"email"`
-	NickTag        string  `json:"nick_tag"`
-	ProfilePicture *string `json:"profilePicture,omitempty"`
-	Description    *string `json:"description,omitempty"`
+	UserID         uuid.UUID `json:"userId"`
+	Nickname       string    `json:"nickname"`
+	Email          string    `json:"email"`
+	NickTag        string    `json:"nick_tag"`
+	ProfilePicture *string   `json:"profilePicture,omitempty"`
+	Description    *string   `json:"description,omitempty"`
 }
 
 type Mutation struct {
@@ -26,17 +27,18 @@ type Query struct {
 }
 
 type SettingsStatuses struct {
-	ID          uuid.UUID `json:"id"`
-	Type        string    `json:"type"`
-	Description *string   `json:"description,omitempty"`
+	ID          int     `json:"id"`
+	Type        string  `json:"type"`
+	Description *string `json:"description,omitempty"`
 }
 
 type UpdateUserInput struct {
-	Nickname       *string `json:"nickname,omitempty"`
-	Email          *string `json:"email,omitempty"`
-	NickTag        string  `json:"nick_tag"`
-	ProfilePicture *string `json:"profilePicture,omitempty"`
-	Description    *string `json:"description,omitempty"`
+	UserID         uuid.UUID `json:"userId"`
+	Nickname       *string   `json:"nickname,omitempty"`
+	Email          *string   `json:"email,omitempty"`
+	NickTag        *string   `json:"nick_tag,omitempty"`
+	ProfilePicture *string   `json:"profilePicture,omitempty"`
+	Description    *string   `json:"description,omitempty"`
 }
 
 type User struct {
