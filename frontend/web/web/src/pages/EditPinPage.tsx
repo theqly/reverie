@@ -172,7 +172,7 @@ const EditPinPage = () => {
         description: pinInfo,
         latitude: pinLatitude,
         longitude: pinLongitude,
-        userId: '00000000-0000-0000-0000-000000000001' // TODO: взять из контекста/авторизации
+        userId: '00000000-0000-0000-0000-000000000002' // TODO: взять из контекста/авторизации
       });
 
       if (!updatedPin) {

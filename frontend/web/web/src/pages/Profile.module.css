@@ -675,3 +675,7 @@ ul.follow_options li:last-child {
   max-height: 48px;          /* примерно 2-3 строки */
   overflow: hidden;
 }
+
+.hidden{
+  display:none;
+}

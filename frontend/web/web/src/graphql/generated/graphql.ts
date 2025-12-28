@@ -1092,17 +1092,16 @@ export const GetUserByIdDocument = gql`
     nickname
     email
     nickTag
-    profilePicture
     description
-    status
     userRating
+    profilePicture
     followers {
-      id
-      nickname
+        id
+        nickname
     }
     following {
-      id
-      nickname
+        id
+        nickname
     }
   }
 }

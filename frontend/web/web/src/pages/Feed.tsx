@@ -10,6 +10,8 @@ import { mockPins, mockCollections } from '../utils/mockData';
 import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
 import { getCityFromCoordinates } from '../services/geoService';
 
+import { findUser } from '../services/profileService';
+
 import placeholder_1 from '../assets/placeholder1.jpg';
 
 const Feed = () => {
@@ -65,13 +67,65 @@ const Feed = () => {
         offset: 0,
       });
 
-      const sourcePins =
-        response && response.length > 0 ? response : mockPins;
+      const response2 = await getPinsByUser({
+        viewerId: '00000000-0000-0000-0000-000000000001',
+        userId: '00000000-0000-0000-0000-000000000002',
+        limit: 20,
+        offset: 0,
+      });
 
-      // 🔥 здесь получаем город по координатам
-      const pinsWithLocation = await Promise.all(
+      // Добавляем поле author к пинам из первого ответа
+      const pinsFromResponse1 = response 
+        ? response.map(pin => ({
+            ...pin,
+            authorId: '00000000-0000-0000-0000-000000000001'
+          }))
+        : [];
+
+      // Добавляем поле author к пинам из второго ответа  
+      const pinsFromResponse2 = response2
+        ? response2.map(pin => ({
+            ...pin,
+            authorId: '00000000-0000-0000-0000-000000000002'
+          }))
+        : [];
+
+      // Объединяем оба массива
+      const combinedPins = [
+        ...pinsFromResponse1,
+        ...pinsFromResponse2
+      ];
+
+      const sourcePins = combinedPins.length > 0 ? combinedPins : mockPins;
+
+      // Получаем уникальные ID авторов
+      const uniqueAuthorIds = [...new Set(sourcePins.map(pin => pin.authorId))];
+      
+      // Получаем информацию обо всех авторах параллельно
+      const authorsPromises = uniqueAuthorIds.map(authorId => findUser({ id: authorId }));
+      const authors = await Promise.all(authorsPromises);
+      
+      // Создаем маппинг authorId -> данные пользователя
+      const authorMap = new Map();
+      authors.forEach((user, index) => {
+        if (user) {
+          authorMap.set(uniqueAuthorIds[index], {
+            nickname: user.nickTag || user.nickname || 'unknown',
+            profilePicture: user.profilePicture || placeholder_1,
+            name: user.nickname || user.nickTag || 'Пользователь'
+          });
+        }
+      });
+
+      // 🔥 здесь получаем город по координатам и добавляем данные автора
+      const pinsWithLocationAndAuthor = await Promise.all(
         sourcePins.map(async (pin) => {
           let location = '';
+          const authorData = authorMap.get(pin.authorId) || {
+            nickname: pin.authorId,
+            profilePicture: placeholder_1,
+            name: 'Пользователь'
+          };
 
           if (pin.latitude && pin.longitude) {
             try {
@@ -87,11 +141,14 @@ const Feed = () => {
           return {
             ...pin,
             location, // ← готовая строка города
+            author: authorData.nickname, // ← никнейм автора
+            authorAvatar: authorData.profilePicture, // ← аватарка автора
+            authorName: authorData.name, // ← имя автора
           };
         })
       );
 
-      setPins(pinsWithLocation);
+      setPins(pinsWithLocationAndAuthor);
     } catch (err) {
       console.error('[Feed] getPins error:', err);
       setPins(mockPins);
@@ -106,14 +163,76 @@ const Feed = () => {
     setError(null);
 
     try {
-      const response = await getOwnBoardsByUser({
-        userId: '00000000-0000-0000-0000-000000000001',
-        limit: 20,
-        offset: 0,
-      });
+      const [response, response2] = await Promise.all([
+        getOwnBoardsByUser({
+          userId: '00000000-0000-0000-0000-000000000001',
+          limit: 20,
+          offset: 0,
+        }),
+        getOwnBoardsByUser({
+          userId: '00000000-0000-0000-0000-000000000002',
+          limit: 20,
+          offset: 0,
+        })
+      ]);
 
-      if (response && response.length > 0) {
-        setCollections(response);
+      const collectionsFromResponse1 = response 
+        ? response.map(col => ({
+            ...col,
+            authorId: '00000000-0000-0000-0000-000000000001'
+          }))
+        : [];
+
+      const collectionsFromResponse2 = response2
+        ? response2.map(col => ({
+            ...col,
+            authorId: '00000000-0000-0000-0000-000000000002'
+          }))
+        : [];
+
+      // Объединяем оба массива
+      const combinedCollections = [
+        ...collectionsFromResponse1,
+        ...collectionsFromResponse2
+      ];
+
+      if (combinedCollections.length > 0) {
+        // Получаем данные всех авторов за один запрос
+        const uniqueAuthorIds = [...new Set(combinedCollections.map(col => col.authorId))];
+        
+        // Получаем информацию обо всех авторах параллельно
+        const authorsPromises = uniqueAuthorIds.map(authorId => findUser({ id: authorId }));
+        const authors = await Promise.all(authorsPromises);
+        
+        // Создаем маппинг authorId -> данные пользователя
+        const authorMap = new Map();
+        authors.forEach((user, index) => {
+          if (user) {
+            authorMap.set(uniqueAuthorIds[index], {
+              nickname: user.nickTag || user.nickname || 'unknown',
+              profilePicture: user.profilePicture || placeholder_1,
+              name: user.nickname || user.nickTag || 'Пользователь'
+            });
+          }
+        });
+
+        // Добавляем данные авторов к подборкам
+        const collectionsWithAuthors = combinedCollections.map(col => {
+          const authorData = authorMap.get(col.authorId) || {
+            nickname: col.authorId,
+            profilePicture: placeholder_1,
+            name: 'Пользователь'
+          };
+          
+          return {
+            ...col,
+            author: authorData.nickname, // ← никнейм автора
+            authorAvatar: authorData.profilePicture, // ← аватарка автора
+            authorName: authorData.name, // ← имя автора
+          };
+        });
+
+        setCollections(collectionsWithAuthors);
       } else {
         setCollections(mockCollections);
       }
@@ -246,9 +365,11 @@ const Feed = () => {
             <PinGrid
               pins={filteredPins.map((pin) => ({
                 ...pin,
-                image: placeholder_1,
-                title: pin.name,
-                location: pin.location, // ✅ город
+                image: pin.images?.[0]?.imageUrl || pin.imageUrl || placeholder_1, // используем реальное изображение пина
+                title: pin.name || pin.title,
+                location: pin.location,
+                author: pin.author,
+                authorAvatar: pin.authorAvatar, // ← передаем аватарку автора
               }))}
               onPinClick={handlePinClick}
             />
@@ -260,9 +381,11 @@ const Feed = () => {
             <CollectionGrid
               collections={filteredCollections.map((col) => ({
                 ...col,
-                image: placeholder_1,
+                image: col.boardImageURL || col.image || placeholder_1, // используем реальное изображение подборки
                 title: col.name,
-                pinsCount: 0,
+                pinsCount: col.pins ? col.pins.length : 0,
+                author: col.author,
+                authorAvatar: col.authorAvatar, // ← передаем аватарку автора
               }))}
               onCollectionClick={handleCollectionClick}
             />

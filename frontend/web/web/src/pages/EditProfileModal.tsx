@@ -6,8 +6,10 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
 
   const [name, setName] = useState(initialData.name);
   const [nickname, setNickname] = useState(initialData.nickname || "");
-  const [bio, setBio] = useState(initialData.bio);
+  const [description, setdescription] = useState(initialData.description);
   const [avatar, setAvatar] = useState(initialData.avatar);
+  const [nickTag, setNickTag] = useState(initialData.nickTag);
+
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -18,7 +20,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
   };
 
   const handleSave = () => {
-    onSave({ name, nickname, bio, avatar });
+    onSave({ name, nickname, description, avatar });
     onClose();
   };
 
@@ -58,22 +60,22 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
           <span>Никнейм</span>
           <input 
             maxLength={50}
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            value={nickTag}
+            onChange={(e) => setNickTag(e.target.value)}
           />
           <div className={styles.counter}>{nickname.length} / 50</div>
         </label>
 
-        {/* BIO */}
+        {/* description */}
         <label className={styles.field}>
-          <span>Bio</span>
+          <span>description</span>
           <textarea
             maxLength={250}
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            value={description}
+            onChange={(e) => setdescription(e.target.value)}
             className={styles.textarea}
           />
-          <div className={styles.counter}>{bio.length} / 250</div>
+          <div className={styles.counter}>{description.length} / 250</div>
         </label>
 
         <div className={styles.actions}>
