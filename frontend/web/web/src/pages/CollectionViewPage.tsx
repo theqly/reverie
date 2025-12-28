@@ -1,4 +1,4 @@
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import Header from "./Header";
 import MapShower from "./MapShowBoard";
@@ -59,6 +59,8 @@ const CollectionViewPage = () => {
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+    const [searchParams] = useSearchParams();
+
 
     const getPinImageUrl = (pin: any) => {
     if (pin.image) return pin.image;
@@ -444,7 +446,7 @@ const CollectionViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Подборка от <Link to="/profile" className={styles.authorA}>@{getCollectionAuthor()}</Link>
+              Подборка от <Link to={`/profile/${searchParams.get('ownerId')}`} className={styles.authorA}>@{searchParams.get('owner')}</Link>
             </h2>
             <button
               className={styles.settingsBtn}

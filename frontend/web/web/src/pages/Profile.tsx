@@ -17,6 +17,8 @@ import CollectionGrid from './CollectionGrid';
 import placeholder_3 from '../assets/placeholder3.jpg';
 import placeholder_1 from '../assets/placeholder1.jpg';
 import {getUserIdFromToken} from '../auth/tokenStorage';
+import { useParams } from "react-router-dom";
+
 
 
 import { mockPins, mockCollections } from '../utils/mockData';
@@ -94,8 +96,10 @@ const Profile = () => {
   /* =======================
      Константы для ID пользователей
   ======================= */
-  const TEMP_USER_ID = String(getUserIdFromToken());
-  const TEMP_VIEWER_ID = '00000000-0000-0000-0000-000000000001';
+  const { id } = useParams<{ id: string }>();
+  const TEMP_USER_ID = id;
+  console.log("temp" + TEMP_USER_ID);
+  const TEMP_VIEWER_ID = String(getUserIdFromToken());
 
   /* =======================
      Навигация
@@ -108,12 +112,12 @@ const Profile = () => {
   const handleCreatePin = () => navigate('/pin/create');
   const handleCreateCollection = () => navigate('/collection/create');
 
-  const handlePinClick = (pinId: string, ownerId: string) => {
-    navigate(`/pin/${pinId}?ownerId=${ownerId}`);
+  const handlePinClick = (pinId: string, owner: string, ownerId: string) => {
+    navigate(`/pin/${pinId}?owner=${owner}&ownerId=${ownerId}`);
   };
 
-  const handleCollectionClick = (collectionId: string) => {
-    navigate(`/collection/${collectionId}`);
+  const handleCollectionClick = (collectionId: string, owner: string, ownerId: string) => {
+    navigate(`/collection/${collectionId}?owner=${owner}&ownerId=${ownerId}`);
   };
 
   /* =======================
@@ -227,6 +231,7 @@ const Profile = () => {
               description: pin.description || '',
               image: imageUrl,
               author: userData.nickname,
+              ownerId: userData.id,
               authorAvatar: userData.profilePicture || placeholder_1,
               likes: pin.rating || pin.likes || 0,
               location: location || 'Не указано',

@@ -11,7 +11,10 @@ const Header: React.FC = () => {
   const { showToast } = useToast(); // теперь можем вызывать showToast
   let id = getUserIdFromToken();
 
-  const handleProfile = () => navigate(`/profile/${id}`);
+const handleProfile = () => {
+  window.location.href = `/profile/${id}`; // Полная перезагрузка
+  // или
+};
   const handleLogoClick = () => navigate('/feed');
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

@@ -46,7 +46,7 @@ const PinViewPage = () => {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const { showToast } = useToast();
-    const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
 
 
@@ -326,7 +326,7 @@ const handleSelectCollection = async (collectionId: string, collectionName: stri
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Пин от <Link to="/profile" className={styles.authorA}>@{searchParams.get('ownerId')}</Link>
+              Пин от <Link to={`/profile/${searchParams.get('ownerId')}`} className={styles.authorA}>@{searchParams.get('owner')}</Link>
             </h2>
             <button
               className={styles.settingsBtn}

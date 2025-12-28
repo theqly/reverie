@@ -11,7 +11,7 @@ const PinGrid = ({ pins, onPinClick }) => {
         <PinGridItem 
           key={pin.id} 
           pin={pin} 
-          onClick={() => onPinClick(pin.id, pin.author)}
+          onClick={() => onPinClick(pin.id, pin.author, pin.ownerId)}
         />
       ))}
     </div>

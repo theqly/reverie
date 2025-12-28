@@ -9,7 +9,7 @@ const CollectionGrid = ({ collections, onCollectionClick }) => {
         <CollectionGridItem 
           key={collection.id} 
           collection={collection} 
-          onClick={() => onCollectionClick(collection.id)}
+          onClick={() => onCollectionClick(collection.id, collection.author, collection.ownerId)}
         />
       ))}
     </div>
