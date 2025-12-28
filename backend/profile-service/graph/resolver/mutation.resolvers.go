@@ -11,19 +11,15 @@ import (
 	"profile-service/graph/model"
 	"profile-service/internal/mapper"
 	"profile-service/internal/models"
-	"profile-service/pkg/middleware"
 
 	"github.com/google/uuid"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
-	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unautorized: %w", err)
-	}
+	userID := input.UserID
 
-	if _, err = r.UserRepo.GetUserByID(ctx, userID); err == nil {
+	if _, err := r.UserRepo.GetUserByID(ctx, userID); err == nil {
 		return nil, fmt.Errorf("user already exists")
 	}
 
@@ -37,7 +33,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		UserRating:     0,
 	}
 
-	if err = r.UserRepo.CreateUser(ctx, *user); err != nil {
+	if err := r.UserRepo.CreateUser(ctx, *user); err != nil {
 		return nil, err
 	}
 
@@ -64,8 +60,8 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID uuid.UUID, inp
 	if input.Description != nil {
 		user.Description = input.Description
 	}
-	if input.NickTag != "" {
-		user.NickTag = input.NickTag
+	if input.NickTag != nil {
+		user.NickTag = *input.NickTag
 	}
 
 	if err := r.UserRepo.SaveUser(ctx, user).Error; err != nil {
@@ -140,7 +136,7 @@ func (r *mutationResolver) UnfollowUser(ctx context.Context, userID uuid.UUID, f
 }
 
 // ChangeAccessBookmarks is the resolver for the changeAccessBookmarks field.
-func (r *mutationResolver) ChangeAccessBookmarks(ctx context.Context, userID uuid.UUID, newStatus uuid.UUID) (bool, error) {
+func (r *mutationResolver) ChangeAccessBookmarks(ctx context.Context, userID uuid.UUID, newStatus int) (bool, error) {
 	panic(fmt.Errorf("not implemented: ChangeAccessBookmarks - changeAccessBookmarks"))
 }
 

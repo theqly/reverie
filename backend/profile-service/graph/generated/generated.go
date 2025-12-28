@@ -54,7 +54,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ChangeAccessBookmarks func(childComplexity int, userID uuid.UUID, newStatus uuid.UUID) int
+		ChangeAccessBookmarks func(childComplexity int, userID uuid.UUID, newStatus int) int
 		CreateUser            func(childComplexity int, input model.CreateUserInput) int
 		DeleteUser            func(childComplexity int, userID uuid.UUID) int
 		FollowUser            func(childComplexity int, userID uuid.UUID, followerID uuid.UUID) int
@@ -109,7 +109,7 @@ type MutationResolver interface {
 	DeleteUser(ctx context.Context, userID uuid.UUID) (bool, error)
 	FollowUser(ctx context.Context, userID uuid.UUID, followerID uuid.UUID) (bool, error)
 	UnfollowUser(ctx context.Context, userID uuid.UUID, followerID uuid.UUID) (bool, error)
-	ChangeAccessBookmarks(ctx context.Context, userID uuid.UUID, newStatus uuid.UUID) (bool, error)
+	ChangeAccessBookmarks(ctx context.Context, userID uuid.UUID, newStatus int) (bool, error)
 }
 type QueryResolver interface {
 	UserByID(ctx context.Context, userID uuid.UUID) (*model.User, error)
@@ -164,7 +164,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ChangeAccessBookmarks(childComplexity, args["userId"].(uuid.UUID), args["newStatus"].(uuid.UUID)), true
+		return e.complexity.Mutation.ChangeAccessBookmarks(childComplexity, args["userId"].(uuid.UUID), args["newStatus"].(int)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -574,7 +574,7 @@ type User @key(fields: "id") {
 }
 
 type SettingsStatuses {
-  id: UUID!
+  id: Int!
   type: String!
   description: String
 }
@@ -594,6 +594,7 @@ type SettingsStatuses {
 }
 `, BuiltIn: false},
 	{Name: "../schema/mutation.graphqls", Input: `input CreateUserInput {
+  userId: UUID!
   nickname: String!
   email: String!
   nick_tag: String!
@@ -602,9 +603,10 @@ type SettingsStatuses {
 }
 
 input UpdateUserInput {
+  userId: UUID!
   nickname: String
   email: String
-  nick_tag: String!
+  nick_tag: String
   profilePicture: String
   description: String
 }
@@ -617,7 +619,7 @@ type Mutation {
   followUser(userId: UUID!, followerId: UUID!): Boolean!
   unfollowUser(userId: UUID!, followerId: UUID!): Boolean!
 
-  changeAccessBookmarks(userId: UUID!, newStatus: UUID!): Boolean!
+  changeAccessBookmarks(userId: UUID!, newStatus: Int!): Boolean!
 }
 `, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
@@ -718,18 +720,18 @@ func (ec *executionContext) field_Mutation_changeAccessBookmarks_argsUserID(
 func (ec *executionContext) field_Mutation_changeAccessBookmarks_argsNewStatus(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (uuid.UUID, error) {
+) (int, error) {
 	if _, ok := rawArgs["newStatus"]; !ok {
-		var zeroVal uuid.UUID
+		var zeroVal int
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("newStatus"))
 	if tmp, ok := rawArgs["newStatus"]; ok {
-		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+		return ec.unmarshalNInt2int(ctx, tmp)
 	}
 
-	var zeroVal uuid.UUID
+	var zeroVal int
 	return zeroVal, nil
 }
 
@@ -1752,7 +1754,7 @@ func (ec *executionContext) _Mutation_changeAccessBookmarks(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ChangeAccessBookmarks(rctx, fc.Args["userId"].(uuid.UUID), fc.Args["newStatus"].(uuid.UUID))
+		return ec.resolvers.Mutation().ChangeAccessBookmarks(rctx, fc.Args["userId"].(uuid.UUID), fc.Args["newStatus"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2665,9 +2667,9 @@ func (ec *executionContext) _SettingsStatuses_id(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SettingsStatuses_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2677,7 +2679,7 @@ func (ec *executionContext) fieldContext_SettingsStatuses_id(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5245,13 +5247,20 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"nickname", "email", "nick_tag", "profilePicture", "description"}
+	fieldsInOrder := [...]string{"userId", "nickname", "email", "nick_tag", "profilePicture", "description"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
 		case "nickname":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nickname"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -5300,13 +5309,20 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"nickname", "email", "nick_tag", "profilePicture", "description"}
+	fieldsInOrder := [...]string{"userId", "nickname", "email", "nick_tag", "profilePicture", "description"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
 		case "nickname":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nickname"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -5323,7 +5339,7 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 			it.Email = data
 		case "nick_tag":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nick_tag"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
