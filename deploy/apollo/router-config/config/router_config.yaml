@@ -12,6 +12,12 @@ homepage:
 rhai:
   scripts: "/config/rhai"
 
+headers:
+  all:
+    request:
+      - propagate:
+          matching: "x-user-id"
+
 health_check:
   listen: 0.0.0.0:8088
   enabled: true
@@ -24,9 +30,7 @@ telemetry:
         service_name: "apollo-router"
 
 cors:
-  policies:
-    - origins:
-        - "http://localhost:5173"
+  allow_any_origin: true
   methods:
     - GET
     - POST
@@ -56,4 +60,4 @@ authentication:
           name: authz
 
 authorization:
-  require_authentication: true
+  require_authentication: false
