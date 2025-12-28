@@ -36,7 +36,7 @@ function App() {
 
           <Route path="/map" element={<MapPage />} />
           <Route path="/likes/feed" element={<LikedPins />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:id" element={<Profile />} />
 
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>

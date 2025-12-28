@@ -16,6 +16,8 @@ import CollectionGrid from './CollectionGrid';
 
 import placeholder_3 from '../assets/placeholder3.jpg';
 import placeholder_1 from '../assets/placeholder1.jpg';
+import {getUserIdFromToken} from '../auth/tokenStorage';
+
 
 import { mockPins, mockCollections } from '../utils/mockData';
 import {
@@ -92,7 +94,7 @@ const Profile = () => {
   /* =======================
      Константы для ID пользователей
   ======================= */
-  const TEMP_USER_ID = '00000000-0000-0000-0000-000000000001';
+  const TEMP_USER_ID = String(getUserIdFromToken());
   const TEMP_VIEWER_ID = '00000000-0000-0000-0000-000000000001';
 
   /* =======================
@@ -106,8 +108,8 @@ const Profile = () => {
   const handleCreatePin = () => navigate('/pin/create');
   const handleCreateCollection = () => navigate('/collection/create');
 
-  const handlePinClick = (pinId: string) => {
-    navigate(`/pin/${pinId}`);
+  const handlePinClick = (pinId: string, ownerId: string) => {
+    navigate(`/pin/${pinId}?ownerId=${ownerId}`);
   };
 
   const handleCollectionClick = (collectionId: string) => {

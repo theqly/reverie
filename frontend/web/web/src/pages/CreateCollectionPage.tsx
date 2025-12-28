@@ -5,6 +5,7 @@ import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header'; 
 import { createCollection } from "../services/collectionsService";
 import { validateImageFile } from '../services/imageService';
+import {getUserIdFromToken} from '../auth/tokenStorage';
 
 const CreateCollectionPage = () => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ const handleBack = () => {
 
   
   const handleSaveCollection = async () => {
-    const currentUser = "00000000-0000-0000-0000-000000000002"; 
+    const currentUser = getUserIdFromToken(); 
 
     setIsUploading(true);
     setUploadProgress(0);

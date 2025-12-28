@@ -5,6 +5,7 @@ import styles from './Feed.module.css';
 import Header from './Header';
 import PinGrid from './PinGrid';
 import CollectionGrid from './CollectionGrid';
+import {getUserIdFromToken} from '../auth/tokenStorage';
 
 import { mockPins, mockCollections } from '../utils/mockData';
 import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
@@ -43,8 +44,8 @@ const Feed = () => {
       ? 'Создать новый пин'
       : 'Создать новую подборку';
 
-  const handlePinClick = (pinId: string) => {
-    navigate(`/pin/${pinId}`);
+  const handlePinClick = (pinId: string, ownerId: string) => {
+    navigate(`/pin/${pinId}?ownerId=${ownerId}`);
   };
 
   const handleCollectionClick = (collectionId: string) => {
@@ -54,6 +55,8 @@ const Feed = () => {
   /* =======================
      Data loading
   ======================= */
+  let userIdd = getUserIdFromToken();
+  console.log("USER ID" + userIdd);
 
   const handleGetPins = async () => {
     setLoading(true);
@@ -61,15 +64,15 @@ const Feed = () => {
 
     try {
       const response = await getPinsByUser({
-        viewerId: '00000000-0000-0000-0000-000000000001',
-        userId: '00000000-0000-0000-0000-000000000001',
+        viewerId: String(getUserIdFromToken()),
+        userId: String(getUserIdFromToken()),
         limit: 20,
         offset: 0,
       });
 
       const response2 = await getPinsByUser({
-        viewerId: '00000000-0000-0000-0000-000000000001',
-        userId: '00000000-0000-0000-0000-000000000002',
+        viewerId: String(getUserIdFromToken()),
+        userId: String(getUserIdFromToken()),
         limit: 20,
         offset: 0,
       });
@@ -78,7 +81,7 @@ const Feed = () => {
       const pinsFromResponse1 = response 
         ? response.map(pin => ({
             ...pin,
-            authorId: '00000000-0000-0000-0000-000000000001'
+            authorId: String(getUserIdFromToken())
           }))
         : [];
 
@@ -86,13 +89,13 @@ const Feed = () => {
       const pinsFromResponse2 = response2
         ? response2.map(pin => ({
             ...pin,
-            authorId: '00000000-0000-0000-0000-000000000002'
+            authorId: String(getUserIdFromToken())
           }))
         : [];
 
       // Объединяем оба массива
       const combinedPins = [
-        ...pinsFromResponse1,
+        //...pinsFromResponse1,
         ...pinsFromResponse2
       ];
 

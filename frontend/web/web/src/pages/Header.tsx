@@ -3,12 +3,15 @@ import styles from './Header.module.css';
 import logo from '../assets/Reverie.svg';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from './ToastProvider'; // импортируем хук из провайдера
+import {getUserIdFromToken} from '../auth/tokenStorage';
+
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast(); // теперь можем вызывать showToast
+  let id = getUserIdFromToken();
 
-  const handleProfile = () => navigate('/profile');
+  const handleProfile = () => navigate(`/profile/${id}`);
   const handleLogoClick = () => navigate('/feed');
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

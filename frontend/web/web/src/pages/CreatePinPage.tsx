@@ -10,6 +10,7 @@ import MapModal from './MapModal';
 import { validateImageFile } from '../services/imageService';
 import { useToast } from './ToastProvider';
 import { addPinToBoard } from "../services/addPinToBoardService";
+import {getUserIdFromToken} from '../auth/tokenStorage';
 
 const CreatePinPage = () => {
   const navigate = useNavigate();
@@ -187,7 +188,7 @@ const CreatePinPage = () => {
       description: pinInfo,
       latitude: pinLatitude,
       longitude: pinLongitude,
-      ownerId: '00000000-0000-0000-0000-000000000001', // временно, заглушка
+      ownerId: String(getUserIdFromToken()), // временно, заглушка
       coverImages: images
     };
 

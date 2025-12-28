@@ -4,6 +4,7 @@ import styles from './CreateCollectionPage.module.css';
 import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header';
 import { useToast } from './ToastProvider';
+import {getUserIdFromToken} from '../auth/tokenStorage';
 
 import {
   getCollectionById as getMockCollectionById,
@@ -108,7 +109,7 @@ const EditCollectionPage = () => {
 
     try {
       const payload: UpdateBoardInput = {
-        userId: originalCollection.ownerId,
+        userId: getUserIdFromToken(),
         name: collectionName.trim(),
         description: collectionInfo.trim(),
         accessLevel: AccessLevelType.Public,

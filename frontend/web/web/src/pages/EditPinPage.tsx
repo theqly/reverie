@@ -7,6 +7,7 @@ import InviteCollaboratorModal from './InviteCollaboratorModal';
 import MapModal from './MapModal';
 import { getPinById as getMockPinById } from '../utils/mockData';
 import { useToast } from './ToastProvider';
+import {getUserIdFromToken} from '../auth/tokenStorage';
 import { 
   updatePin, 
   getPinById as getBackendPinById,
@@ -172,7 +173,7 @@ const EditPinPage = () => {
         description: pinInfo,
         latitude: pinLatitude,
         longitude: pinLongitude,
-        userId: '00000000-0000-0000-0000-000000000002' // TODO: взять из контекста/авторизации
+        userId: getUserIdFromToken(), // TODO: взять из контекста/авторизации
       });
 
       if (!updatedPin) {

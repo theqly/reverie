@@ -1,4 +1,4 @@
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "./Header";
 import MapShower from "./MapShower";
@@ -7,6 +7,8 @@ import placeholder_1 from "../assets/placeholder1.jpg";
 import ReactionBlock from "./ReactionBlock";
 import CommentSection from "./CommentSection";
 import { useToast } from './ToastProvider';
+import {getUserIdFromToken} from '../auth/tokenStorage';
+
 
 
 
@@ -21,7 +23,7 @@ import { addPinToBoard } from "../services/addPinToBoardService";
 import { getOwnBoardsByUser } from "../services/profileService";
 
 const FALLBACK_LIKES = 226;
-const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
+const TEMP_USER_ID = getUserIdFromToken();
 
 // Интерфейс для подборки
 interface Collection {
@@ -44,6 +46,8 @@ const PinViewPage = () => {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const { showToast } = useToast();
+    const [searchParams] = useSearchParams();
+
 
 
   // Состояния для модального окна и подборок
@@ -322,7 +326,7 @@ const handleSelectCollection = async (collectionId: string, collectionName: stri
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Пин от <Link to="/profile" className={styles.authorA}>@{getAuthor()}</Link>
+              Пин от <Link to="/profile" className={styles.authorA}>@{searchParams.get('ownerId')}</Link>
             </h2>
             <button
               className={styles.settingsBtn}
