@@ -82,7 +82,7 @@ const handleBack = () => {
 
       if (result.success && result.boardId) {
         console.log("Коллекция создана:", result);
-        navigate(`/collection/${result.boardId}`);
+        navigate(`/feed`);
       } else {
         setUploadError(result.error || 'Не удалось создать коллекцию');
       }
@@ -108,7 +108,7 @@ const handleBack = () => {
       <main className={styles.collectionContent}>
         <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn}></button>
-            <h1>Создание подборки @nickname</h1>
+            <h1>Создание подборки</h1>
         </div>
 
         <div className={styles.gridWrapper}>

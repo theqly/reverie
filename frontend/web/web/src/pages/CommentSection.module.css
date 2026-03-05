@@ -22,3 +22,18 @@
   background: #f9f9f9;
   border-radius: 8px;
 }
+.commentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.commentInput {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.commentButton {
+  align-self: flex-end;
+}

@@ -23,7 +23,7 @@ function App() {
     <Router>
       <ToastProvider>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Feed />} />
           <Route path="/collection/create" element={<CreateCollectionPage />} />
           <Route path="/pin/create" element={<CreatePinPage />} />
           <Route path="/pin/edit/:id" element={<EditPinPage />} />

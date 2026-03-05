@@ -1,4 +1,4 @@
-import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import Header from "./Header";
 import MapShower from "./MapShowBoard";
@@ -7,7 +7,7 @@ import placeholder_1 from "../assets/placeholder1.jpg";
 import placeholder from "../assets/placeholder1.jpg";
 import CommentSection from "./CommentSection";
 import ReactionBlock from "./ReactionBlock";
-import PinGrid from "./PinGrid";
+import PinGrid from "./PinGridNoAuthor";
 
 // моки
 import { getCollectionById, getCollectionPins } from "../utils/mockData";
@@ -18,7 +18,6 @@ import {
   getPinById as getPinByIdService // Добавляем сервис для получения пина по ID
 } from "../services/collectionsService";
 
-
 // сервис для получения полной информации о пине
 import { getPinById as getFullPinInfo } from "../services/pinService";
 
@@ -27,9 +26,12 @@ import { countReactionsToBoard, reactToBoard } from "../services/reactionsServic
 import { isBoardLiked, isBoardBookmarked } from "../services/collectionsService";
 import { toggleBookmarkToBoard } from "../services/bookmarksService";
 
+// для получения ID текущего пользователя и данных пользователя
+import { getUserIdFromToken } from '../auth/tokenStorage';
+import { findUser } from '../services/profileService';
+
 const FALLBACK_LIKES = 0;
 const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
-const TEMP_USER_ID = "TEMP_USER_ID";
 
 // Генерация случайных координат в пределах Москвы и области
 const generateRandomMoscowCoords = (): [number, number] => {
@@ -59,10 +61,52 @@ const CollectionViewPage = () => {
   const [likesCount, setLikesCount] = useState<number>(FALLBACK_LIKES);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
-    const [searchParams] = useSearchParams();
 
+  // Состояния для данных о владельце
+  const [ownerData, setOwnerData] = useState<{
+    id: string;
+    nickname: string;
+    profilePicture?: string;
+  } | null>(null);
+  const [loadingOwner, setLoadingOwner] = useState(false);
 
-    const getPinImageUrl = (pin: any) => {
+  // ID текущего пользователя
+  const currentUserId = String(getUserIdFromToken());
+  // ID владельца подборки (из данных подборки)
+  const collectionOwnerId = collection?.ownerId;
+
+  // Проверяем, является ли текущий пользователь владельцем подборки
+  const isCollectionOwner = collectionOwnerId === currentUserId;
+
+  // Функция для загрузки данных о владельце
+  const loadOwnerData = async (ownerId: string) => {
+    if (!ownerId) return;
+    
+    setLoadingOwner(true);
+    try {
+      const user = await findUser({ id: ownerId });
+      if (user) {
+        setOwnerData({
+          id: user.id,
+          nickname: user.nickname || user.nickTag || "user",
+          profilePicture: user.profilePicture
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки данных владельца:', error);
+    } finally {
+      setLoadingOwner(false);
+    }
+  };
+
+  // Загружаем данные владельца при получении collection
+  useEffect(() => {
+    if (collection?.ownerId) {
+      loadOwnerData(collection.ownerId);
+    }
+  }, [collection?.ownerId]);
+
+  const getPinImageUrl = (pin: any) => {
     if (pin.image) return pin.image;
     if (pin.images && pin.images[0] && pin.images[0].imageUrl) {
       return pin.images[0].imageUrl;
@@ -118,8 +162,8 @@ const CollectionViewPage = () => {
           name: fullPin.name || fullPin.title || "Без названия",
           description: fullPin.description || "",
           image: getFullPinImageUrl(fullPin),
-          author: fullPin.author || fullPin.owner?.nickname || "jane_anderson",
-          authorAvatar: placeholder_1,
+          author: ownerData?.nickname || "jane_anderson",
+          authorAvatar: ownerData?.profilePicture || placeholder_1,
           likes: fullPin.rating || fullPin.likes || 0,
           latitude: fullPin.latitude,
           longitude: fullPin.longitude,
@@ -140,8 +184,8 @@ const CollectionViewPage = () => {
       name: "Без названия",
       description: "",
       image: placeholder_1,
-      author: "jane_anderson",
-      authorAvatar: placeholder_1,
+      author: ownerData?.nickname || "jane_anderson",
+      authorAvatar: ownerData?.profilePicture || placeholder_1,
       likes: 0,
       latitude: null,
       longitude: null
@@ -222,7 +266,7 @@ const CollectionViewPage = () => {
               const formattedPins = mockPins.map((pin: any) => ({
                 ...pin,
                 image: getPinImageUrl(pin),
-                author: pin.author || "jane_anderson",
+                author: "jane_anderson",
                 authorAvatar: placeholder_1,
                 description: pin.description || "",
                 likes: pin.likes || 0,
@@ -250,7 +294,7 @@ const CollectionViewPage = () => {
           const formattedPins = mockPins.map((pin: any) => ({
             ...pin,
             image: getPinImageUrl(pin),
-            author: pin.author || "jane_anderson",
+            author: "jane_anderson",
             authorAvatar: placeholder_1,
             description: pin.description || "",
             likes: pin.likes || 0,
@@ -305,9 +349,6 @@ const CollectionViewPage = () => {
     loadReactions();
   }, [collectionId]);
 
-  // Вспомогательная функция для получения URL изображения пина
-
-
   // Функция для получения полного URL изображения из деталей пина
   const getFullPinImageUrl = (fullPin: any) => {
     if (fullPin.images && fullPin.images[0] && fullPin.images[0].imageUrl) {
@@ -346,9 +387,9 @@ const CollectionViewPage = () => {
     return collection?.description || "";
   };
 
-  // Получаем автора коллекции
-  const getCollectionAuthor = () => {
-    return collection?.author || collection?.authorName || "jane_anderson";
+  // Получаем никнейм автора из данных владельца
+  const getCollectionAuthorNickname = () => {
+    return ownerData?.nickname || "jane_anderson";
   };
 
   const handleLike = async (nextLiked: boolean) => {
@@ -358,7 +399,7 @@ const CollectionViewPage = () => {
       await reactToBoard({
         boardId: collectionId!,
         reactionId: LIKE_REACTION_ID,
-        userId: TEMP_USER_ID,
+        userId: currentUserId,
       });
     } catch (error) {
       console.error("Failed to toggle board reaction", error);
@@ -368,19 +409,14 @@ const CollectionViewPage = () => {
   const handleBookmark = async (nextBookmarked: boolean) => {
     setBookmarked(nextBookmarked);
     try {
-      await toggleBookmarkToBoard(collectionId!, TEMP_USER_ID);
+      await toggleBookmarkToBoard(collectionId!, currentUserId);
     } catch (error) {
       console.error("Failed to toggle board bookmark", error);
     }
   };
 
   const handleBack = () => {
-    const searchParams = new URLSearchParams(location.search);
-    const from = searchParams.get('from');
-    
-    if (from) {
-      navigate(`/${from}`);
-    } else if (document.referrer && document.referrer.includes(window.location.origin)) {
+    if (document.referrer && document.referrer.includes(window.location.origin)) {
       const referrerPath = new URL(document.referrer).pathname;
       navigate(referrerPath);
     } else {
@@ -390,7 +426,11 @@ const CollectionViewPage = () => {
 
   // Обработчик клика по пину - открываем полную страницу
   const handlePinClick = (pinId: string) => {
-    navigate(`/pin/${pinId}?from=collection/${collectionId}`);
+    if (collectionOwnerId) {
+      navigate(`/pin/${pinId}?from=collection/${collectionId}`);
+    } else {
+      navigate(`/pin/${pinId}?from=collection/${collectionId}`);
+    }
   };
 
   if (loading) {
@@ -419,8 +459,8 @@ const CollectionViewPage = () => {
 
   const comments = [
     {
-      authorName: getCollectionAuthor(),
-      authorAvatar: placeholder_1,
+      authorName: getCollectionAuthorNickname(),
+      authorAvatar: ownerData?.profilePicture || placeholder_1,
       commentText: "Отличная подборка! Спасибо за рекомендации.",
       commentDate: "2 часа назад",
     },
@@ -446,12 +486,26 @@ const CollectionViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Подборка от <Link to={`/profile/${searchParams.get('ownerId')}`} className={styles.authorA}>@{searchParams.get('owner')}</Link>
+              Подборка от{" "}
+              {loadingOwner ? (
+                <span className={styles.authorA}>Загрузка...</span>
+              ) : (
+                <Link 
+                  to={`/profile/${collectionOwnerId}`} 
+                  className={styles.authorA}
+                >
+                  @{getCollectionAuthorNickname()}
+                </Link>
+              )}
             </h2>
-            <button
-              className={styles.settingsBtn}
-              onClick={() => navigate(`/collection/edit/${collectionId}`)}
-            />
+            
+            {/* Кнопка редактирования показывается только владельцу подборки */}
+            {isCollectionOwner && (
+              <button
+                className={styles.settingsBtn}
+                onClick={() => navigate(`/collection/edit/${collectionId}`)}
+              />
+            )}
           </div>
 
           <div className={styles.pinCard}>
@@ -511,12 +565,14 @@ const CollectionViewPage = () => {
                 <p className={styles.placeholderText}>
                   Когда тут будут пины, мы покажем их на карте
                 </p>
-                <button 
-                  className={styles.addPinButton}
-                  onClick={() => navigate(`/pin/create?collectionId=${collectionId}`)}
-                >
-                  Добавить первое место
-                </button>
+                {isCollectionOwner && (
+                  <button 
+                    className={styles.addPinButton}
+                    onClick={() => navigate(`/pin/create?collectionId=${collectionId}`)}
+                  >
+                    Добавить первое место
+                  </button>
+                )}
               </div>
             </div>
           ) : (

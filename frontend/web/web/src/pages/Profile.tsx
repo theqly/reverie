@@ -19,9 +19,6 @@ import placeholder_1 from '../assets/placeholder1.jpg';
 import {getUserIdFromToken} from '../auth/tokenStorage';
 import { useParams } from "react-router-dom";
 
-
-
-import { mockPins, mockCollections } from '../utils/mockData';
 import {
   findUser,
   getPinsByUser,
@@ -100,6 +97,8 @@ const Profile = () => {
   const TEMP_USER_ID = id;
   console.log("temp" + TEMP_USER_ID);
   const TEMP_VIEWER_ID = String(getUserIdFromToken());
+  const isOwnProfile = TEMP_USER_ID === TEMP_VIEWER_ID;
+
 
   /* =======================
      Навигация
@@ -243,26 +242,12 @@ const Profile = () => {
         );
         setPins(pinsWithLocation);
       } else {
-        console.log('[Profile] Использовали моки пинов');
-        const formattedMockPins = mockPins.map(pin => ({
-          ...pin,
-          image: placeholder_1,
-          author: userData?.nickname || 'jane_anderson',
-          authorAvatar: userData?.profilePicture || placeholder_1,
-          location: pin.location || 'Не указано'
-        }));
-        setPins(formattedMockPins);
+        console.log('[Profile] У пользователя нет пинов');
+        setPins([]);
       }
     } catch (err) {
       console.error('[Profile] getPins error:', err);
-      const formattedMockPins = mockPins.map(pin => ({
-        ...pin,
-        image: placeholder_1,
-        author: userData?.nickname || 'jane_anderson',
-        authorAvatar: userData?.profilePicture || placeholder_1,
-        location: pin.location || 'Не указано'
-      }));
-      setPins(formattedMockPins);
+      setPins([]);
       setError('Не удалось загрузить пины');
     } finally {
       setLoading(false);
@@ -299,26 +284,12 @@ const Profile = () => {
         }));
         setCollections(formattedCollections);
       } else {
-        console.log('[Profile] Использовали моки подборок');
-        const formattedMockCollections = mockCollections.map(col => ({
-          ...col,
-          image: placeholder_1,
-          author: userData.nickname,
-          authorAvatar: userData.profilePicture || placeholder_1,
-          pinsCount: col.pinsCount || 0
-        }));
-        setCollections(formattedMockCollections);
+        console.log('[Profile] У пользователя нет подборок');
+        setCollections([]);
       }
     } catch (err) {
       console.error('[Profile] getCollections error:', err);
-      const formattedMockCollections = mockCollections.map(col => ({
-        ...col,
-        image: placeholder_1,
-        author: userData?.nickname || 'jane_anderson',
-        authorAvatar: userData?.profilePicture || placeholder_1,
-        pinsCount: col.pinsCount || 0
-      }));
-      setCollections(formattedMockCollections);
+      setCollections([]);
       setError('Не удалось загрузить подборки');
     } finally {
       setLoading(false);
@@ -585,24 +556,38 @@ const Profile = () => {
 
             {/* Правая часть — кнопки */}
             <div className={styles.btn_container} style={{ display: "flex" }}>
-              <button
-                className={styles.edit_btn}
-                onClick={() => setEditOpen(true)}
-              >
-                Редактировать профиль
-              </button>
+              {isOwnProfile && (
+                <>
+                  <button
+                    className={styles.edit_btn}
+                    onClick={() => setEditOpen(true)}
+                  >
+                    Редактировать профиль
+                  </button>
 
-              <button
-                className={styles.settingsBtn}
-                onClick={() => setSettingsOpen(true)}
-                title="Настройки"
-              />
-
+                  <button
+                    className={styles.settingsBtn}
+                    onClick={() => setSettingsOpen(true)}
+                    title="Настройки"
+                  />
+                </>
+              )}
+            {!isOwnProfile && (
               <button
                 className={styles.shareBtn}
                 onClick={() => setShareOpen(true)}
                 title="Поделиться профилем"
-              />
+                    style={{ marginLeft: 'auto' }}
+
+                />
+              )}
+              {isOwnProfile && (
+              <button
+                className={styles.shareBtn}
+                onClick={() => setShareOpen(true)}
+                title="Поделиться профилем"
+                />
+              )}
             </div>
 
           </div>
@@ -610,20 +595,25 @@ const Profile = () => {
           <div className={styles.bio}>{getBio()}</div>
 
           <div style={{ display: "flex" }}>
-            <button
-              className={styles.editBtn}
-              onClick={() => setFollowing(prev => !prev)}
-            >
-              {isFollowing ? 'Отписаться' : 'Подписаться'}
-            </button>
+            {!isOwnProfile && (
+              <>
+                <button
+                  className={styles.editBtn}
+                  onClick={() => setFollowing(prev => !prev)}
+                >
+                  {isFollowing ? 'Отписаться' : 'Подписаться'}
+                </button>
 
-            <button
-              className={styles.reportBtn}
-              onClick={() => setReportOpen(true)}
-              title="Пожаловаться на профиль"
-            >
-              !
-            </button>
+                <button
+                  className={styles.reportBtn}
+                  onClick={() => setReportOpen(true)}
+                  title="Пожаловаться на профиль"
+                >
+                  !
+                </button>
+              </>
+            )}
+
           </div>
         </section>
 
@@ -660,18 +650,24 @@ const Profile = () => {
                 Создать подборку
               </button>
 
-              <CollectionGrid
-                collections={collections.map(col => ({
-                  ...col,
-                  image: getImageUrl(col),
-                  authorAvatar: getProfilePicture(),
-                  title: col.name || col.title || 'Без названия',
-                  pinsCount: col.pinsCount || (col.pins ? col.pins.length : 0),
-                  description: col.description || '',
-                  author: getNickTag()
-                }))}
-                onCollectionClick={handleCollectionClick}
-              />
+              {collections.length > 0 ? (
+                <CollectionGrid
+                  collections={collections.map(col => ({
+                    ...col,
+                    image: getImageUrl(col),
+                    authorAvatar: getProfilePicture(),
+                    title: col.name || col.title || 'Без названия',
+                    pinsCount: col.pinsCount || (col.pins ? col.pins.length : 0),
+                    description: col.description || '',
+                    author: getNickTag()
+                  }))}
+                  onCollectionClick={handleCollectionClick}
+                />
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>У вас пока нет подборок</p>
+                </div>
+              )}
             </>
           )}
 
@@ -684,18 +680,24 @@ const Profile = () => {
                 Создать пин
               </button>
 
-              <PinGrid 
-                pins={pins.map(pin => ({
-                  ...pin,
-                  image: getImageUrl(pin),
-                  title: pin.name || pin.title || 'Без названия',
-                  author: getNickTag(),
-                  authorAvatar: getProfilePicture(),
-                  location: pin.location || 'Не указано',
-                  likes: pin.rating || pin.likes || 0
-                }))} 
-                onPinClick={handlePinClick} 
-              />
+              {pins.length > 0 ? (
+                <PinGrid 
+                  pins={pins.map(pin => ({
+                    ...pin,
+                    image: getImageUrl(pin),
+                    title: pin.name || pin.title || 'Без названия',
+                    author: getNickTag(),
+                    authorAvatar: getProfilePicture(),
+                    location: pin.location || 'Не указано',
+                    likes: pin.rating || pin.likes || 0
+                  }))} 
+                  onPinClick={handlePinClick} 
+                />
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>У вас пока нет пинов</p>
+                </div>
+              )}
             </>
           )}
 

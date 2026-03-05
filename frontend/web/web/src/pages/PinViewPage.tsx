@@ -1,4 +1,4 @@
-import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "./Header";
 import MapShower from "./MapShower";
@@ -7,10 +7,7 @@ import placeholder_1 from "../assets/placeholder1.jpg";
 import ReactionBlock from "./ReactionBlock";
 import CommentSection from "./CommentSection";
 import { useToast } from './ToastProvider';
-import {getUserIdFromToken} from '../auth/tokenStorage';
-
-
-
+import { getUserIdFromToken } from '../auth/tokenStorage';
 
 // mock + backend
 import { getPinById as getMockPinById } from "../utils/mockData";
@@ -20,7 +17,7 @@ import { toggleBookmarkToPin } from "../services/bookmarksService";
 import { isPinLiked, isPinBookmarked } from "../services/pinService";
 import { addPinToBoard } from "../services/addPinToBoardService";
 // Добавляем импорт сервиса для работы с подборками
-import { getOwnBoardsByUser } from "../services/profileService";
+import { getOwnBoardsByUser, findUser } from "../services/profileService";
 
 const FALLBACK_LIKES = 226;
 const TEMP_USER_ID = getUserIdFromToken();
@@ -32,6 +29,13 @@ interface Collection {
   description?: string;
   author?: string;
   // другие поля при необходимости
+}
+
+// Интерфейс для данных владельца
+interface OwnerData {
+  id: string;
+  nickname: string;
+  profilePicture?: string;
 }
 
 const PinViewPage = () => {
@@ -46,15 +50,50 @@ const PinViewPage = () => {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const { showToast } = useToast();
-  const [searchParams] = useSearchParams();
 
-
+  // Состояния для данных владельца
+  const [ownerData, setOwnerData] = useState<OwnerData | null>(null);
+  const [loadingOwner, setLoadingOwner] = useState(false);
 
   // Состояния для модального окна и подборок
   const [showCollectionsModal, setShowCollectionsModal] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loadingCollections, setLoadingCollections] = useState(false);
   const [errorCollections, setErrorCollections] = useState<string | null>(null);
+
+  // Получаем ownerId из данных пина
+  const ownerId = pin?.owner?.id;
+
+  // Проверяем, является ли текущий пользователь владельцем пина
+  const isPinOwner = ownerId === TEMP_USER_ID;
+
+  // Функция для загрузки данных владельца
+  const loadOwnerData = async (ownerId: string) => {
+    if (!ownerId) return;
+    
+    setLoadingOwner(true);
+    try {
+      const user = await findUser({ id: ownerId });
+      if (user) {
+        setOwnerData({
+          id: user.id,
+          nickname: user.nickname || user.nickTag || "user",
+          profilePicture: user.profilePicture
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки данных владельца:', error);
+    } finally {
+      setLoadingOwner(false);
+    }
+  };
+
+  // Загружаем данные владельца при получении pin
+  useEffect(() => {
+    if (ownerId) {
+      loadOwnerData(ownerId);
+    }
+  }, [ownerId]);
 
   useEffect(() => {
     if (!pinId) return;
@@ -186,12 +225,7 @@ const PinViewPage = () => {
   };
 
   const handleBack = () => {
-    const searchParams = new URLSearchParams(location.search);
-    const from = searchParams.get('from');
-    
-    if (from) {
-      navigate(`/${from}`);
-    } else if (document.referrer && document.referrer.includes(window.location.origin)) {
+    if (document.referrer && document.referrer.includes(window.location.origin)) {
       const referrerPath = new URL(document.referrer).pathname;
       navigate(referrerPath);
     } else {
@@ -210,49 +244,30 @@ const PinViewPage = () => {
     setErrorCollections(null);
   };
 
-  // Обработчик выбора подборки
-// Импортируем функцию addPinToBoard
-
-// В компоненте, где вызывается handleSelectCollection:
-const handleSelectCollection = async (collectionId: string, collectionName: string) => {
-  if (!pinId) {
-    console.error("Не указан pinId для добавления в подборку");
-    return;
-  }
-
-  console.log(`Добавляем пин ${pinId} в подборку ${collectionName} (${collectionId})`);
-  
-  try {
-    // Вызываем API для добавления пина в подборку
-    const result = await addPinToBoard(pinId, collectionId);
-    
-    if (result) {
-      //console.log("Пин успешно добавлен в подборку");
-      showToast(`Пин добавлен в подборку!`);
-
-      
-      // Можно показать уведомление пользователю
-      // Пример с кастомным уведомлением:
-      //alert(`Пин успешно добавлен в подборку "${collectionName}"`);
-      
-      // Или использовать toast/notification компонент:
-      // showNotification('success', `Пин добавлен в "${collectionName}"`);
-      
-      // Если нужно обновить состояние
-      // Например, если есть локальное состояние с подборками пользователя
-      // updateCollectionsState(collectionId, pinId);
-    } else {
-      console.error("Не удалось добавить пин в подборку");
-      alert("Подборка уже содержит этот пин");
+  const handleSelectCollection = async (collectionId: string, collectionName: string) => {
+    if (!pinId) {
+      console.error("Не указан pinId для добавления в подборку");
+      return;
     }
-  } catch (error) {
-    console.error("Ошибка при добавлении пина в подборку:", error);
-    alert("Произошла ошибка при добавлении пина в подборку.");
-  }
-  
-  // Закрываем модальное окно
-  handleCloseModal();
-};
+
+    console.log(`Добавляем пин ${pinId} в подборку ${collectionName} (${collectionId})`);
+    
+    try {
+      const result = await addPinToBoard(pinId, collectionId);
+      
+      if (result) {
+        showToast(`Пин добавлен в подборку!`);
+      } else {
+        console.error("Не удалось добавить пин в подборку");
+        alert("Подборка уже содержит этот пин");
+      }
+    } catch (error) {
+      console.error("Ошибка при добавлении пина в подборку:", error);
+      alert("Произошла ошибка при добавлении пина в подборку.");
+    }
+    
+    handleCloseModal();
+  };
 
   if (loading) return (
     <div className={styles.pageWrapper}>
@@ -277,8 +292,8 @@ const handleSelectCollection = async (collectionId: string, collectionName: stri
   // Комментарии
   const comments = [
     {
-      authorName: pin?.author || "jane_anderson",
-      authorAvatar: placeholder_1,
+      authorName: ownerData?.nickname || "jane_anderson",
+      authorAvatar: ownerData?.profilePicture || placeholder_1,
       commentText: "Отличное фото! Очень красивое место.",
       commentDate: "2 часа назад",
     },
@@ -308,9 +323,9 @@ const handleSelectCollection = async (collectionId: string, collectionName: stri
     return pin.name || pin.title || "Без названия";
   };
 
-  // Получаем автора
-  const getAuthor = () => {
-    return pin.author || "jane_anderson";
+  // Получаем никнейм автора
+  const getAuthorNickname = () => {
+    return ownerData?.nickname || "jane_anderson";
   };
 
   // Получаем описание
@@ -326,12 +341,23 @@ const handleSelectCollection = async (collectionId: string, collectionName: stri
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Пин от <Link to={`/profile/${searchParams.get('ownerId')}`} className={styles.authorA}>@{searchParams.get('owner')}</Link>
+              Пин от{" "}
+              {loadingOwner ? (
+                <span className={styles.authorA}>Загрузка...</span>
+              ) : (
+                <Link to={`/profile/${ownerId}`} className={styles.authorA}>
+                  @{getAuthorNickname()}
+                </Link>
+              )}
             </h2>
-            <button
-              className={styles.settingsBtn}
-              onClick={() => navigate(`/pin/edit/${pinId}`)}
-            />
+            
+            {/* Кнопка редактирования показывается только владельцу пина */}
+            {isPinOwner && (
+              <button
+                className={styles.settingsBtn}
+                onClick={() => navigate(`/pin/edit/${pinId}`)}
+              />
+            )}
           </div>
 
           <div className={styles.pinCardWrapper}>

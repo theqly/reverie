@@ -117,7 +117,7 @@ const CreatePinPage = () => {
         showToast(`Пин добавлен в "${collectionName}"`);
         
         // Переходим на страницу подборки
-        navigate(`/collection/${collectionId}`);
+        navigate(`/feed`);
       } else {
         console.error("Не удалось добавить пин в подборку");
         showToast("Не удалось добавить пин в подборку", true);
@@ -220,17 +220,17 @@ const CreatePinPage = () => {
           if (addedToCollection) {
             // Переходим на страницу подборки
             setTimeout(() => {
-              navigate(`/collection/${collectionId}`);
+              navigate(`/feed`);
             }, 1000);
           } else {
             // Если не удалось добавить в подборку, переходим на страницу пина
             showToast("Пин создан, но не добавлен в подборку", true);
-            navigate(`/pin/${newPinId}`);
+            navigate(`/feed`);
           }
         } else {
           // Если нет collectionId, просто переходим на страницу пина
           showToast("Пин успешно создан!");
-          navigate(`/pin/${newPinId}`);
+          navigate(`/feed`);
         }
       } else {
         setUploadError('Не удалось создать пин');
@@ -257,7 +257,7 @@ const CreatePinPage = () => {
     if (collectionId) {
       return "Добавить пин в подборку";
     }
-    return "Новый пин от @nickname";
+    return "Новый пин";
   };
 
   return (

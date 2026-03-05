@@ -786,7 +786,7 @@ export type GetPinByIdQueryVariables = Exact<{
 }>;
 
 
-export type GetPinByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
+export type GetPinByIdQuery = { __typename?: 'Query', pin?: { __typename?: 'Pin', id: any, name: string, latitude: number, longitude: number, description?: string | null, rating: number, owner?: { __typename?: 'User', id: any}, images?: Array<{ __typename?: 'PinImage', id: any, orderNumber: number, imageUrl: string }> | null } | null };
 
 export type GetBoardByIdQueryVariables = Exact<{
   id: Scalars['UUID']['input'];
@@ -1797,6 +1797,9 @@ export const GetPinByIdDocument = gql`
     longitude
     description
     rating
+    owner {
+      id
+    }
     images {
       id
       orderNumber

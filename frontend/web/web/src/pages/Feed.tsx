@@ -27,7 +27,6 @@ const Feed = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const UUID = String(getUserIdFromToken());
 
   /* =======================
      Navigation
@@ -57,9 +56,8 @@ const Feed = () => {
   /* =======================
      Data loading
   ======================= */
-  let userIdd = getUserIdFromToken();
-  let UUID2 = '458c47be-bcab-4572-bf06-bafbc7c536ec';
-  console.log("USER ID" + userIdd);
+  const UUID = String(getUserIdFromToken());
+  const UUID2 = '458c47be-bcab-4572-bf06-bafbc7c536ec';
 
   const handleGetPins = async () => {
     setLoading(true);
@@ -67,7 +65,7 @@ const Feed = () => {
 
     try {
       const response = await getPinsByUser({
-        viewerId: UUID2,
+        viewerId: UUID,
         userId: UUID2,
         limit: 20,
         offset: 0,
@@ -93,8 +91,8 @@ const Feed = () => {
       const pinsFromResponse2 = response2
         ? response2.map(pin => ({
             ...pin,
-            authorId: String(getUserIdFromToken()),
-            ownerId: String(getUserIdFromToken())
+            authorId: UUID,
+            ownerId: UUID
           }))
         : [];
 
@@ -173,7 +171,7 @@ const Feed = () => {
     try {
       const [response, response2] = await Promise.all([
         getOwnBoardsByUser({
-          userId: UUID,
+          userId: UUID2,
           limit: 20,
           offset: 0,
         }),
@@ -187,7 +185,7 @@ const Feed = () => {
       const collectionsFromResponse1 = response 
         ? response.map(col => ({
             ...col,
-            authorId: UUID
+            authorId: UUID2
           }))
         : [];
 
@@ -201,7 +199,7 @@ const Feed = () => {
 
       // Объединяем оба массива
       const combinedCollections = [
-        //...collectionsFromResponse1,
+        ...collectionsFromResponse1,
         ...collectionsFromResponse2
       ];
 

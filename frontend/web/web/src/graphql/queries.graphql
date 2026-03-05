@@ -303,6 +303,9 @@ query GetPinById($id: UUID!) {
     longitude
     description
     rating
+    owner {
+      id
+    }
     images {
       id
       orderNumber
