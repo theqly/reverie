@@ -1,61 +1,10 @@
 scalar UUID
 scalar Time
 
-type Pin {
-  pin_id: UUID!
-  name: String!
-  owner_id: UUID!
-  description: String
-  latitude: Float
-  longitude: Float
-  address: String
-  rating: Float
-  created_at: String!
-  saved_at: String!
-  access_level: String!
-  place_id: UUID
-  place_name: String
-  place_latitude: Float
-  place_longitude: Float
-  place_address: String
-  place_purpose_name: String
-  place_type: String
-  likes_count: Int
-  comments_count: Int
-  bookmarks_count: Int
-}
-
-type Board {
-  board_id: UUID!
-  name: String!
-  access_level: String!
-  owner_id: UUID!
-  owner_type: String!
-  created_at: String!
-  saved_at: String!
-  likes_count: Int
-  comments_count: Int
-  bookmarks_count: Int
-  pin_ids: [UUID!]!
-  group_member_ids: [UUID!]!
-}
-
-type User {
-  user_id: UUID!
-  nickname: String!
-  nick_tag: String
-  email: String!
-  description: String
-  user_rating: Float
-  status: String!
-  followers_count: Int
-  followings_count: Int
+extend type Pin @key(fields: "id") {
+  id: UUID! @external
 }
 
 type Query {
-  searchPins(query: String!): [Pin!]!
-  searchBoards(query: String!): [Board!]!
-  searchUsers(query: String!): [User!]!
-  feedPins(userID: UUID!): [Pin!]!
-  feedBoards(userID: UUID!): [Board!]!
+  feed: [Pin!]!
 }
