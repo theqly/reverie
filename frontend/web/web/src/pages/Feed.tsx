@@ -31,9 +31,7 @@ const Feed = () => {
   };
 
   const getPlusButtonTitle = () =>
-    activeTab === 'pins'
-      ? 'Создать новый пин'
-      : 'Создать новую подборку';
+    activeTab === 'pins' ? 'Создать новый пин' : 'Создать новую подборку';
 
   const handlePinClick = (pinId: string) => {
     navigate(`/pin/${pinId}`);
@@ -58,7 +56,7 @@ const Feed = () => {
       if (response && response.length > 0) {
         setPins(response);
       } else {
-        console.log("Использовали моки");
+        console.log('Использовали моки');
         setPins(mockPins);
       }
     } catch (err) {
@@ -84,7 +82,7 @@ const Feed = () => {
       if (response && response.length > 0) {
         setCollections(response);
       } else {
-        console.log("Использовали моки");
+        console.log('Использовали моки');
         setCollections(mockCollections);
       }
     } catch (err) {
@@ -107,15 +105,11 @@ const Feed = () => {
   }, [activeTab]);
 
   const filteredPins = onlySubscriptions
-    ? pins.filter(pin =>
-        ['jane_anderson', 'alex_smith'].includes(pin.author)
-      )
+    ? pins.filter((pin) => ['jane_anderson', 'alex_smith'].includes(pin.author))
     : pins;
 
   const filteredCollections = onlySubscriptions
-    ? collections.filter(col =>
-        ['jane_anderson', 'hana_tanaka'].includes(col.author)
-      )
+    ? collections.filter((col) => ['jane_anderson', 'hana_tanaka'].includes(col.author))
     : collections;
 
   return (
@@ -134,20 +128,13 @@ const Feed = () => {
               title={getPlusButtonTitle()}
             >
               <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 5V19M5 12H19"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+                <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
 
             <div className={styles.tabSwitcher}>
               <button
-                className={`${styles.tabButton} ${
-                  activeTab === 'pins' ? styles.active : ''
-                }`}
+                className={`${styles.tabButton} ${activeTab === 'pins' ? styles.active : ''}`}
                 onClick={() => setActiveTab('pins')}
               >
                 Пины
@@ -162,10 +149,7 @@ const Feed = () => {
                 Подборки
               </button>
 
-              <div
-                className={styles.tabIndicator}
-                data-active={activeTab}
-              />
+              <div className={styles.tabIndicator} data-active={activeTab} />
             </div>
           </div>
 
@@ -174,7 +158,7 @@ const Feed = () => {
               <input
                 type="checkbox"
                 checked={onlySubscriptions}
-                onChange={e => setOnlySubscriptions(e.target.checked)}
+                onChange={(e) => setOnlySubscriptions(e.target.checked)}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
@@ -184,9 +168,7 @@ const Feed = () => {
                   </svg>
                 )}
               </span>
-              <span className={styles.checkboxText}>
-                Только подписки
-              </span>
+              <span className={styles.checkboxText}>Только подписки</span>
             </label>
           </div>
         </section>
@@ -197,29 +179,28 @@ const Feed = () => {
         {activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
             <PinGrid
-              pins={filteredPins.map(pin => ({
+              pins={filteredPins.map((pin) => ({
                 ...pin,
-                image: placeholder_1,  // поменяли imageUrl на image
-                title: pin.name,        // название сразу в title
+                image: placeholder_1, // поменяли imageUrl на image
+                title: pin.name, // название сразу в title
                 location: pin.latitude,
               }))}
               onPinClick={handlePinClick}
             />
-
           </div>
         )}
 
         {activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
-          <CollectionGrid
-            collections={filteredCollections.map(col => ({
-              ...col,
-              image: placeholder_1, // вместо imageUrl
-              title: col.name,       // название сразу в title
-              pinsCount: 0
-            }))}
-            onCollectionClick={handleCollectionClick}
-          />
+            <CollectionGrid
+              collections={filteredCollections.map((col) => ({
+                ...col,
+                image: placeholder_1, // вместо imageUrl
+                title: col.name, // название сразу в title
+                pinsCount: 0,
+              }))}
+              onCollectionClick={handleCollectionClick}
+            />
           </div>
         )}
       </main>

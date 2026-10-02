@@ -1,23 +1,22 @@
-import React, { useState } from "react";
-import styles from "./InviteCollaboratorModal.module.css";
+import React, { useState } from 'react';
+import styles from './InviteCollaboratorModal.module.css';
 import placeholder from '../assets/placeholder.jpg';
 
 interface InviteCollaboratorModalProps {
   onClose: () => void;
   onAddCollaborator: (name: string) => void;
-  existingCollaborators: string[];   // ← добавили
+  existingCollaborators: string[]; // ← добавили
 }
-
 
 const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
   onClose,
   onAddCollaborator,
-  existingCollaborators
+  existingCollaborators,
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFollowersOpen, setIsFollowersOpen] = useState(false);
-  const [nickname, setNickname] = useState("");
-  const [foundUser, setFoundUser] = useState<{name: string, avatar: string} | null>(null);
+  const [nickname, setNickname] = useState('');
+  const [foundUser, setFoundUser] = useState<{ name: string; avatar: string } | null>(null);
 
   // Заглушка: 100 подписчиков
   const followers = Array.from({ length: 100 }, (_, i) => `Follower ${i + 1}`);
@@ -33,9 +32,8 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
     setIsSearchOpen(true);
     setIsFollowersOpen(false);
     setFoundUser(null);
-    setNickname("");
+    setNickname('');
   };
-  
 
   const handleFindUser = () => {
     if (nickname.trim()) {
@@ -43,7 +41,6 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
       setFoundUser({ name: nickname, avatar: placeholder });
     }
   };
-  
 
   const handleInviteFoundUser = () => {
     if (foundUser) {
@@ -56,7 +53,7 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
   const handleFollowersClick = () => {
     setIsFollowersOpen(true);
     setIsSearchOpen(false);
-    setNickname("");
+    setNickname('');
     setFoundUser(null);
   };
 
@@ -66,8 +63,8 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
   };
 
   // Фильтрация подписчиков по введённому тексту
-  const filteredFollowers = followers.filter(f =>
-    f.toLowerCase().includes(nickname.toLowerCase())
+  const filteredFollowers = followers.filter((f) =>
+    f.toLowerCase().includes(nickname.toLowerCase()),
   );
 
   return (
@@ -76,10 +73,10 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
         <div className={styles.header_container}>
           <h2 className={styles.title}>
             {isFollowersOpen
-              ? "Подписчики"
+              ? 'Подписчики'
               : isSearchOpen
-              ? "Найти по нику"
-              : "Пригласить соавтора"}
+                ? 'Найти по нику'
+                : 'Пригласить соавтора'}
           </h2>
           <button className={styles.closeBtn} onClick={onClose}></button>
         </div>
@@ -137,7 +134,6 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
                 )}
               </div>
             )}
-
           </div>
         )}
 
@@ -162,14 +158,19 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
                       Уже добавлен
                     </button>
                   ) : (
-                    <button className={styles.inviteButton} onClick={() => handleSelectFollower(name)}>
+                    <button
+                      className={styles.inviteButton}
+                      onClick={() => handleSelectFollower(name)}
+                    >
                       Добавить
                     </button>
                   )}
                 </div>
               ))}
 
-              {filteredFollowers.length === 0 && <div className={styles.noResults}>Ничего не найдено</div>}
+              {filteredFollowers.length === 0 && (
+                <div className={styles.noResults}>Ничего не найдено</div>
+              )}
             </div>
           </div>
         )}

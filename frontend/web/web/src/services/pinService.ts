@@ -1,11 +1,14 @@
-import {apolloClient} from "@/api/apolloClient.ts";
+import { apolloClient } from '@/api/apolloClient.ts';
 import {
   CreatePinDocument,
   type CreatePinInput,
   type UpdatePinInput,
   UpdatePinDocument,
-  type Pin, GetPinByIdDocument, IsPinBookmarkedDocument, GetPinReactionIdDocument,
-} from "@/graphql/generated/graphql.ts";
+  type Pin,
+  GetPinByIdDocument,
+  IsPinBookmarkedDocument,
+  GetPinReactionIdDocument,
+} from '@/graphql/generated/graphql.ts';
 
 export interface CreatePinPayload {
   name: string;
@@ -20,7 +23,7 @@ export interface CreatePinPayload {
  * Создаёт новый пин с заданными параметрами. Добавляет его в БД
  *
  * @param {CreatePinPayload} payload - Данные пина, которые нужно отправить.
- * 
+ *
  * @example
  * await createPin({
  *   name: "Мой пин",
@@ -55,13 +58,12 @@ export async function createPin(payload: CreatePinPayload) {
   const createPinResult = await apolloClient.mutate({
     mutation: CreatePinDocument,
     variables: {
-      input: createInput as CreatePinInput
+      input: createInput as CreatePinInput,
     },
   });
 
   return createPinResult.data?.createPin || null;
 }
-
 
 /**
  * Обновляет пин с заданным ID
@@ -78,7 +80,7 @@ export async function createPin(payload: CreatePinPayload) {
  *   ownerId: "00000000-0000-0000-0000-000000000001",
  * });
  */
-export async function updatePin(pinId: string, input: UpdatePinInput) : Promise< Pin | null > {
+export async function updatePin(pinId: string, input: UpdatePinInput): Promise<Pin | null> {
   const updateInput: any = {
     userId: input.userId,
   };
@@ -107,7 +109,7 @@ export async function updatePin(pinId: string, input: UpdatePinInput) : Promise<
     mutation: UpdatePinDocument,
     variables: {
       id: pinId,
-      input: updateInput as UpdatePinInput
+      input: updateInput as UpdatePinInput,
     },
   });
 
@@ -141,7 +143,7 @@ export async function isPinLiked(id: string): Promise<boolean> {
       query: GetPinReactionIdDocument,
       variables: { id },
     });
-    return result.data?.pin.reactionId == "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
+    return result.data?.pin.reactionId == '8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f';
   } catch (error) {
     console.error('Failed to fetch pin:', error);
     return false;

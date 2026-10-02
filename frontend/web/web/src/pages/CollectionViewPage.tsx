@@ -1,26 +1,26 @@
-import { useNavigate, useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-import Header from "./Header";
-import styles from "./PinViewPage.module.css";
-import placeholder_1 from "../assets/placeholder1.jpg";
-import CommentSection from "./CommentSection";
-import ReactionBlock from "./ReactionBlock";
-import PinGrid from "./PinGrid";
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import Header from './Header';
+import styles from './PinViewPage.module.css';
+import placeholder_1 from '../assets/placeholder1.jpg';
+import CommentSection from './CommentSection';
+import ReactionBlock from './ReactionBlock';
+import PinGrid from './PinGrid';
 
 // моки
-import { getCollectionById, getCollectionPins } from "../utils/mockData";
+import { getCollectionById, getCollectionPins } from '../utils/mockData';
 
 // backend
-import { getPinById as getBoardById } from "../services/collectionsService";
+import { getPinById as getBoardById } from '../services/collectionsService';
 
 // реакции
-import { countReactionsToBoard, reactToBoard } from "../services/reactionsService";
-import { isBoardLiked, isBoardBookmarked } from "../services/collectionsService";
-import { toggleBookmarkToBoard } from "../services/bookmarksService";
+import { countReactionsToBoard, reactToBoard } from '../services/reactionsService';
+import { isBoardLiked, isBoardBookmarked } from '../services/collectionsService';
+import { toggleBookmarkToBoard } from '../services/bookmarksService';
 
 const FALLBACK_LIKES = 0;
-const LIKE_REACTION_ID = "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
-const TEMP_USER_ID = "TEMP_USER_ID";
+const LIKE_REACTION_ID = '8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f';
+const TEMP_USER_ID = 'TEMP_USER_ID';
 
 const CollectionViewPage = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const CollectionViewPage = () => {
   useEffect(() => {
     const loadCollection = async () => {
       if (!collectionId) {
-        setError("ID коллекции не указан");
+        setError('ID коллекции не указан');
         setLoading(false);
         return;
       }
@@ -53,18 +53,18 @@ const CollectionViewPage = () => {
         if (board) {
           setCollection({
             ...board,
-            image: placeholder_1 // заглушка для картинки самой подборки
+            image: placeholder_1, // заглушка для картинки самой подборки
           });
           setCollectionPins(
             Array.isArray(board.pins)
-              ? board.pins.map(pin => ({
+              ? board.pins.map((pin) => ({
                   ...pin,
                   image: placeholder_1,
-                  author: "jane_anderson",
+                  author: 'jane_anderson',
                   authorAvatar: placeholder_1,
-                  description: pin.description || "",
+                  description: pin.description || '',
                 }))
-              : []
+              : [],
           );
           setLikesCount(board.rating ?? board.likes ?? FALLBACK_LIKES);
           return;
@@ -74,35 +74,35 @@ const CollectionViewPage = () => {
         if (mockCollection) {
           setCollection({ ...mockCollection, image: placeholder_1 });
           setCollectionPins(
-            getCollectionPins(collectionId)?.map(pin => ({
+            getCollectionPins(collectionId)?.map((pin) => ({
               ...pin,
               image: placeholder_1,
-              author: "jane_anderson",
+              author: 'jane_anderson',
               authorAvatar: placeholder_1,
-              description: pin.description || "",
-            })) || []
+              description: pin.description || '',
+            })) || [],
           );
           setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
           setError(`Коллекция с ID ${collectionId} не найдена`);
         }
       } catch (e) {
-        console.error("Ошибка загрузки коллекции:", e);
+        console.error('Ошибка загрузки коллекции:', e);
         const mockCollection = getCollectionById(collectionId);
         if (mockCollection) {
           setCollection({ ...mockCollection, image: placeholder_1 });
           setCollectionPins(
-            getCollectionPins(collectionId)?.map(pin => ({
+            getCollectionPins(collectionId)?.map((pin) => ({
               ...pin,
               image: placeholder_1,
-              author: "jane_anderson",
+              author: 'jane_anderson',
               authorAvatar: placeholder_1,
-              description: pin.description || "",
-            })) || []
+              description: pin.description || '',
+            })) || [],
           );
           setLikesCount(mockCollection.likes ?? FALLBACK_LIKES);
         } else {
-          setError("Не удалось загрузить коллекцию");
+          setError('Не удалось загрузить коллекцию');
         }
       } finally {
         setLoading(false);
@@ -131,17 +131,17 @@ const CollectionViewPage = () => {
         const count = await countReactionsToBoard({ boardId: collectionId });
         let actualCount: number | null = null;
 
-        if (typeof count === "number") actualCount = count;
-        else if (typeof count === "string") actualCount = Number(count);
-        else if (count && typeof count === "object" && "count" in count) {
+        if (typeof count === 'number') actualCount = count;
+        else if (typeof count === 'string') actualCount = Number(count);
+        else if (count && typeof count === 'object' && 'count' in count) {
           const nested = (count as any).count;
-          if (typeof nested === "number") actualCount = nested;
-          else if (typeof nested === "string") actualCount = Number(nested);
+          if (typeof nested === 'number') actualCount = nested;
+          else if (typeof nested === 'string') actualCount = Number(nested);
         }
 
         if (actualCount !== null && actualCount >= 0) setLikesCount(actualCount);
       } catch (err) {
-        console.warn("Не удалось загрузить количество лайков:", err);
+        console.warn('Не удалось загрузить количество лайков:', err);
       }
     };
 
@@ -150,7 +150,7 @@ const CollectionViewPage = () => {
 
   const handleLike = async (nextLiked: boolean) => {
     setLiked(nextLiked);
-    setLikesCount(prev => (nextLiked ? prev + 1 : Math.max(prev - 0, 0)));
+    setLikesCount((prev) => (nextLiked ? prev + 1 : Math.max(prev - 0, 0)));
     try {
       await reactToBoard({
         boardId: collectionId!,
@@ -158,7 +158,7 @@ const CollectionViewPage = () => {
         userId: TEMP_USER_ID,
       });
     } catch (error) {
-      console.error("Failed to toggle board reaction", error);
+      console.error('Failed to toggle board reaction', error);
     }
   };
 
@@ -167,7 +167,7 @@ const CollectionViewPage = () => {
     try {
       await toggleBookmarkToBoard(collectionId!, TEMP_USER_ID);
     } catch (error) {
-      console.error("Failed to toggle board bookmark", error);
+      console.error('Failed to toggle board bookmark', error);
     }
   };
 
@@ -188,8 +188,8 @@ const CollectionViewPage = () => {
         <Header />
         <div className={styles.errorContainer}>
           <h2>Коллекция не найдена</h2>
-          <p>{error || "Не удалось загрузить данные"}</p>
-          <button onClick={() => navigate("/feed")} className={styles.backButton}>
+          <p>{error || 'Не удалось загрузить данные'}</p>
+          <button onClick={() => navigate('/feed')} className={styles.backButton}>
             Вернуться на главную
           </button>
         </div>
@@ -199,10 +199,10 @@ const CollectionViewPage = () => {
 
   const comments = [
     {
-      authorName: "jane_anderson",
+      authorName: 'jane_anderson',
       authorAvatar: placeholder_1,
-      commentText: "Отличная подборка! Спасибо за рекомендации.",
-      commentDate: "2 часа назад",
+      commentText: 'Отличная подборка! Спасибо за рекомендации.',
+      commentDate: '2 часа назад',
     },
   ];
 
@@ -213,7 +213,12 @@ const CollectionViewPage = () => {
         <div className={styles.leftColumn}>
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
-              <h2>Подборка от <Link to={`/profile`} className={styles.authorA}>@jane_anderson</Link></h2>
+            <h2>
+              Подборка от{' '}
+              <Link to={`/profile`} className={styles.authorA}>
+                @jane_anderson
+              </Link>
+            </h2>
             <button
               className={styles.settingsBtn}
               onClick={() => navigate(`/collection/edit/${collectionId}`)}
@@ -221,11 +226,13 @@ const CollectionViewPage = () => {
           </div>
 
           <div className={styles.pinCard}>
-            <img src={collection.image || placeholder_1} alt={collection.name} className={styles.collectionImage} />
+            <img
+              src={collection.image || placeholder_1}
+              alt={collection.name}
+              className={styles.collectionImage}
+            />
             <h3 className={styles.pinTitle}>{collection.name}</h3>
-            <p className={styles.pinDescription}>
-              {collection.description || ""}
-            </p>
+            <p className={styles.pinDescription}>{collection.description || ''}</p>
 
             <ReactionBlock
               initialLikes={likesCount}
@@ -236,15 +243,10 @@ const CollectionViewPage = () => {
             />
           </div>
 
-          <h3 className={styles.pinsTitle}>
-            Места в подборке ({collectionPins.length})
-          </h3>
+          <h3 className={styles.pinsTitle}>Места в подборке ({collectionPins.length})</h3>
 
           <div className={styles.pinsWrapper}>
-            <PinGrid
-              pins={collectionPins}
-              onPinClick={(pinId) => navigate(`/pin/${pinId}`)}
-            />
+            <PinGrid pins={collectionPins} onPinClick={(pinId) => navigate(`/pin/${pinId}`)} />
           </div>
 
           <CommentSection comments={comments} title="Комментарии" />

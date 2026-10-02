@@ -1,4 +1,4 @@
-import styles from "./SettingsModal.module.css";
+import styles from './SettingsModal.module.css';
 
 const SettingsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;

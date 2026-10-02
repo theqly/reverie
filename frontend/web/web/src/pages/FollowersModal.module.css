@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -33,7 +33,7 @@
 .closeBtn {
   width: 24px;
   height: 24px;
-  background: url("../assets/close.svg") center/cover no-repeat;
+  background: url('../assets/close.svg') center/cover no-repeat;
   border: none;
   cursor: pointer;
 }

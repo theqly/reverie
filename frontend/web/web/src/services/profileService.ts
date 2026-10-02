@@ -1,6 +1,8 @@
-import {apolloClient} from "@/api/apolloClient.ts";
+import { apolloClient } from '@/api/apolloClient.ts';
 import {
-  type Board, GetBookmarkedBoardsByUserIdDocument, GetBookmarkedPinsByUserIdDocument,
+  type Board,
+  GetBookmarkedBoardsByUserIdDocument,
+  GetBookmarkedPinsByUserIdDocument,
   GetLikedBoardsByUserIdDocument,
   GetLikedPinsByUserIdDocument,
   GetOwnBoardsByUserIdDocument,
@@ -11,15 +13,15 @@ import {
   UpdateUserDocument,
   type UpdateUserInput,
   type User,
-} from "@/graphql/generated/graphql.ts";
+} from '@/graphql/generated/graphql.ts';
 
-export async function resolveUserId(
-  params: { userId?: string; nickTag?: string }
-): Promise<string | null> {
-
+export async function resolveUserId(params: {
+  userId?: string;
+  nickTag?: string;
+}): Promise<string | null> {
   // Если оба существуют или оба отсутствуют — ошибка.
   if (!!params.userId === !!params.nickTag) {
-    console.warn("resolveUserId: You must provide exactly one identifier: userId OR nickTag.");
+    console.warn('resolveUserId: You must provide exactly one identifier: userId OR nickTag.');
     return null;
   }
 
@@ -52,9 +54,7 @@ export async function resolveUserId(
  * const user = await findUser({id: "00000000-0000-0000-0000-000000000001"});
  * // должен вернуть объект пользователя или null, если пользователь не найден
  */
-export async function findUser(
-  userInfo: { id?: string; nickTag?: string }
-): Promise<User | null> {
+export async function findUser(userInfo: { id?: string; nickTag?: string }): Promise<User | null> {
   if (userInfo.id == null && userInfo.nickTag == null) {
     throw new Error("At least one of 'id' or 'nickTag' must be provided");
   }
@@ -64,18 +64,18 @@ export async function findUser(
       const userResult = await apolloClient.query({
         query: GetUserByIdDocument,
         variables: {
-          userId: userInfo.id
-        }
+          userId: userInfo.id,
+        },
       });
-      return userResult.data?.userById || null
+      return userResult.data?.userById || null;
     } else if (userInfo.nickTag != null) {
       const userResult = await apolloClient.query({
         query: GetUserByNickTagDocument,
         variables: {
-          nickTag: userInfo.nickTag
-        }
+          nickTag: userInfo.nickTag,
+        },
       });
-      return userResult.data?.userById || null
+      return userResult.data?.userById || null;
     } else {
       return null;
     }
@@ -94,10 +94,10 @@ export async function getUserIdByNickTag(userId: string): Promise<string | null>
       const userResult = await apolloClient.query({
         query: GetUserByIdDocument,
         variables: {
-          userId: userId
-        }
+          userId: userId,
+        },
       });
-      return userResult.data?.userById?.id || null
+      return userResult.data?.userById?.id || null;
     } else {
       return null;
     }
@@ -115,19 +115,16 @@ export async function getUserIdByNickTag(userId: string): Promise<string | null>
  *
  * @example const pins = await getPinsByUserId({nickTag: "alice_777", viewerId: "00000000-0000-0000-0000-000000000001", limit: 10, offset: 0});
  */
-export async function getPinsByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    viewerId?: string;
-    limit?: number; // default = 10
-    offset?: number // default = 0
-  }
-): Promise<[Pin] | null> {
-
+export async function getPinsByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  viewerId?: string;
+  limit?: number; // default = 10
+  offset?: number; // default = 0
+}): Promise<[Pin] | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -135,7 +132,6 @@ export async function getPinsByUser(
   }
 
   try {
-
     const variables: any = {
       userId: finalUserId,
     };
@@ -154,10 +150,9 @@ export async function getPinsByUser(
 
     const pinsResult = await apolloClient.query({
       query: GetPinsByUserIdDocument,
-      variables
+      variables,
     });
     return pinsResult.data?.pinsByUser || null;
-
   } catch (error) {
     console.error('Failed to get pins by user:', error);
   }
@@ -172,18 +167,15 @@ export async function getPinsByUser(
  *
  * @example const pins = await getOwnBoardsByUserId({nickTag: "alice_777", limit: 10, offset: 0});
  */
-export async function getOwnBoardsByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    limit?: number; // default = 10
-    offset?: number // default = 0
-  }
-): Promise<[Pin] | null> {
-
+export async function getOwnBoardsByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  limit?: number; // default = 10
+  offset?: number; // default = 0
+}): Promise<[Pin] | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -191,7 +183,6 @@ export async function getOwnBoardsByUser(
   }
 
   try {
-
     const variables: any = {
       userId: finalUserId,
     };
@@ -206,16 +197,14 @@ export async function getOwnBoardsByUser(
 
     const boardsOwnByUserResult = await apolloClient.query({
       query: GetOwnBoardsByUserIdDocument,
-      variables
+      variables,
     });
     return boardsOwnByUserResult.data?.ownBoardsByUser || null;
-
   } catch (error) {
     console.error('Failed to get boards by user:', error);
   }
   return null;
 }
-
 
 /**
  * Возвращает два массива лайкнутых пинов и досок пользователя или null, если пользователь не найден.
@@ -223,20 +212,17 @@ export async function getOwnBoardsByUser(
  *
  * @example const likes = await getLikesByUser({nickTag: "alice_777", pinsLimit: 10, pinsOffset = 0, boardsLimit = 10, boardsOffset = 0});
  */
-export async function getLikesByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    pinsLimit?: number; // default = 10
-    pinsOffset?: number; // default = 0
-    boardsLimit?: number; // default = 10
-    boardsOffset?: number // default = 0
-  }
-): Promise< { pins: Pin[]; boards: Board[] } | null> {
-
+export async function getLikesByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  pinsLimit?: number; // default = 10
+  pinsOffset?: number; // default = 0
+  boardsLimit?: number; // default = 10
+  boardsOffset?: number; // default = 0
+}): Promise<{ pins: Pin[]; boards: Board[] } | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -244,7 +230,6 @@ export async function getLikesByUser(
   }
 
   try {
-
     const pinsVariables: any = {
       userId: finalUserId,
     };
@@ -270,19 +255,18 @@ export async function getLikesByUser(
 
     const likedPinsResult = await apolloClient.query({
       query: GetLikedPinsByUserIdDocument,
-      variables: pinsVariables
+      variables: pinsVariables,
     });
 
     const likedBoardsResult = await apolloClient.query({
       query: GetLikedBoardsByUserIdDocument,
-      variables: boardsVariables
+      variables: boardsVariables,
     });
 
     return {
       pins: likedPinsResult.data?.likedPinsByUser ?? [],
       boards: likedBoardsResult.data?.likedBoardsByUser ?? [],
     };
-
   } catch (error) {
     console.error('Failed to likes by user:', error);
   }
@@ -290,27 +274,23 @@ export async function getLikesByUser(
   return null;
 }
 
-
 /**
  * Возвращает два массива добавленных в закладки пинов и досок пользователя или null, если пользователь не найден.
  * Если userId и nickTag одновременно переданы или не переданы, также возвращает null
  *
  * @example const likes = await getBookmarksByUser({nickTag: "alice_777", pinsLimit: 10, pinsOffset = 0, boardsLimit = 10, boardsOffset = 0});
  */
-export async function getBookmarksByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    pinsLimit?: number; // default = 10
-    pinsOffset?: number; // default = 0
-    boardsLimit?: number; // default = 10
-    boardsOffset?: number // default = 0
-  }
-): Promise< { pins: Pin[]; boards: Board[] } | null> {
-
+export async function getBookmarksByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  pinsLimit?: number; // default = 10
+  pinsOffset?: number; // default = 0
+  boardsLimit?: number; // default = 10
+  boardsOffset?: number; // default = 0
+}): Promise<{ pins: Pin[]; boards: Board[] } | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -318,7 +298,6 @@ export async function getBookmarksByUser(
   }
 
   try {
-
     const pinsVariables: any = {
       userId: finalUserId,
     };
@@ -344,19 +323,18 @@ export async function getBookmarksByUser(
 
     const bookmarkedPinsResult = await apolloClient.query({
       query: GetBookmarkedPinsByUserIdDocument,
-      variables: pinsVariables
+      variables: pinsVariables,
     });
 
     const bookmarkedBoardsResult = await apolloClient.query({
       query: GetBookmarkedBoardsByUserIdDocument,
-      variables: boardsVariables
+      variables: boardsVariables,
     });
 
     return {
       pins: bookmarkedPinsResult.data?.likedPinsByUser ?? [],
       boards: bookmarkedBoardsResult.data?.likedBoardsByUser ?? [],
     };
-
   } catch (error) {
     console.error('Failed to likes by user:', error);
   }
@@ -386,8 +364,8 @@ export async function updateUser(userId: string, input: UpdateUserInput): Promis
       mutation: UpdateUserDocument,
       variables: {
         userId: userId,
-        input: input
-      }
+        input: input,
+      },
     });
 
     return userResult.data?.updateUser || null;
@@ -397,4 +375,3 @@ export async function updateUser(userId: string, input: UpdateUserInput): Promis
 
   return null;
 }
-

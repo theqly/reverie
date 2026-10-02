@@ -18,8 +18,7 @@ const loadYandexScript = () => {
     script.async = true;
     script.dataset.ymaps = 'true';
     script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error('Ошибка загрузки скрипта Яндекс.Карт'));
+    script.onerror = () => reject(new Error('Ошибка загрузки скрипта Яндекс.Карт'));
     document.body.appendChild(script);
   });
 };
@@ -98,7 +97,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
               placemarkRef.current = new window.ymaps.Placemark(
                 coords,
                 {},
-                { preset: 'islands#redIcon' }
+                { preset: 'islands#redIcon' },
               );
               map.geoObjects.add(placemarkRef.current);
             } else {

@@ -1,21 +1,21 @@
-import { useNavigate, useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-import Header from "./Header";
-import MapPicker from "./MapPicker";
-import styles from "./PinViewPage.module.css";
-import placeholder_1 from "../assets/placeholder1.jpg";
-import ReactionBlock from "./ReactionBlock";
-import CommentSection from "./CommentSection";
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import Header from './Header';
+import MapPicker from './MapPicker';
+import styles from './PinViewPage.module.css';
+import placeholder_1 from '../assets/placeholder1.jpg';
+import ReactionBlock from './ReactionBlock';
+import CommentSection from './CommentSection';
 
 // mock + backend
-import { getPinById as getMockPinById } from "../utils/mockData";
-import { getPinById as getBackendPinById } from "../services/pinService";
-import { countReactionsToPin, reactToPin } from "../services/reactionsService";
-import { toggleBookmarkToPin } from "../services/bookmarksService";
-import { isPinLiked, isPinBookmarked } from "../services/pinService";
+import { getPinById as getMockPinById } from '../utils/mockData';
+import { getPinById as getBackendPinById } from '../services/pinService';
+import { countReactionsToPin, reactToPin } from '../services/reactionsService';
+import { toggleBookmarkToPin } from '../services/bookmarksService';
+import { isPinLiked, isPinBookmarked } from '../services/pinService';
 
 const FALLBACK_LIKES = 226;
-const TEMP_USER_ID = "00000000-0000-0000-0000-000000000001";
+const TEMP_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 const PinViewPage = () => {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ const PinViewPage = () => {
           setPin(mockPin);
           setLikesCount(mockPin.likes ?? FALLBACK_LIKES);
         } else {
-          setError("Не удалось загрузить пин");
+          setError('Не удалось загрузить пин');
         }
       } finally {
         setLoading(false);
@@ -84,7 +84,7 @@ const PinViewPage = () => {
 
       try {
         const reactionsCount = await countReactionsToPin({ pinId });
-        if (typeof reactionsCount === "number" && reactionsCount >= 0) {
+        if (typeof reactionsCount === 'number' && reactionsCount >= 0) {
           setLikesCount(reactionsCount);
         }
       } catch {}
@@ -95,12 +95,12 @@ const PinViewPage = () => {
 
   const handleLike = async (nextLiked: boolean) => {
     setLiked(nextLiked);
-    setLikesCount(prev => nextLiked ? prev + 1 : Math.max(prev - 1, 0));
+    setLikesCount((prev) => (nextLiked ? prev + 1 : Math.max(prev - 1, 0)));
 
     try {
       await reactToPin({ pinId, userId: TEMP_USER_ID });
     } catch (error) {
-      console.error("Failed to toggle pin reaction", error);
+      console.error('Failed to toggle pin reaction', error);
     }
   };
 
@@ -109,38 +109,40 @@ const PinViewPage = () => {
     try {
       await toggleBookmarkToPin(pinId!, TEMP_USER_ID);
     } catch (error) {
-      console.error("Failed to toggle bookmark", error);
+      console.error('Failed to toggle bookmark', error);
     }
   };
 
   const handleBack = () => navigate(-1);
 
-  if (loading) return (
-    <div className={styles.pageWrapper}>
-      <Header />
-      <div className={styles.loading}>Загрузка...</div>
-    </div>
-  );
-
-  if (error || !pin) return (
-    <div className={styles.pageWrapper}>
-      <Header />
-      <div className={styles.errorContainer}>
-        <h2>Пин не найден</h2>
-        <p>{error}</p>
-        <button onClick={() => navigate("/feed")} className={styles.backButton}>
-          Вернуться на главную
-        </button>
+  if (loading)
+    return (
+      <div className={styles.pageWrapper}>
+        <Header />
+        <div className={styles.loading}>Загрузка...</div>
       </div>
-    </div>
-  );
+    );
+
+  if (error || !pin)
+    return (
+      <div className={styles.pageWrapper}>
+        <Header />
+        <div className={styles.errorContainer}>
+          <h2>Пин не найден</h2>
+          <p>{error}</p>
+          <button onClick={() => navigate('/feed')} className={styles.backButton}>
+            Вернуться на главную
+          </button>
+        </div>
+      </div>
+    );
 
   const comments = [
     {
-      authorName: "jane_anderson",
+      authorName: 'jane_anderson',
       authorAvatar: placeholder_1,
-      commentText: "Отличное фото! Очень красивое место.",
-      commentDate: "2 часа назад",
+      commentText: 'Отличное фото! Очень красивое место.',
+      commentDate: '2 часа назад',
     },
   ];
 
@@ -152,15 +154,18 @@ const PinViewPage = () => {
           <div className={styles.h_container}>
             <button onClick={handleBack} className={styles.back_btn} />
             <h2>
-              Пин от <Link to="/profile" className={styles.authorA}>@jane_anderson</Link>
+              Пин от{' '}
+              <Link to="/profile" className={styles.authorA}>
+                @jane_anderson
+              </Link>
             </h2>
-            
-            <button className={styles.settingsBtn} onClick={() => navigate(`/pin/edit/${pinId}`)}></button>
 
             <button
               className={styles.settingsBtn}
               onClick={() => navigate(`/pin/edit/${pinId}`)}
-            />
+            ></button>
+
+            <button className={styles.settingsBtn} onClick={() => navigate(`/pin/edit/${pinId}`)} />
           </div>
 
           <div className={styles.pinCardWrapper}>
@@ -170,7 +175,7 @@ const PinViewPage = () => {
               <p className={styles.collectionLocation}>
                 Широта: {pin.latitude}, Долгота: {pin.longitude}
               </p>
-              <p className={styles.pinDescription}>{pin.description || ""}</p>
+              <p className={styles.pinDescription}>{pin.description || ''}</p>
 
               <ReactionBlock
                 initialLikes={likesCount}
@@ -187,11 +192,7 @@ const PinViewPage = () => {
 
         <div className={styles.mapWrapperFixed}>
           {pin.latitude != null && pin.longitude != null && (
-            <MapPicker
-              readOnly
-              onSelect={() => {}}
-              initialCoords={[pin.latitude, pin.longitude]}
-            />
+            <MapPicker readOnly onSelect={() => {}} initialCoords={[pin.latitude, pin.longitude]} />
           )}
         </div>
       </div>

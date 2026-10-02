@@ -2,14 +2,14 @@ import React from 'react';
 import styles from './CommentSection.module.css'; // Скопируй сюда твои стили
 import CommentCard from './CommentCard';
 
-const CommentSection = ({ 
+const CommentSection = ({
   comments = [], // Массив комментариев
-  title = "Комментарии"
+  title = 'Комментарии',
 }) => {
   return (
     <div className={styles.commentWrapper}>
       <p>{title}</p>
-      
+
       <section className={styles.commentSection}>
         {comments.length > 0 ? (
           comments.map((comment, index) => (

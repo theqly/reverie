@@ -6,7 +6,7 @@ const HomePage = () => {
   const handleCreateCollection = () => {
     // Пока заглушка - всегда авторизован
     navigate('/collection/create');
-    
+
     // Позже добавишь проверку:
     // if (isAuthenticated) {
     //   navigate('/collection/create');
@@ -14,22 +14,22 @@ const HomePage = () => {
     //   showAuthModal();
     // }
   };
-    const handleEditCollection = () => {
-      // Пока заглушка - всегда авторизован
-      navigate('/collection/edit');
-      
-      // Позже добавишь проверку:
-      // if (isAuthenticated) {
-      //   navigate('/collection/create');
-      // } else {
-      //   showAuthModal();
-      // }
-    };
+  const handleEditCollection = () => {
+    // Пока заглушка - всегда авторизован
+    navigate('/collection/edit');
 
-   const handleCreatePin = () => {
+    // Позже добавишь проверку:
+    // if (isAuthenticated) {
+    //   navigate('/collection/create');
+    // } else {
+    //   showAuthModal();
+    // }
+  };
+
+  const handleCreatePin = () => {
     // Пока заглушка - всегда авторизован
     navigate('/pin/create');
-    
+
     // Позже добавишь проверку:
     // if (isAuthenticated) {
     //   navigate('/collection/create');
@@ -38,22 +38,22 @@ const HomePage = () => {
     // }
   };
 
-      const handleLogin = () => {
-      // Пока заглушка - всегда авторизован
-      navigate('/login');
-      
-      // Позже добавишь проверку:
-      // if (isAuthenticated) {
-      //   navigate('/collection/create');
-      // } else {
-      //   showAuthModal();
-      // }
-    };
+  const handleLogin = () => {
+    // Пока заглушка - всегда авторизован
+    navigate('/login');
 
-     const handleEditPin = () => {
+    // Позже добавишь проверку:
+    // if (isAuthenticated) {
+    //   navigate('/collection/create');
+    // } else {
+    //   showAuthModal();
+    // }
+  };
+
+  const handleEditPin = () => {
     // Пока заглушка - всегда авторизован
     navigate('/pin/edit');
-    
+
     // Позже добавишь проверку:
     // if (isAuthenticated) {
     //   navigate('/collection/create');
@@ -65,7 +65,7 @@ const HomePage = () => {
   const handleProfile = () => {
     // Пока заглушка - всегда авторизован
     navigate('/profile');
-    
+
     // Позже добавишь проверку:
     // if (isAuthenticated) {
     //   navigate('/collection/create');
@@ -74,11 +74,10 @@ const HomePage = () => {
     // }
   };
 
-  
   const handleViewPin = () => {
     // Пока заглушка - всегда авторизован
     navigate('/pin/view');
-    
+
     // Позже добавишь проверку:
     // if (isAuthenticated) {
     //   navigate('/collection/create');
@@ -90,7 +89,7 @@ const HomePage = () => {
   const handleViewCollection = () => {
     // Пока заглушка - всегда авторизован
     navigate('/collection/view');
-    
+
     // Позже добавишь проверку:
     // if (isAuthenticated) {
     //   navigate('/collection/create');
@@ -99,10 +98,10 @@ const HomePage = () => {
     // }
   };
 
-    const handleFeed = () => {
+  const handleFeed = () => {
     // Пока заглушка - всегда авторизован
     navigate('/feed');
-    
+
     // Позже добавишь проверку:
     // if (isAuthenticated) {
     //   navigate('/collection/create');
@@ -110,37 +109,18 @@ const HomePage = () => {
     //   showAuthModal();
     // }
   };
-
 
   return (
     <div className="home-page">
-      <button onClick={handleFeed}>
-        Feed
-      </button>
-      <button onClick={handleCreateCollection}>
-        Создать подборку
-      </button>
-      <button onClick={handleEditCollection}>
-        Редактировать подборку
-      </button>
-      <button onClick={handleCreatePin}>
-        Создать пин
-      </button>
-      <button onClick={handleEditPin}>
-        Редактировать пин
-      </button>
-      <button onClick={handleProfile}>
-        Профиль
-      </button>
-      <button onClick={handleLogin}>
-        Логин
-      </button>
-      <button onClick={handleViewPin}>
-        Посмотреть пин
-      </button>
-      <button onClick={handleViewCollection}>
-        Посмотреть подборку
-      </button>
+      <button onClick={handleFeed}>Feed</button>
+      <button onClick={handleCreateCollection}>Создать подборку</button>
+      <button onClick={handleEditCollection}>Редактировать подборку</button>
+      <button onClick={handleCreatePin}>Создать пин</button>
+      <button onClick={handleEditPin}>Редактировать пин</button>
+      <button onClick={handleProfile}>Профиль</button>
+      <button onClick={handleLogin}>Логин</button>
+      <button onClick={handleViewPin}>Посмотреть пин</button>
+      <button onClick={handleViewCollection}>Посмотреть подборку</button>
     </div>
   );
 };

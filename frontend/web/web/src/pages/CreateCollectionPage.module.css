@@ -1,66 +1,64 @@
 /* CreateCollectionPage.module.css */
 
 body {
-    padding: 0;
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+  padding: 0;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .createCollectionPage {
-    margin: 0;
-    padding: 0;
-    width: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 /* Хедер */
 .collectionHeader {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 70px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 70px;
 
-    
-    background-color: #EDEDED;
-    box-sizing: border-box;
+  background-color: #ededed;
+  box-sizing: border-box;
 }
 
 .rev_logo {
-    margin: 0 50px 0 0;
-    padding: 8px;
-    height: 22px;
-    
+  margin: 0 50px 0 0;
+  padding: 8px;
+  height: 22px;
 }
 
-.search_input{
-    margin: 0;
-    padding: 5px 0 0 34px;
-    height: 40px;
-    border-radius: 15px;
-    border: none;
-    background-color: #CDCDCD;
-    box-sizing: border-box;
-    font-size: 16px;
-    font-weight: 700px;
-    color: black;
-    width: 600px;
+.search_input {
+  margin: 0;
+  padding: 5px 0 0 34px;
+  height: 40px;
+  border-radius: 15px;
+  border: none;
+  background-color: #cdcdcd;
+  box-sizing: border-box;
+  font-size: 16px;
+  font-weight: 700px;
+  color: black;
+  width: 600px;
 
-    background-image: url('../assets/search.svg');
-    background-size: 15px 15px;
-    background-position: 10px 14px;
-    background-repeat: no-repeat;
+  background-image: url('../assets/search.svg');
+  background-size: 15px 15px;
+  background-position: 10px 14px;
+  background-repeat: no-repeat;
 }
 
 .header_container {
-    height: 70px;
-    display: flex;
-    padding: 15px 0 0 35px;
+  height: 70px;
+  display: flex;
+  padding: 15px 0 0 35px;
 }
 
-.h_container{
-    display: flex;
-    margin: 20px 40px 0 40px;
-    align-items: center;
-    border-bottom: 1px solid #a6a6a6;
+.h_container {
+  display: flex;
+  margin: 20px 40px 0 40px;
+  align-items: center;
+  border-bottom: 1px solid #a6a6a6;
 }
 
 .h_container h1 {
@@ -89,32 +87,30 @@ body {
 
 /* --- GRID WRAPPER --- */
 .gridWrapper {
-    display: grid;
-    grid-template-columns: 150px 600px 300px;
-    grid-auto-rows: auto auto auto;
-    gap: 20px 40px;
-    margin: 40px 60px;
-    align-items: start;
+  display: grid;
+  grid-template-columns: 150px 600px 300px;
+  grid-auto-rows: auto auto auto;
+  gap: 20px 40px;
+  margin: 40px 60px;
+  align-items: start;
 }
 
 /* --- Колонка 1: LABELS --- */
 .name_label,
 .discr_label,
 .collaborator_label {
-    grid-column: 1;
-    justify-self: start;
-    margin: 10px 0 0 40px;
-    font-size: 20px;
+  grid-column: 1;
+  justify-self: start;
+  margin: 10px 0 0 40px;
+  font-size: 20px;
 }
 
-
-
-.collaboratorItem{
-  display: flex;               /* превращаем блок в flex-контейнер */
-  justify-content: center; 
+.collaboratorItem {
+  display: flex; /* превращаем блок в flex-контейнер */
+  justify-content: center;
   background-color: #c5c5c5;
   text-align: center;
-  align-items: center;  
+  align-items: center;
   width: 150px;
   margin-right: 15px;
   border-radius: 10px;
@@ -124,12 +120,12 @@ body {
 .discr_input_block,
 .actionButton,
 .collaboratorsList {
-    grid-column: 2;
-    justify-self: start;
-    width: 100%;
+  grid-column: 2;
+  justify-self: start;
+  width: 100%;
 }
 
-.actionButton{
+.actionButton {
   height: 40px;
   cursor: pointer;
   background-color: transparent;
@@ -140,37 +136,36 @@ body {
 
   background-image: url('../assets/plus.svg');
   background-size: 30px 30px;
-  background-position: left center ;
-  
+  background-position: left center;
+
   background-repeat: no-repeat;
   border: none;
 }
 
-.actionButton:hover{
+.actionButton:hover {
   background-size: 35px 35px;
   padding-left: 45px;
 }
 
 .name_input,
-#collection_name{
-    margin: 0;
-    padding: 5px 15px 0 15px;
-    height: 40px;
-    border-radius: 5px;
-    border: none;
-    background-color: #EDEDED;
-    box-sizing: border-box;
-    font-size: 16px;
-    font-weight: 700px;
-    color: black;
-    width: 600px;
+#collection_name {
+  margin: 0;
+  padding: 5px 15px 0 15px;
+  height: 40px;
+  border-radius: 5px;
+  border: none;
+  background-color: #ededed;
+  box-sizing: border-box;
+  font-size: 16px;
+  font-weight: 700px;
+  color: black;
+  width: 600px;
 }
 
 .name_input:hover,
-.discr_input:hover{
+.discr_input:hover {
   background-color: #e3e3e3;
 }
-
 
 .discr_input {
   resize: none;
@@ -179,7 +174,7 @@ body {
   height: 140px;
   border-radius: 5px;
   border: none;
-  background-color: #EDEDED;
+  background-color: #ededed;
   box-sizing: border-box;
   font-size: 16px;
   font-weight: 700px;
@@ -189,18 +184,15 @@ body {
 
 /* Чтобы инпуты не растягивались чрезмерно */
 
-
 /* --- Колонка 3: COVER --- */
 .coverSection {
-    grid-column: 3;
-    grid-row: 1 / span 3; /* покрывает все строки */
-    display: flex;
-    justify-content: center;
-    align-items: start;
-    width: 100%;
-
+  grid-column: 3;
+  grid-row: 1 / span 3; /* покрывает все строки */
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  width: 100%;
 }
-
 
 .saveButton {
   padding: 12px 20px;
@@ -225,7 +217,7 @@ body {
 }
 
 .coverLabel {
-  width: auto;      
+  width: auto;
   aspect-ratio: 1/1;
   border: 2px solid #ccc;
   border-radius: 8px;
@@ -234,19 +226,19 @@ body {
   align-items: center;
   justify-content: center;
   background: #f9f9f9;
-  overflow: hidden;     
+  overflow: hidden;
   position: relative;
 }
 
 .coverPreview {
   width: auto;
   height: 100%;
-  object-fit: cover;     /* превращает всё в квадрат */
+  object-fit: cover; /* превращает всё в квадрат */
   border-radius: inherit;
 }
 
 .coverLabel:hover {
-    background: #ebebeb;
+  background: #ebebeb;
 }
 
 .coverSection {
@@ -255,19 +247,17 @@ body {
   align-items: center;
 }
 
-.lbl{
+.lbl {
   margin-top: 15px;
   font-size: 16px;
 }
 
 .saveButton:disabled {
-  background: #EDEDED;
+  background: #ededed;
   cursor: not-allowed;
   opacity: 0.6;
   color: black;
 }
-
-
 
 .characterCounter {
   /*
@@ -347,10 +337,9 @@ body {
   margin-top: 3px;
 }
 
-.collaboratorItem span{
+.collaboratorItem span {
   padding-top: 1px;
 }
-
 
 .removeCollaboratorBtn {
   background: none;
@@ -367,7 +356,7 @@ body {
   color: #000000;
 }
 
-.collaboratorsList{
+.collaboratorsList {
   display: flex;
   max-width: 700px;
   flex-wrap: wrap;

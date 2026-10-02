@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import styles from "./FollowersModal.module.css";
+import React, { useState } from 'react';
+import styles from './FollowersModal.module.css';
 import placeholder_10 from '../assets/placeholder10.jpg';
-
 
 const FollowersModal = ({ isOpen, onClose, onFollowToggle }) => {
   if (!isOpen) return null;
@@ -10,16 +9,14 @@ const FollowersModal = ({ isOpen, onClose, onFollowToggle }) => {
     Array.from({ length: 20 }, (_, i) => ({
       id: i + 1,
       name: `Follo=er ${i + 1}`,
-      avatar: {placeholder_10},
-      isFollowing: false
-    }))
+      avatar: { placeholder_10 },
+      isFollowing: false,
+    })),
   );
 
   const handleToggle = (userId) => {
     setFollowers((prev) =>
-      prev.map((f) =>
-        f.id === userId ? { ...f, isFollowing: !f.isFollowing } : f
-      )
+      prev.map((f) => (f.id === userId ? { ...f, isFollowing: !f.isFollowing } : f)),
     );
 
     // вызываем внешний обработчик (заглушка)
@@ -38,14 +35,11 @@ const FollowersModal = ({ isOpen, onClose, onFollowToggle }) => {
 
               <span>{f.name}</span>
 
-
               <button
                 onClick={() => handleToggle(f.id)}
-                className={`${styles.followBtn} ${
-                  f.isFollowing ? styles.unfollow : styles.follow
-                }`}
+                className={`${styles.followBtn} ${f.isFollowing ? styles.unfollow : styles.follow}`}
               >
-                {f.isFollowing ? "Отписаться" : "Подписаться"}
+                {f.isFollowing ? 'Отписаться' : 'Подписаться'}
               </button>
             </div>
           ))}

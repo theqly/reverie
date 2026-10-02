@@ -3,194 +3,191 @@
 =========================== */
 
 body {
-    padding: 0;
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+  padding: 0;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .createCollectionPage {
-    margin: 0;
-    padding: 0;
-    width: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .collectionHeader {
-    width: 100%;
-    height: 70px;
-    background-color: #EDEDED;
-    box-sizing: border-box;
+  width: 100%;
+  height: 70px;
+  background-color: #ededed;
+  box-sizing: border-box;
 }
 
 .header_container {
-    height: 70px;
-    display: flex;
-    padding: 15px 0 0 35px;
+  height: 70px;
+  display: flex;
+  padding: 15px 0 0 35px;
 }
 
 .rev_logo {
-    margin-right: 50px;
-    padding: 8px;
-    height: 22px;
+  margin-right: 50px;
+  padding: 8px;
+  height: 22px;
 }
 
 .search_input {
-    padding: 5px 0 0 34px;
-    height: 40px;
-    border-radius: 15px;
-    border: none;
-    background-color: #CDCDCD;
-    box-sizing: border-box;
-    font-size: 16px;
-    width: 600px;
+  padding: 5px 0 0 34px;
+  height: 40px;
+  border-radius: 15px;
+  border: none;
+  background-color: #cdcdcd;
+  box-sizing: border-box;
+  font-size: 16px;
+  width: 600px;
 
-    background-image: url('../assets/search.svg');
-    background-size: 15px;
-    background-position: 10px 14px;
-    background-repeat: no-repeat;
+  background-image: url('../assets/search.svg');
+  background-size: 15px;
+  background-position: 10px 14px;
+  background-repeat: no-repeat;
 }
 
 .search_input:hover {
-    background-color: #c5c5c5;
+  background-color: #c5c5c5;
 }
 
 .h_container {
-    display: flex;
-    margin: 20px -30px;
-    align-items: center;
-    /* justify-content: center; */
-    border-bottom: 1px solid #a6a6a6;
+  display: flex;
+  margin: 20px -30px;
+  align-items: center;
+  /* justify-content: center; */
+  border-bottom: 1px solid #a6a6a6;
 }
 
 .h_container h1 {
-    font-size: 26px;
-    margin-right: auto;
-    /*margin-left: -40px;*/
+  font-size: 26px;
+  margin-right: auto;
+  /*margin-left: -40px;*/
 }
 
 .back_btn {
-    padding: 8px;
-    height: 40px;
-    width: 40px;
-    /* margin-right: auto; */
-    margin-right: 20px; 
+  padding: 8px;
+  height: 40px;
+  width: 40px;
+  /* margin-right: auto; */
+  margin-right: 20px;
 
-
-    background-image: url('../assets/back.svg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-color: white;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
+  background-image: url('../assets/back.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: white;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
 }
 
 .back_btn:hover {
-    background-color: rgb(237, 237, 237);
-    transition: 0.2s;
+  background-color: rgb(237, 237, 237);
+  transition: 0.2s;
 }
 
-
-.collectionContent{
-    margin: 0 70px;
+.collectionContent {
+  margin: 0 70px;
 }
 
 .avatar {
-    width: 90px;
-    height: 90px;
-    background-color: #5e5e5e;
-    border-radius: 50%;
+  width: 90px;
+  height: 90px;
+  background-color: #5e5e5e;
+  border-radius: 50%;
 }
 
 .profile {
-    display: flex;
+  display: flex;
 }
 a p {
-    font-weight: 700;
-    display: inline;
+  font-weight: 700;
+  display: inline;
 }
 
-.follow_options{
-    display: flex;
-    list-style-type: none;
-    padding: 0;
+.follow_options {
+  display: flex;
+  list-style-type: none;
+  padding: 0;
 }
 
-.follow_options li{
-    padding: 0;
+.follow_options li {
+  padding: 0;
 }
 
 .name {
-    font-size: 28px;
+  font-size: 28px;
 }
 
 .info {
-    margin-left: 20px;
-    margin-top: 10px;
+  margin-left: 20px;
+  margin-top: 10px;
 }
 
 ul.follow_options li:last-child {
-    margin-left: 10px;
+  margin-left: 10px;
 }
 
 .bio {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
-.editBtn{
-    width: 300px;
-    height: 40px;
-    margin: 30px 0 0 0;
-    background-color: #cbcbcb;
-    border:none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-
+.editBtn {
+  width: 300px;
+  height: 40px;
+  margin: 30px 0 0 0;
+  background-color: #cbcbcb;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 16px;
 }
 
-.editBtn:hover{
-    background-color: #b1b1b1;
+.editBtn:hover {
+  background-color: #b1b1b1;
 }
 
 /* Табы */
 .tabs {
-    display: flex;
-    margin-top: 30px;
-    border-bottom: 2px solid #d3d3d3;
+  display: flex;
+  margin-top: 30px;
+  border-bottom: 2px solid #d3d3d3;
 }
 
 .tabBtn {
-    flex: 1;
-    padding: 12px 0;
-    text-align: center;
-    font-size: 16px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #555;
-    font-weight: 500;
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-weight: 500;
 }
 
 .tabBtn:hover {
-    background-color: #f0f0f0;
+  background-color: #f0f0f0;
 }
 
 .active {
-    color: #000;
-    font-weight: 700;
-    border-bottom: 2px solid #000;
+  color: #000;
+  font-weight: 700;
+  border-bottom: 2px solid #000;
 }
 
 .tabContent {
-    padding: 25px 0;
-    font-size: 20px;
+  padding: 25px 0;
+  font-size: 20px;
 }
 
-.main_content{
-    display: flex;
-    flex-direction: column;
-    align-items: start; /* ← вот это */
+.main_content {
+  display: flex;
+  flex-direction: column;
+  align-items: start; /* ← вот это */
 }
 
 .pinsGrid {
@@ -218,8 +215,8 @@ ul.follow_options li:last-child {
   width: 100%;
   object-fit: cover;
   border-radius: 20px;
-  aspect-ratio: 1.3 / 1; 
-  cursor: pointer
+  aspect-ratio: 1.3 / 1;
+  cursor: pointer;
 }
 
 .pinImageWrapper {
@@ -228,7 +225,7 @@ ul.follow_options li:last-child {
 }
 
 .pinImageWrapper::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -243,9 +240,6 @@ ul.follow_options li:last-child {
 .pinImageWrapper:hover::after {
   background-color: rgba(0, 0, 0, 0.11); /* лёгкая полупрозрачная тень */
 }
-
-
-
 
 /* Верхний правый угол — название локации */
 .pinLocation {
@@ -266,11 +260,9 @@ ul.follow_options li:last-child {
   background-image: url('../assets/location_on.svg');
   background-size: 12px 12px;
   background-position: left 3px top 2px;
-  
+
   background-repeat: no-repeat;
   border: none;
-
-
 }
 
 /* Имя автора под картинкой */
@@ -286,10 +278,10 @@ ul.follow_options li:last-child {
 
 /* Нижний центр — название пина, перенос строк вверх */
 .pinTitle {
-    margin: 5px 0;
-    font-size: 18px;
-    font-weight: 600;
-    text-align: start;
+  margin: 5px 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: start;
 }
 
 .pinAuthorWrapper {
@@ -330,26 +322,26 @@ ul.follow_options li:last-child {
   border-radius: 22px;
   background-color: #ededed;
   position: relative;
-  cursor:pointer;
+  cursor: pointer;
   width: 45vw;
   min-width: 400px;
 }
 
 .collectionCard:hover {
-    background-color: #e4e4e4;
-    transition: 0.2s;
+  background-color: #e4e4e4;
+  transition: 0.2s;
 }
 
 .img1 {
   width: 220px;
   padding: 20px 20px 20px 20px;
-  margin-right: -10px;;
+  margin-right: -10px;
   border-radius: 38px;
   aspect-ratio: 1.4 / 1;
   object-fit: cover; /* это че, как лучше */
 }
 
-.collectionLabelWrapper{
+.collectionLabelWrapper {
   display: flex;
   flex-direction: column;
   padding: 20px 20px 20px 0;
@@ -393,19 +385,16 @@ ul.follow_options li:last-child {
   background-image: url('../assets/location_on.svg');
   background-size: 18px 18px;
   background-position: left 6px top 5px;
-  
+
   background-repeat: no-repeat;
   border: none;
-
-
 }
 
-.pinAuthorWrapperBoard{
+.pinAuthorWrapperBoard {
   margin: -20px 20px 10px 20px;
   display: flex;
   align-items: center;
   margin-right: auto;
-
 }
 
 /* ===== ЛАЙКИ — МАКЕТ ===== */
@@ -431,87 +420,83 @@ ul.follow_options li:last-child {
   gap: 16px;
 }
 
-.btn_container{
-    margin-left: auto;
-    width: 600px;
-    height: 100px;
-    display: block;
+.btn_container {
+  margin-left: auto;
+  width: 600px;
+  height: 100px;
+  display: block;
 }
-
 
 .edit_btn,
-.reportBtn, 
+.reportBtn,
 .settingsBtn,
-.shareBtn
-{
-    height: 30px;
-    width: 100px;
-    border-radius: 10px;
-    background-color: rgb(236, 236, 236);
-    border: none;
-    cursor: pointer;
+.shareBtn {
+  height: 30px;
+  width: 100px;
+  border-radius: 10px;
+  background-color: rgb(236, 236, 236);
+  border: none;
+  cursor: pointer;
 }
 
-.edit_btn{
-    margin-left: auto;
-    width: 250px;
-    height: 40px;
-    background-color: #b5b5b5;
-    border:none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 16px;
+.edit_btn {
+  margin-left: auto;
+  width: 250px;
+  height: 40px;
+  background-color: #b5b5b5;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
 }
 
-.settingsBtn{
+.settingsBtn {
   height: 40px;
   width: 40px;
   border-radius: 10px;
 
   background-image: url('../assets/Settings.svg');
-    background-size: 20px 20px;
-    background-color:   rgb(236, 236, 236);
+  background-size: 20px 20px;
+  background-color: rgb(236, 236, 236);
 
-    background-position: center;
-    background-repeat: no-repeat;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-left: 10px;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-left: 10px;
 }
 
-.shareBtn{
+.shareBtn {
   height: 40px;
   width: 40px;
   border-radius: 10px;
 
   background-image: url('../assets/Share.svg');
-    background-size: 20px 20px;
-    background-color:   rgb(236, 236, 236);
+  background-size: 20px 20px;
+  background-color: rgb(236, 236, 236);
 
-    background-position: center;
-    background-repeat: no-repeat;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-left: 10px;
-
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-left: 10px;
 }
 
-.reportBtn{
-    margin: 37px 0 0 15px;
-    width: 25px;
-    height: 25px;
-    border-radius: 15px;
-    font-size: 15px;
-    font-weight: 700;
-    color: rgb(0, 0, 0);
-    background-color: #ffffff;
-    border: 2px solid black;
+.reportBtn {
+  margin: 37px 0 0 15px;
+  width: 25px;
+  height: 25px;
+  border-radius: 15px;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgb(0, 0, 0);
+  background-color: #ffffff;
+  border: 2px solid black;
 }
-.reportBtn:hover{
-    background-color: #f6f6f6;
-
+.reportBtn:hover {
+  background-color: #f6f6f6;
 }
 
 .followLink {
@@ -523,20 +508,19 @@ ul.follow_options li:last-child {
   color: inherit;
   display: flex;
   gap: 4px;
-  color:#515151;
+  color: #515151;
 }
-.followLink p{
+.followLink p {
   margin: 0;
-  color:#000000;
+  color: #000000;
 }
 
-.followLink:hover { 
-  color:#000000;
+.followLink:hover {
+  color: #000000;
 }
-
 
 .newBoardBtn,
-.newPinBtn{
+.newPinBtn {
   height: 40px;
   cursor: pointer;
   background-color: transparent;
@@ -547,17 +531,17 @@ ul.follow_options li:last-child {
 
   background-image: url('../assets/plus.svg');
   background-size: 30px 30px;
-  background-position: left center ;
-  
+  background-position: left center;
+
   background-repeat: no-repeat;
   border: none;
   margin-left: 15px;
 }
-.newPinBtn{
+.newPinBtn {
   margin-bottom: 20px;
 }
 
-.newBoardBtn:hover{
+.newBoardBtn:hover {
   background-size: 35px 35px;
   padding-left: 45px;
 }
@@ -595,7 +579,7 @@ ul.follow_options li:last-child {
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Блок пинов — сетка (используем уже существующий .pinsGrid) */
@@ -632,12 +616,12 @@ ul.follow_options li:last-child {
   background-image: url('../assets/location_on.svg');
   background-size: 18px 18px;
   background-position: left 6px top 5px;
-  
+
   background-repeat: no-repeat;
   border: none;
 
-  width: max-content;      /* ширина ровно под текст */
-  white-space: nowrap;     /* не переносить строки */
+  width: max-content; /* ширина ровно под текст */
+  white-space: nowrap; /* не переносить строки */
   background: #00000065;
   padding: 6px 10px 6px 26px;
   border-radius: 10px;
@@ -650,7 +634,7 @@ ul.follow_options li:last-child {
   background-position: left 6px top 5px;
   background-repeat: no-repeat;
 
-  display: inline-block;   /* чтобы работало корректно */      /* чтобы работало ограничение */
+  display: inline-block; /* чтобы работало корректно */ /* чтобы работало ограничение */
 }
 
 .lilPinTitle {
@@ -665,12 +649,12 @@ ul.follow_options li:last-child {
   font-size: 16px;
   width: 170px;
   max-width: 100%;
-  
-  white-space: normal;       /* разрешаем перенос строк */
-  word-break: break-word;    /* переносим длинные слова */
+
+  white-space: normal; /* разрешаем перенос строк */
+  word-break: break-word; /* переносим длинные слова */
   text-align: center;
 
   /* Опционально ограничение по высоте */
-  max-height: 48px;          /* примерно 2-3 строки */
+  max-height: 48px; /* примерно 2-3 строки */
   overflow: hidden;
 }

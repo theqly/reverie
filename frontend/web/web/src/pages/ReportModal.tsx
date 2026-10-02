@@ -1,12 +1,12 @@
-import { useState } from "react";
-import styles from "./ReportModal.module.css";
+import { useState } from 'react';
+import styles from './ReportModal.module.css';
 
 const REASONS = [
-  "Spam or fraud",
-  "Fake account",
-  "Hate speech or discrimination",
-  "Privacy violation",
-  "Other",
+  'Spam or fraud',
+  'Fake account',
+  'Hate speech or discrimination',
+  'Privacy violation',
+  'Other',
 ];
 
 const ReportModal = ({ isOpen, onClose, onSubmit }) => {
@@ -15,7 +15,7 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
   // ШАГИ: 1 — выбор причины, 2 — ввод текста
   const [step, setStep] = useState(1);
   const [reason, setReason] = useState(null);
-  const [text, setText] = useState("");
+  const [text, setText] = useState('');
 
   const textLimit = 250;
   const textLength = text.length;
@@ -37,7 +37,7 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
     setTimeout(() => {
       setStep(1);
       setReason(null);
-      setText("");
+      setText('');
     }, 300);
   };
 
@@ -53,9 +53,7 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
               {REASONS.map((r) => (
                 <button
                   key={r}
-                  className={`${styles.reasonItem} ${
-                    reason === r ? styles.selected : ""
-                  }`}
+                  className={`${styles.reasonItem} ${reason === r ? styles.selected : ''}`}
                   onClick={() => setReason(r)}
                 >
                   {r}
@@ -64,9 +62,7 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
 
             <button
-              className={`${styles.continueBtn} ${
-                !reason ? styles.disabled : ""
-              }`}
+              className={`${styles.continueBtn} ${!reason ? styles.disabled : ''}`}
               disabled={!reason}
               onClick={() => setStep(2)}
             >
@@ -80,9 +76,7 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
           <>
             <textarea
               className={`${styles.textarea} ${
-                textLength === 0 || textLength > textLimit
-                  ? styles.invalid
-                  : ""
+                textLength === 0 || textLength > textLimit ? styles.invalid : ''
               }`}
               placeholder="Describe the issue…"
               value={text}
@@ -92,18 +86,14 @@ const ReportModal = ({ isOpen, onClose, onSubmit }) => {
 
             <div
               className={`${styles.counter} ${
-                textLength === 0 || textLength > textLimit
-                  ? styles.invalidText
-                  : ""
+                textLength === 0 || textLength > textLimit ? styles.invalidText : ''
               }`}
             >
               {textLength}/{textLimit}
             </div>
 
             <button
-              className={`${styles.sendBtn} ${
-                !isTextValid ? styles.disabled : ""
-              }`}
+              className={`${styles.sendBtn} ${!isTextValid ? styles.disabled : ''}`}
               disabled={!isTextValid}
               onClick={handleSend}
             >

@@ -1,11 +1,11 @@
-import { useState } from "react";
-import styles from "./EditProfileModal.module.css";
+import { useState } from 'react';
+import styles from './EditProfileModal.module.css';
 
 const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
   if (!isOpen) return null;
 
   const [name, setName] = useState(initialData.name);
-  const [nickname, setNickname] = useState(initialData.nickname || "");
+  const [nickname, setNickname] = useState(initialData.nickname || '');
   const [bio, setBio] = useState(initialData.bio);
   const [avatar, setAvatar] = useState(initialData.avatar);
 
@@ -33,7 +33,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
 
           <label className={styles.avatarButton}>
             Сменить аватарку
-            <input 
+            <input
               type="file"
               accept="image/*"
               onChange={handleAvatarChange}
@@ -45,22 +45,14 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
         {/* ИМЯ */}
         <label className={styles.field}>
           <span>Имя</span>
-          <input 
-            maxLength={50}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <input maxLength={50} value={name} onChange={(e) => setName(e.target.value)} />
           <div className={styles.counter}>{name.length} / 50</div>
         </label>
 
         {/* НИКНЕЙМ */}
         <label className={styles.field}>
           <span>Никнейм</span>
-          <input 
-            maxLength={50}
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-          />
+          <input maxLength={50} value={nickname} onChange={(e) => setNickname(e.target.value)} />
           <div className={styles.counter}>{nickname.length} / 50</div>
         </label>
 
@@ -77,8 +69,12 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
         </label>
 
         <div className={styles.actions}>
-          <button onClick={handleSave} className={styles.saveBtn}>Сохранить</button>
-          <button onClick={onClose} className={styles.cancelBtn}>Отмена</button>
+          <button onClick={handleSave} className={styles.saveBtn}>
+            Сохранить
+          </button>
+          <button onClick={onClose} className={styles.cancelBtn}>
+            Отмена
+          </button>
         </div>
       </div>
     </div>

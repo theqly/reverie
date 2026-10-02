@@ -1,5 +1,5 @@
-import { useState } from "react";
-import styles from "./ShareModal.module.css";
+import { useState } from 'react';
+import styles from './ShareModal.module.css';
 
 const ShareModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -22,7 +22,7 @@ const ShareModal = ({ isOpen, onClose }) => {
         <div className={styles.field}>
           <input readOnly value={profileUrl} className={styles.input} />
           <button onClick={copyLink} className={styles.copyBtn}>
-            {copied ? "Скопировано!" : "Копировать"}
+            {copied ? 'Скопировано!' : 'Копировать'}
           </button>
         </div>
 

@@ -5,23 +5,20 @@ import InviteCollaboratorModal from './InviteCollaboratorModal';
 import Header from './Header';
 import { useToast } from './ToastProvider';
 
-import { 
-  getCollectionById as getMockCollectionById, 
-  getCollectionPins 
-} from '../utils/mockData';
+import { getCollectionById as getMockCollectionById, getCollectionPins } from '../utils/mockData';
 
-import { 
+import {
   updateCollection,
-  getPinById as getBackendCollectionById 
-} from "../services/collectionsService";
+  getPinById as getBackendCollectionById,
+} from '../services/collectionsService';
 
-import { UpdateBoardDocument, type UpdateBoardInput } from "@/graphql/generated/graphql.ts";
-import { AccessLevelType } from "@/graphql/generated/graphql.ts";
+import { UpdateBoardDocument, type UpdateBoardInput } from '@/graphql/generated/graphql.ts';
+import { AccessLevelType } from '@/graphql/generated/graphql.ts';
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  
+
   // Состояния для полей формы
   const [collectionName, setCollectionName] = useState('');
   const [collectionInfo, setCollectionInfo] = useState('');
@@ -49,15 +46,15 @@ const EditCollectionPage = () => {
           setOriginalCollection(board);
           setCollectionName(board.title || board.name || '');
           setCollectionInfo(board.description || '');
-          
+
           // Если в API есть данные о соавторах
           setCollaborators(board.collaborators || []);
-          
+
           return;
         }
 
         // 2. Фолбек на моки
-        console.log("Используем моки для загрузки данных  коллекции");
+        console.log('Используем моки для загрузки данных  коллекции');
         const mockCollection = getMockCollectionById(parseInt(id));
 
         if (mockCollection) {
@@ -68,12 +65,11 @@ const EditCollectionPage = () => {
         } else {
           setError(`Подборка с ID ${id} не найдена`);
         }
-
       } catch (e) {
-        console.error("Ошибка при загрузке коллекции:", e);
+        console.error('Ошибка при загрузке коллекции:', e);
 
         // 3. Фолбек на моки при ошибке
-        console.log("Ошибка при загрузке, используем моки");
+        console.log('Ошибка при загрузке, используем моки');
         const mockCollection = getMockCollectionById(parseInt(id));
 
         if (mockCollection) {
@@ -84,7 +80,6 @@ const EditCollectionPage = () => {
         } else {
           setError('Не удалось загрузить подборку');
         }
-
       } finally {
         setLoading(false);
       }
@@ -95,14 +90,14 @@ const EditCollectionPage = () => {
 
   const handleSaveCollection = async () => {
     if (!id) {
-      console.error("ID коллекции не указан");
+      console.error('ID коллекции не указан');
       return;
     }
 
     const payload: UpdateBoardInput = {
-      userId: originalCollection?.ownerId ?? "",
-      name: collectionName,                     
-      description: collectionInfo,              
+      userId: originalCollection?.ownerId ?? '',
+      name: collectionName,
+      description: collectionInfo,
       accessLevel: AccessLevelType.Public,
     };
 
@@ -110,16 +105,16 @@ const EditCollectionPage = () => {
       const updatedBoard = await updateCollection(id, payload);
 
       if (updatedBoard) {
-        console.log("Коллекция успешно обновлена:", updatedBoard);
+        console.log('Коллекция успешно обновлена:', updatedBoard);
         handleBack();
-        showToast("Успешное сохранение!");
+        showToast('Успешное сохранение!');
       } else {
-        console.warn("Коллекция не была обновлена. Вернулась null");
-        showToast("Ошибка при сохранении", true);
+        console.warn('Коллекция не была обновлена. Вернулась null');
+        showToast('Ошибка при сохранении', true);
       }
     } catch (error: any) {
-      console.error("Ошибка при обновлении коллекции:", error.message);
-      showToast("Ошибка при сохранении", true);
+      console.error('Ошибка при обновлении коллекции:', error.message);
+      showToast('Ошибка при сохранении', true);
     }
   };
 
@@ -127,7 +122,7 @@ const EditCollectionPage = () => {
     // Пробуем взять from из URL
     const searchParams = new URLSearchParams(location.search);
     const from = searchParams.get('from');
-    
+
     if (from) {
       // Если есть параметр from - используем его
       navigate(`/${from}`);
@@ -148,9 +143,10 @@ const EditCollectionPage = () => {
     }
   };
 
-  const isSaveEnabled = collectionName.trim().length > 0 &&
-                        collectionName.length <= 50 &&
-                        collectionInfo.length <= 1000;
+  const isSaveEnabled =
+    collectionName.trim().length > 0 &&
+    collectionName.length <= 50 &&
+    collectionInfo.length <= 1000;
 
   // Показываем загрузку
   if (loading) {
@@ -175,10 +171,7 @@ const EditCollectionPage = () => {
           <div className={styles.errorContainer}>
             <h2>Коллекция не найдена</h2>
             <p>{error || `Коллекция с ID ${id} не существует.`}</p>
-            <button 
-              onClick={() => navigate('/feed')}
-              className={styles.backButton}
-            >
+            <button onClick={() => navigate('/feed')} className={styles.backButton}>
               Вернуться на главную
             </button>
           </div>
@@ -198,7 +191,9 @@ const EditCollectionPage = () => {
         </div>
 
         <div className={styles.gridWrapper}>
-          <label htmlFor="collection-name" className={styles.name_label}>Название:</label> 
+          <label htmlFor="collection-name" className={styles.name_label}>
+            Название:
+          </label>
           <div className={styles.name_input_block}>
             <input
               id="collection-name"
@@ -208,9 +203,7 @@ const EditCollectionPage = () => {
               maxLength={50}
               className={collectionName.length > 50 ? styles.error : styles.name_input}
             />
-            <div className={styles.characterCounter}>
-              {collectionName.length}/50
-            </div>
+            <div className={styles.characterCounter}>{collectionName.length}/50</div>
             {collectionName.length > 50 && (
               <div className={styles.errorMessage}>
                 Collection name must be 50 characters or less
@@ -218,7 +211,9 @@ const EditCollectionPage = () => {
             )}
           </div>
 
-          <label htmlFor="collection-info" className={styles.discr_label}>Описание:</label>
+          <label htmlFor="collection-info" className={styles.discr_label}>
+            Описание:
+          </label>
           <div className={styles.discr_input_block}>
             <textarea
               id="collection-info"
@@ -229,9 +224,7 @@ const EditCollectionPage = () => {
               className={collectionInfo.length > 1000 ? styles.error : styles.discr_input}
               placeholder="Опишите вашу подборку..."
             />
-            <div className={styles.characterCounter}>
-              {collectionInfo.length}/1000
-            </div>
+            <div className={styles.characterCounter}>{collectionInfo.length}/1000</div>
           </div>
 
           <label className={styles.collaborator_label}>Соавторы:</label>
@@ -243,7 +236,7 @@ const EditCollectionPage = () => {
                   <button
                     className={styles.removeCollaboratorBtn}
                     onClick={() => {
-                      setCollaborators(prev => prev.filter(c => c !== name));
+                      setCollaborators((prev) => prev.filter((c) => c !== name));
                     }}
                   >
                     ✕
@@ -292,14 +285,14 @@ const EditCollectionPage = () => {
               className={styles.hiddenInput}
             />
             <label htmlFor="cover-input" className={styles.uploadButton}>
-              {coverImage || originalCollection?.image ? "Изменить фото" : "Загрузить фото"}
+              {coverImage || originalCollection?.image ? 'Изменить фото' : 'Загрузить фото'}
             </label>
             {originalCollection?.image && !coverImage && (
               <p className={styles.currentCoverNote}>Используется текущая обложка</p>
             )}
           </section>
         </div>
-        
+
         <button
           type="button"
           onClick={handleSaveCollection}
@@ -314,7 +307,7 @@ const EditCollectionPage = () => {
             onClose={() => setIsInviteModalOpen(false)}
             onAddCollaborator={(name) => {
               if (name && !collaborators.includes(name)) {
-                setCollaborators(prev => [...prev, name]);
+                setCollaborators((prev) => [...prev, name]);
               }
             }}
             existingCollaborators={collaborators}

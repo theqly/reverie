@@ -1,10 +1,13 @@
-import {apolloClient} from "@/api/apolloClient.ts";
+import { apolloClient } from '@/api/apolloClient.ts';
 import {
   type Board,
   BookmarkToBoardDocument,
-  BookmarkToPinDocument, GetBookmarkedBoardsByUserIdDocument, GetBookmarkedPinsByUserIdDocument, type Pin,
-} from "@/graphql/generated/graphql.ts";
-import {resolveUserId} from "@/services/profileService.ts";
+  BookmarkToPinDocument,
+  GetBookmarkedBoardsByUserIdDocument,
+  GetBookmarkedPinsByUserIdDocument,
+  type Pin,
+} from '@/graphql/generated/graphql.ts';
+import { resolveUserId } from '@/services/profileService.ts';
 
 /**
  * Добавляет или удаляет пин из закладок пользователя
@@ -13,9 +16,10 @@ import {resolveUserId} from "@/services/profileService.ts";
  * @param params.pinId - ID пина
  * @param params.userId - ID пользователя
  */
-export async function toggleBookmarkToPin(
-  params: { pinId: string; userId: string }
-): Promise<boolean> {
+export async function toggleBookmarkToPin(params: {
+  pinId: string;
+  userId: string;
+}): Promise<boolean> {
   try {
     const result = await apolloClient.mutate({
       mutation: BookmarkToPinDocument,
@@ -35,9 +39,10 @@ export async function toggleBookmarkToPin(
  * @param params.boardId - ID доски
  * @param params.userId - ID пользователя
  */
-export async function toggleBookmarkToBoard(
-  params: { boardId: string; userId: string }
-): Promise<boolean> {
+export async function toggleBookmarkToBoard(params: {
+  boardId: string;
+  userId: string;
+}): Promise<boolean> {
   try {
     const result = await apolloClient.mutate({
       mutation: BookmarkToBoardDocument,
@@ -60,17 +65,15 @@ export async function toggleBookmarkToBoard(
  * @param params.offset - (Опционально) Смещение
  * @returns Массив пинов в закладках или null
  */
-export async function getBookmarkedPinsByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    limit?: number;
-    offset?: number;
-  }
-): Promise<Pin[] | null> {
+export async function getBookmarkedPinsByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<Pin[] | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -89,7 +92,7 @@ export async function getBookmarkedPinsByUser(
 
     const result = await apolloClient.query({
       query: GetBookmarkedPinsByUserIdDocument,
-      variables
+      variables,
     });
     return result.data?.bookmarkedPinsByUser ?? null;
   } catch (error) {
@@ -108,17 +111,15 @@ export async function getBookmarkedPinsByUser(
  * @param params.offset - (Опционально) Смещение.
  * @returns Массив досок в закладках или null.
  */
-export async function getBookmarkedBoardsByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    limit?: number;
-    offset?: number;
-  }
-): Promise<Board[] | null> {
+export async function getBookmarkedBoardsByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<Board[] | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -137,7 +138,7 @@ export async function getBookmarkedBoardsByUser(
 
     const result = await apolloClient.query({
       query: GetBookmarkedBoardsByUserIdDocument,
-      variables
+      variables,
     });
     return result.data?.bookmarkedBoardsByUser ?? null;
   } catch (error) {

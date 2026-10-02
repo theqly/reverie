@@ -25,7 +25,6 @@ import {
   getBookmarksByUser,
 } from '../services/profileService';
 
-
 type TabType = 'collections' | 'pins' | 'likes' | 'bookmarks';
 
 const Profile = () => {
@@ -70,7 +69,6 @@ const Profile = () => {
   const [bookmarkedPins, setBookmarkedPins] = useState<any[]>([]);
   const [bookmarkedCollections, setBookmarkedCollections] = useState<any[]>([]);
 
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,7 +103,7 @@ const Profile = () => {
     try {
       const response = await getPinsByUser({
         viewerId: '000', // временно
-        userId: '000',   // временно
+        userId: '000', // временно
         limit: 20,
         offset: 0,
       });
@@ -152,68 +150,66 @@ const Profile = () => {
   };
 
   const handleGetLikes = async () => {
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  try {
-    const response = await getLikesByUser({
-      userId: '000', // временно
-      pinsLimit: 20,
-      pinsOffset: 0,
-      boardsLimit: 10,
-      boardsOffset: 0,
-    });
+    try {
+      const response = await getLikesByUser({
+        userId: '000', // временно
+        pinsLimit: 20,
+        pinsOffset: 0,
+        boardsLimit: 10,
+        boardsOffset: 0,
+      });
 
-    if (response) {
-      setLikedPins(response.pins || []);
-      setLikedCollections(response.boards || []);
-    } else {
-      console.log('[Profile] Использовали моки лайков');
+      if (response) {
+        setLikedPins(response.pins || []);
+        setLikedCollections(response.boards || []);
+      } else {
+        console.log('[Profile] Использовали моки лайков');
+        setLikedPins(mockPins);
+        setLikedCollections(mockCollections);
+      }
+    } catch (err) {
+      console.error('[Profile] getLikes error:', err);
       setLikedPins(mockPins);
       setLikedCollections(mockCollections);
+      setError('Не удалось загрузить лайки');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('[Profile] getLikes error:', err);
-    setLikedPins(mockPins);
-    setLikedCollections(mockCollections);
-    setError('Не удалось загрузить лайки');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-const handleGetBookmarks = async () => {
-  setLoading(true);
-  setError(null);
+  const handleGetBookmarks = async () => {
+    setLoading(true);
+    setError(null);
 
-  try {
-    const response = await getBookmarksByUser({
-      userId: '000', // временно
-      pinsLimit: 20,
-      pinsOffset: 0,
-      boardsLimit: 10,
-      boardsOffset: 0,
-    });
+    try {
+      const response = await getBookmarksByUser({
+        userId: '000', // временно
+        pinsLimit: 20,
+        pinsOffset: 0,
+        boardsLimit: 10,
+        boardsOffset: 0,
+      });
 
-    if (response) {
-      setBookmarkedPins(response.pins || []);
-      setBookmarkedCollections(response.boards || []);
-    } else {
-      console.log('[Profile] Использовали моки закладок');
+      if (response) {
+        setBookmarkedPins(response.pins || []);
+        setBookmarkedCollections(response.boards || []);
+      } else {
+        console.log('[Profile] Использовали моки закладок');
+        setBookmarkedPins(mockPins);
+        setBookmarkedCollections(mockCollections);
+      }
+    } catch (err) {
+      console.error('[Profile] getBookmarks error:', err);
       setBookmarkedPins(mockPins);
       setBookmarkedCollections(mockCollections);
+      setError('Не удалось загрузить закладки');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('[Profile] getBookmarks error:', err);
-    setBookmarkedPins(mockPins);
-    setBookmarkedCollections(mockCollections);
-    setError('Не удалось загрузить закладки');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   /* =======================
      Effects
@@ -229,7 +225,7 @@ const handleGetBookmarks = async () => {
     }
 
     if (activeTab === 'likes') {
-    handleGetLikes();
+      handleGetLikes();
     }
 
     if (activeTab === 'bookmarks') {
@@ -240,15 +236,11 @@ const handleGetBookmarks = async () => {
   /* =======================
      Mixed feed (likes / bookmarks)
   ======================= */
-  const generateMixedFeed = (
-    collections: any[],
-    pins: any[]
-  ) => {
+  const generateMixedFeed = (collections: any[], pins: any[]) => {
     const COLLECTIONS_PER_BLOCK = 2;
     const PINS_PER_BLOCK = 5;
 
     //console.log('collections:', collections);
-
 
     const colls = [...collections];
     const ps = [...pins];
@@ -277,10 +269,8 @@ const handleGetBookmarks = async () => {
     return feed;
   };
 
-
   const likesFeed = generateMixedFeed(likedCollections, likedPins);
   const bookmarksFeed = generateMixedFeed(bookmarkedCollections, bookmarkedPins);
-
 
   /* =======================
      Render
@@ -297,8 +287,7 @@ const handleGetBookmarks = async () => {
         </div>
 
         <section className={styles.main_content}>
-          <div style={{ display: "flex", width: "100%" }}>
-
+          <div style={{ display: 'flex', width: '100%' }}>
             {/* Левая часть — профиль */}
             <div className={styles.profile}>
               <img src={profileData.avatar} className={styles.avatar} />
@@ -308,19 +297,13 @@ const handleGetBookmarks = async () => {
 
                 <ul className={styles.follow_options}>
                   <li>
-                    <button
-                      className={styles.followLink}
-                      onClick={() => setFollowersOpen(true)}
-                    >
+                    <button className={styles.followLink} onClick={() => setFollowersOpen(true)}>
                       <p>1247</p> подписчиков
                     </button>
                   </li>
 
                   <li>
-                    <button
-                      className={styles.followLink}
-                      onClick={() => setFollowingOpen(true)}
-                    >
+                    <button className={styles.followLink} onClick={() => setFollowingOpen(true)}>
                       <p>450</p> подписок
                     </button>
                   </li>
@@ -329,66 +312,46 @@ const handleGetBookmarks = async () => {
             </div>
 
             {/* Правая часть — кнопки */}
-            <div
-              className={styles.btn_container}
-              style={{ display: "flex" }}
-            >
-              <button
-                className={styles.edit_btn}
-                onClick={() => setEditOpen(true)}
-              >
+            <div className={styles.btn_container} style={{ display: 'flex' }}>
+              <button className={styles.edit_btn} onClick={() => setEditOpen(true)}>
                 Редактировать профиль
               </button>
 
-              <button
-                className={styles.settingsBtn}
-                onClick={() => setSettingsOpen(true)}
-              />
+              <button className={styles.settingsBtn} onClick={() => setSettingsOpen(true)} />
 
-              <button
-                className={styles.shareBtn}
-                onClick={() => setShareOpen(true)}
-              />
+              <button className={styles.shareBtn} onClick={() => setShareOpen(true)} />
             </div>
-
           </div>
 
           <div className={styles.bio}>{profileData.bio}</div>
 
-          <div style={{ display: "flex" }}>
-            <button
-              className={styles.editBtn}
-              onClick={() => setFollowing(prev => !prev)}
-            >
+          <div style={{ display: 'flex' }}>
+            <button className={styles.editBtn} onClick={() => setFollowing((prev) => !prev)}>
               {isFollowing ? 'Отписаться' : 'Подписаться'}
             </button>
 
-            <button
-              className={styles.reportBtn}
-              onClick={() => setReportOpen(true)}
-            >
+            <button className={styles.reportBtn} onClick={() => setReportOpen(true)}>
               !
             </button>
           </div>
         </section>
 
-
         {/* Tabs */}
         <div className={styles.tabs}>
-          {(['collections', 'pins', 'likes', 'bookmarks'] as TabType[]).map(tab => (
+          {(['collections', 'pins', 'likes', 'bookmarks'] as TabType[]).map((tab) => (
             <button
               key={tab}
-              className={`${styles.tabBtn} ${
-                activeTab === tab ? styles.active : ''
-              }`}
+              className={`${styles.tabBtn} ${activeTab === tab ? styles.active : ''}`}
               onClick={() => setActiveTab(tab)}
             >
-              {{
-                collections: 'Подборки',
-                pins: 'Пины',
-                likes: 'Понравившиеся',
-                bookmarks: 'Закладки',
-              }[tab]}
+              {
+                {
+                  collections: 'Подборки',
+                  pins: 'Пины',
+                  likes: 'Понравившиеся',
+                  bookmarks: 'Закладки',
+                }[tab]
+              }
             </button>
           ))}
         </div>
@@ -399,15 +362,12 @@ const handleGetBookmarks = async () => {
         <div className={styles.tabContent}>
           {activeTab === 'collections' && (
             <>
-              <button
-                onClick={handleCreateCollection}
-                className={styles.newBoardBtn}
-              >
+              <button onClick={handleCreateCollection} className={styles.newBoardBtn}>
                 Создать подборку
               </button>
 
               <CollectionGrid
-                collections={collections.map(col => ({
+                collections={collections.map((col) => ({
                   ...col,
                   authorAvatar: col.authorAvatar || placeholder_1,
                 }))}
@@ -418,10 +378,7 @@ const handleGetBookmarks = async () => {
 
           {activeTab === 'pins' && (
             <>
-              <button
-                onClick={handleCreatePin}
-                className={styles.newPinBtn}
-              >
+              <button onClick={handleCreatePin} className={styles.newPinBtn}>
                 Создать пин
               </button>
 
@@ -439,10 +396,7 @@ const handleGetBookmarks = async () => {
                       onCollectionClick={handleCollectionClick}
                     />
                   ) : (
-                    <PinGrid
-                      pins={block.items}
-                      onPinClick={handlePinClick}
-                    />
+                    <PinGrid pins={block.items} onPinClick={handlePinClick} />
                   )}
                 </div>
               ))}
@@ -459,18 +413,13 @@ const handleGetBookmarks = async () => {
                       onCollectionClick={handleCollectionClick}
                     />
                   ) : (
-                    <PinGrid
-                      pins={block.items}
-                      onPinClick={handlePinClick}
-                    />
+                    <PinGrid pins={block.items} onPinClick={handlePinClick} />
                   )}
                 </div>
               ))}
             </div>
           )}
         </div>
-
-
 
         {/* Modals */}
         <EditProfileModal
@@ -480,31 +429,19 @@ const handleGetBookmarks = async () => {
           initialData={profileData}
         />
 
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setSettingsOpen(false)}
-        />
+        <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
 
-        <ShareModal
-          isOpen={isShareOpen}
-          onClose={() => setShareOpen(false)}
-        />
+        <ShareModal isOpen={isShareOpen} onClose={() => setShareOpen(false)} />
 
         <ReportModal
           isOpen={isReportOpen}
           onClose={() => setReportOpen(false)}
-          onSubmit={data => console.log('Жалоба:', data)}
+          onSubmit={(data) => console.log('Жалоба:', data)}
         />
 
-        <FollowersModal
-          isOpen={isFollowersOpen}
-          onClose={() => setFollowersOpen(false)}
-        />
+        <FollowersModal isOpen={isFollowersOpen} onClose={() => setFollowersOpen(false)} />
 
-        <FollowingModal
-          isOpen={isFollowingOpen}
-          onClose={() => setFollowingOpen(false)}
-        />
+        <FollowingModal isOpen={isFollowingOpen} onClose={() => setFollowingOpen(false)} />
       </main>
     </div>
   );

@@ -1,17 +1,15 @@
 export type AccessLevel = {
-  type: "public" | "private" | "group_public" | "group";
+  type: 'public' | 'private' | 'group_public' | 'group';
 };
 
 export type Owner = {
   id: string;
 };
 
-
 export type Pin = {
   id: string;
   title: string;
   content: string;
-
 };
 
 export type Board = {
@@ -32,11 +30,11 @@ export type FullBoard = {
 };
 
 export type BoardResponse = {
-  board: Board | null; 
+  board: Board | null;
 };
 
 export type FullBoardResponse = {
-  board: FullBoard | null; 
+  board: FullBoard | null;
 };
 
 export type GraphQLResponse<T> = {
@@ -57,7 +55,6 @@ export type User = {
 export type UserByIdResponse = {
   userById: User | null;
 };
-
 
 export type Reaction = {
   id: string;
@@ -80,11 +77,10 @@ export type ReactionsCountByBoardResponse = {
   reactionsCountByBoard: number;
 };
 
-
 export type AddCommentInput = {
   contentId: string;
   userId: string;
-  message: string;   
+  message: string;
 };
 
 export type AddCommentResponse = {

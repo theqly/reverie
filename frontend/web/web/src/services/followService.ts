@@ -1,10 +1,11 @@
-import {apolloClient} from "@/api/apolloClient.ts";
+import { apolloClient } from '@/api/apolloClient.ts';
 import {
   FollowUserDocument,
   GetFollowersByIdDocument,
   GetUserByNickTagDocument,
-  GetUserIdByNickTagDocument, UnfollowUserDocument
-} from "@/graphql/generated/graphql.ts";
+  GetUserIdByNickTagDocument,
+  UnfollowUserDocument,
+} from '@/graphql/generated/graphql.ts';
 
 /**
  * Ищет пользователя по его уникальному никнейму.
@@ -16,30 +17,28 @@ import {
  * // должен вернуть объект пользователя или null, если пользователь не найден
  */
 export async function findUserByNickTag(nickTag: string) {
-  if ( nickTag === undefined || nickTag === null || nickTag.length === 0 ) {
+  if (nickTag === undefined || nickTag === null || nickTag.length === 0) {
     return null;
   }
   try {
     const userResult = await apolloClient.query({
       query: GetUserByNickTagDocument,
       variables: {
-        nickname: nickTag
-      }
+        nickname: nickTag,
+      },
     });
 
-    return userResult.data?.userByNickname || null
+    return userResult.data?.userByNickname || null;
   } catch (error) {
     console.error('Failed to find user by nickname:', error);
   }
   return null;
 }
 
-
-
 export interface GetFollowersPayload {
   username: string; // Ник владельца профиля, у которого нужно получить подписчиков
-  offset: number;   // Смещение для пагинации
-  limit: number;    // Количество элементов (например, 100)
+  offset: number; // Смещение для пагинации
+  limit: number; // Количество элементов (например, 100)
 }
 
 /**
@@ -59,7 +58,7 @@ export interface GetFollowersPayload {
 export async function getFollowers(payload: GetFollowersPayload) {
   // TODO: Реализовать на бэке
   if (payload.username === undefined) {
-    return {followers: [], totalCount: 0};
+    return { followers: [], totalCount: 0 };
   }
 
   try {
@@ -67,28 +66,28 @@ export async function getFollowers(payload: GetFollowersPayload) {
       query: GetUserIdByNickTagDocument,
       variables: {
         nickname: payload.username,
-      }
+      },
     });
     if (!userId) {
-      return {followers: [], totalCount: 0};
+      return { followers: [], totalCount: 0 };
     }
 
     const followers = await apolloClient.query({
       query: GetFollowersByIdDocument,
       variables: {
         id: userId.data?.userByNickname.id,
-      }
+      },
     });
 
     if (!followers || !followers.data) {
-      return {followers: [], totalCount: 0};
+      return { followers: [], totalCount: 0 };
     }
-    return {followers: followers.data, totalCount: followers.data.length};
+    return { followers: followers.data, totalCount: followers.data.length };
   } catch (error) {
     console.error('Failed to find followers:', error);
   }
 
-  return {followers: [], totalCount: 0};
+  return { followers: [], totalCount: 0 };
 }
 
 /**
@@ -102,14 +101,14 @@ export async function getFollowers(payload: GetFollowersPayload) {
  *
  * @return true при успешной подписке, иначе false
  */
-export async function followUser(userId: string, followerId: string) : Promise< boolean > {
+export async function followUser(userId: string, followerId: string): Promise<boolean> {
   try {
     const followed = await apolloClient.mutate({
       mutation: FollowUserDocument,
       variables: {
         userId: userId,
-        followerId: followerId
-      }
+        followerId: followerId,
+      },
     });
 
     return followed.data?.followUser || false;
@@ -131,14 +130,14 @@ export async function followUser(userId: string, followerId: string) : Promise< 
  *
  * @return true при успешной отписке, иначе false
  */
-export async function unfollowUser(userId: string, followerId: string) : Promise< boolean  > {
+export async function unfollowUser(userId: string, followerId: string): Promise<boolean> {
   try {
     const unfollowed = await apolloClient.mutate({
       mutation: UnfollowUserDocument,
       variables: {
         userId: userId,
-        followerId: followerId
-      }
+        followerId: followerId,
+      },
     });
 
     return unfollowed.data?.followUser || false;
