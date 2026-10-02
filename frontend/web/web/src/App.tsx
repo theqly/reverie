@@ -1,7 +1,5 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import HomePage from './pages/HomePage';
 import CreateCollectionPage from './pages/CreateCollectionPage';
 import EditCollectionPage from './pages/EditCollectionPage';
 import CreatePinPage from './pages/CreatePinPage';
@@ -21,7 +19,7 @@ function App() {
     <Router>
       <ToastProvider>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Feed />} />
           <Route path="/collection/create" element={<CreateCollectionPage />} />
           <Route path="/pin/create" element={<CreatePinPage />} />
           <Route path="/pin/edit/:id" element={<EditPinPage />} />

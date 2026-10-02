@@ -1,5 +1,3 @@
-// types/board.ts
-
 export type AccessLevel = {
   type: "public" | "private" | "group_public" | "group";
 };
@@ -13,7 +11,6 @@ export type Pin = {
   id: string;
   title: string;
   content: string;
-  //тут тоже не все поля которые нужны!!
 
 };
 
@@ -29,7 +26,7 @@ export type FullBoard = {
   name: string;
   accessLevel: AccessLevel;
   groupId: string;
-  createdAt: string; // обычно ISO строка
+  createdAt: string;
   owner: Owner;
   pins: Pin[];
 };
@@ -55,7 +52,6 @@ export type User = {
   id: string;
   username: string;
   email: string;
-  // добавить другие поля которые нужны!!!
 };
 
 export type UserByIdResponse = {
@@ -72,7 +68,7 @@ export type Reaction = {
 export type Comment = {
   id: string;
   content: string;
-  createdAt: string; // ISO строка
+  createdAt: string;
   author: User;
 };
 
@@ -97,7 +93,7 @@ export type AddCommentResponse = {
 
 export type ComplaintInput = {
   complaintTypeId: string;
-  content?: string;  // опционально
+  content?: string;
 };
 
 export type ComplaintTypes = {
@@ -112,10 +108,8 @@ export type ComplaintStatuses = {
   description: string;
 };
 
-// types/board.ts
 export type CopyBoardResponse = {
   copyBoard: {
     id: string;
-    // можно добавить другие поля если нужны
   };
 };
