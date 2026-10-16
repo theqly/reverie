@@ -4,7 +4,9 @@ import {
   BookmarkToBoardDocument,
   BookmarkToPinDocument,
   GetBookmarkedBoardsByUserIdDocument,
+  type GetBookmarkedBoardsByUserIdQueryVariables,
   GetBookmarkedPinsByUserIdDocument,
+  type GetBookmarkedPinsByUserIdQueryVariables,
   type Pin,
 } from '@/graphql/generated/graphql.ts';
 import { resolveUserId } from '@/services/profileService.ts';
@@ -43,16 +45,16 @@ export async function toggleBookmarkToBoard(params: {
   boardId: string;
   userId: string;
 }): Promise<boolean> {
-  try {
-    const result = await apolloClient.mutate({
-      mutation: BookmarkToBoardDocument,
-      variables: params,
-    });
-    return result.data?.bookmarkToBoard === true;
-  } catch (error) {
-    console.error(`Failed to toggle bookmark for Board ${params.boardId}:`, error);
-    return false;
+  const result = await apolloClient.mutate({
+    mutation: BookmarkToBoardDocument,
+    variables: params,
+  });
+
+  if (result.data?.bookmarkToBoard == null) {
+    throw new Error('Empty bookmarkToBoard response');
   }
+
+  return result.data.bookmarkToBoard;
 }
 
 /**
@@ -81,14 +83,11 @@ export async function getBookmarkedPinsByUser(params: {
   }
 
   try {
-    const variables: any = { userId: finalUserId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetBookmarkedPinsByUserIdQueryVariables = {
+      userID: finalUserId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetBookmarkedPinsByUserIdDocument,
@@ -127,14 +126,11 @@ export async function getBookmarkedBoardsByUser(params: {
   }
 
   try {
-    const variables: any = { userId: finalUserId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetBookmarkedBoardsByUserIdQueryVariables = {
+      userID: finalUserId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetBookmarkedBoardsByUserIdDocument,

@@ -78,6 +78,34 @@ query GetLikedPinsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
   }
 }
 
+query GetLikedPinIdsByUserId(
+  $userID: UUID!
+  $limit: Int = 100
+  $offset: Int = 0
+) {
+  likedPinsByUser(
+    userID: $userID
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+  }
+}
+
+query GetBookmarkedPinIdsByUserId(
+  $userID: UUID!
+  $limit: Int = 100
+  $offset: Int = 0
+) {
+  bookmarkedPinsByUser(
+    userID: $userID
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+  }
+}
+
 query GetBookmarkedPinsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
   bookmarkedPinsByUser(userID: $userID, limit: $limit, offset: $offset) {
     id
@@ -107,18 +135,6 @@ mutation UpdatePin($id: UUID!, $input: UpdatePinInput!) {
     latitude
     longitude
     description
-    rating
-    createdAt
-    owner {
-      id
-      nickname
-      profilePicture
-    }
-    images {
-      id
-      orderNumber
-      imageUrl
-    }
   }
 }
 
@@ -127,28 +143,6 @@ mutation UpdateBoard($id: UUID!, $input: UpdateBoardInput!) {
     id
     name
     description
-    accessLevel
-    ownerId
-    authorId
-    ownerType
-    createdAt
-    savedAt
-    pins {
-      id
-      name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
-      images {
-        id
-        orderNumber
-        imageUrl
-      }
-    }
-    reactionId
-    bookmarked
   }
 }
 
@@ -205,33 +199,37 @@ query GetLikedBoardsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0)
   }
 }
 
-query GetBookmarkedBoardsByUserId($userID: UUID!, $limit: Int = 10, $offset: Int = 0) {
+query GetLikedBoardIdsByUserId(
+  $userID: UUID!
+  $limit: Int = 100
+  $offset: Int = 0
+) {
+  likedBoardsByUser(userID: $userID, limit: $limit, offset: $offset) {
+    id
+  }
+}
+
+query GetBookmarkedBoardIdsByUserId(
+  $userID: UUID!
+  $limit: Int = 100
+  $offset: Int = 0
+) {
   bookmarkedBoardsByUser(userID: $userID, limit: $limit, offset: $offset) {
     id
-    name
-    description
-    accessLevel
-    ownerId
-    authorId
-    ownerType
-    createdAt
-    savedAt
-    pins {
-      id
-      name
-      owner {
-        id
-        nickname
-        profilePicture
-      }
-      images {
-        id
-        orderNumber
-        imageUrl
-      }
-    }
-    reactionId
-    bookmarked
+  }
+}
+
+query GetBookmarkedBoardsByUserId(
+  $userID: UUID!
+  $limit: Int = 10
+  $offset: Int = 0
+) {
+  bookmarkedBoardsByUser(
+    userID: $userID
+    limit: $limit
+    offset: $offset
+  ) {
+    id
   }
 }
 

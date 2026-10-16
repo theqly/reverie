@@ -11,6 +11,8 @@ import {
   GetCommentsByBoardIdDocument,
   GetCommentsByPinIdDocument,
   UpdateCommentToBoardDocument,
+  type GetCommentsByBoardIdQueryVariables, 
+  type GetCommentsByPinIdQueryVariables,
   UpdateCommentToPinDocument,
 } from '@/graphql/generated/graphql.ts';
 
@@ -31,14 +33,11 @@ export async function getCommentsByPin(params: {
 }): Promise<CommentToPin[]> {
   try {
     // Формируем переменные, включая только те, что переданы
-    const variables: any = { pinId: params.pinId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetCommentsByPinIdQueryVariables = {
+      pinId: params.pinId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetCommentsByPinIdDocument,
@@ -132,14 +131,11 @@ export async function getCommentsByBoard(params: {
 }): Promise<CommentToBoard[]> {
   try {
     // Формируем переменные, включая только те, что переданы
-    const variables: any = { boardId: params.boardId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetCommentsByBoardIdQueryVariables = {
+      boardId: params.boardId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetCommentsByBoardIdDocument,

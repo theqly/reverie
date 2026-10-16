@@ -4,10 +4,11 @@ import {
   type CreatePinInput,
   type UpdatePinInput,
   UpdatePinDocument,
-  type Pin,
   GetPinByIdDocument,
   IsPinBookmarkedDocument,
   GetPinReactionIdDocument,
+  type GetPinByIdQuery,
+  type UpdatePinMutation,
 } from '@/graphql/generated/graphql.ts';
 
 export interface CreatePinPayload {
@@ -35,31 +36,17 @@ export interface CreatePinPayload {
  * });
  */
 export async function createPin(payload: CreatePinPayload) {
-  const createInput: any = {
+  const createInput: CreatePinInput = {
     ownerId: payload.ownerId,
+    name: payload.name,
+    latitude: payload.latitude,
+    longitude: payload.longitude,
+    description: payload.description,
   };
-
-  if (payload.description !== undefined) {
-    createInput.description = payload.description;
-  }
-
-  if (payload.latitude !== undefined) {
-    createInput.latitude = payload.latitude;
-  }
-
-  if (payload.longitude !== undefined) {
-    createInput.longitude = payload.longitude;
-  }
-
-  if (payload.name !== undefined) {
-    createInput.name = payload.name;
-  }
 
   const createPinResult = await apolloClient.mutate({
     mutation: CreatePinDocument,
-    variables: {
-      input: createInput as CreatePinInput,
-    },
+    variables: { input: createInput },
   });
 
   return createPinResult.data?.createPin || null;
@@ -80,52 +67,47 @@ export async function createPin(payload: CreatePinPayload) {
  *   ownerId: "00000000-0000-0000-0000-000000000001",
  * });
  */
-export async function updatePin(pinId: string, input: UpdatePinInput): Promise<Pin | null> {
-  const updateInput: any = {
+type UpdatedPin = UpdatePinMutation['updatePin'];
+
+export async function updatePin(
+  pinId: string,
+  input: UpdatePinInput,
+): Promise<UpdatedPin | null> {
+  const updateInput: UpdatePinInput = {
     userId: input.userId,
+    name: input.name,
+    description: input.description,
+    latitude: input.latitude,
+    longitude: input.longitude,
+    rating: input.rating,
   };
-
-  if (input.description !== undefined) {
-    updateInput.description = input.description;
-  }
-
-  if (input.latitude !== undefined) {
-    updateInput.latitude = input.latitude;
-  }
-
-  if (input.longitude !== undefined) {
-    updateInput.longitude = input.longitude;
-  }
-
-  if (input.name !== undefined) {
-    updateInput.name = input.name;
-  }
-
-  if (input.rating !== undefined) {
-    updateInput.rating = input.rating;
-  }
 
   const updatedPinResult = await apolloClient.mutate({
     mutation: UpdatePinDocument,
     variables: {
       id: pinId,
-      input: updateInput as UpdatePinInput,
+      input: updateInput,
     },
   });
 
-  return updatedPinResult.data?.updatePin || null;
+  return updatedPinResult.data?.updatePin ?? null;
 }
 
 /**
  * Получает пин по его ID
  * @returns Pin или null
  */
-export async function getPinById(id: string): Promise<Pin | null> {
+type PinById = NonNullable<GetPinByIdQuery['pin']>;
+
+export async function getPinById(
+  id: string,
+): Promise<PinById | null> {
   try {
     const result = await apolloClient.query({
       query: GetPinByIdDocument,
       variables: { id },
     });
+
     return result.data?.pin ?? null;
   } catch (error) {
     console.error('Failed to fetch pin:', error);

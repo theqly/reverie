@@ -3,9 +3,7 @@ import {
   AccessLevelType,
   type Board,
   CreateBoardDocument,
-  type CreateBoardInput,
   CreateGroupDocument,
-  type CreateGroupInput,
   GetBoardByIdDocument,
   GetBoardReactionIdDocument,
   IsBoardBookmarkedDocument,
@@ -45,7 +43,7 @@ export async function createCollection(payload: CreateCollectionPayload) {
         variables: {
           input: {
             members: payload.collaborators,
-          } as CreateGroupInput,
+          },
         },
       });
 
@@ -64,7 +62,7 @@ export async function createCollection(payload: CreateCollectionPayload) {
             ownerId: newGroupId,
             ownerType: OwnerType.Group,
             description: payload.info,
-          } as CreateBoardInput,
+          },
         },
         // refetchQueries: ['ownBoardsByUser', 'groupBoardsByUser']
       });
@@ -90,7 +88,7 @@ export async function createCollection(payload: CreateCollectionPayload) {
             ownerId: payload.collaborators[0],
             ownerType: OwnerType.User,
             description: payload.info,
-          } as CreateBoardInput,
+          },
         },
       });
 
@@ -106,9 +104,10 @@ export async function createCollection(payload: CreateCollectionPayload) {
         board: newBoard,
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating collection:', error);
-    throw new Error(`Failed to create collection: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to create collection: ${message}`);
   }
 }
 
@@ -131,27 +130,18 @@ export async function updateCollection(
   collectionId: string,
   input: UpdateBoardInput,
 ): Promise<Board | null> {
-  const updateInput: any = {
+  const updateInput: UpdateBoardInput = {
     userId: input.userId,
+    accessLevel: input.accessLevel,
+    name: input.name,
+    description: input.description,
   };
-
-  if (input.accessLevel !== undefined) {
-    updateInput.accessLevel = input.accessLevel;
-  }
-
-  if (input.name !== undefined) {
-    updateInput.name = input.name;
-  }
-
-  if (input.description !== undefined) {
-    updateInput.description = input.description;
-  }
 
   const updatedBoardResult = await apolloClient.mutate({
     mutation: UpdateBoardDocument,
     variables: {
       id: collectionId,
-      input: updateInput as UpdateBoardInput,
+      input: updateInput,
     },
   });
 
@@ -162,7 +152,7 @@ export async function updateCollection(
  * Получает подборку по её ID
  * @returns Board или null
  */
-export async function getPinById(id: string): Promise<Board | null> {
+export async function getBoardById(id: string): Promise<Board | null> {
   try {
     const result = await apolloClient.query({
       query: GetBoardByIdDocument,
@@ -180,16 +170,14 @@ export async function getPinById(id: string): Promise<Board | null> {
  * @returns true - лайкнута, false - нет или в случае ошибки
  */
 export async function isBoardLiked(id: string): Promise<boolean> {
-  try {
-    const result = await apolloClient.query({
-      query: GetBoardReactionIdDocument,
-      variables: { id },
-    });
-    return result.data?.board.reactionId == '8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f';
-  } catch (error) {
-    console.error('Failed to fetch pin:', error);
-    return false;
-  }
+  const result = await apolloClient.query({
+    query: GetBoardReactionIdDocument,
+    variables: { id },
+    fetchPolicy: 'network-only',
+  });
+
+  return result.data?.board?.reactionId ===
+    '8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f';
 }
 
 /**
@@ -197,14 +185,11 @@ export async function isBoardLiked(id: string): Promise<boolean> {
  * @returns true - добавлена, false - нет или в случае ошибки
  */
 export async function isBoardBookmarked(id: string): Promise<boolean> {
-  try {
-    const result = await apolloClient.query({
-      query: IsBoardBookmarkedDocument,
-      variables: { id },
-    });
-    return result.data?.board.bookmarked ?? false;
-  } catch (error) {
-    console.error('Failed to fetch pin:', error);
-    return false;
-  }
+  const result = await apolloClient.query({
+    query: IsBoardBookmarkedDocument,
+    variables: { id },
+    fetchPolicy: 'network-only',
+  });
+
+  return result.data?.board?.bookmarked ?? false;
 }

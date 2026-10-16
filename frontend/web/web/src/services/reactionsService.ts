@@ -5,7 +5,9 @@ import {
   CountAllReactionsToPinDocument,
   GetAvailableReactionsDocument,
   GetLikedBoardsByUserIdDocument,
+  type GetLikedBoardsByUserIdQueryVariables,
   GetLikedPinsByUserIdDocument,
+  type GetLikedPinsByUserIdQueryVariables,
   type Pin,
   type Reaction,
   ReactionToBoardDocument,
@@ -105,16 +107,16 @@ export async function reactToBoard(params: {
   reactionId: string;
   userId: string;
 }): Promise<boolean> {
-  try {
-    const result = await apolloClient.mutate({
-      mutation: ReactionToBoardDocument,
-      variables: params,
-    });
-    return result.data?.reactionToBoard === true;
-  } catch (error) {
-    console.error(`Failed to set reaction on Board ${params.boardId}:`, error);
-    return false;
+  const result = await apolloClient.mutate({
+    mutation: ReactionToBoardDocument,
+    variables: params,
+  });
+
+  if (result.data?.reactionToBoard == null) {
+    throw new Error('Empty reactionToBoard response');
   }
+
+  return result.data.reactionToBoard;
 }
 
 /**
@@ -143,14 +145,11 @@ export async function getLikedPinsByUser(params: {
   }
 
   try {
-    const variables: any = { userId: finalUserId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetLikedPinsByUserIdQueryVariables = {
+      userID: finalUserId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetLikedPinsByUserIdDocument,
@@ -189,14 +188,11 @@ export async function getLikedBoardsByUser(params: {
   }
 
   try {
-    const variables: any = { userId: finalUserId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetLikedBoardsByUserIdQueryVariables = {
+      userID: finalUserId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetLikedBoardsByUserIdDocument,

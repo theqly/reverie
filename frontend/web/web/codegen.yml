@@ -14,3 +14,14 @@ generates:
     config:
       withHooks: true
       apolloClientVersion: 3
+
+      scalars:
+        UUID:
+          input: string
+          output: string
+        Time:
+          input: string
+          output: string
+
+      strictScalars: true
+      enumsAsConst: true
