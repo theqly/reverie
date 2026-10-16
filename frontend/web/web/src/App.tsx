@@ -1,16 +1,16 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import CreateCollectionPage from './pages/CreateCollectionPage';
-import EditCollectionPage from './pages/EditCollectionPage';
-import CreatePinPage from './pages/CreatePinPage';
-import EditPinPage from './pages/EditPinPage';
-import MapPage from './pages/MapPage';
+import CreateCollectionPage from './features/collections/CreateCollectionPage';
+import EditCollectionPage from './features/collections/EditCollectionPage';
+import CollectionViewPage from './features/collections/CollectionViewPage';
+import CreatePinPage from './features/pins/CreatePinPage';
+import PinViewPage from './features/pins/PinViewPage';
+import EditPinPage from './features/pins/EditPinPage';
+import MapPage from './features/map/MapPage';
 import LikedPins from './pages/LikedPins';
-import Profile from './pages/Profile';
+import Profile from './features/profiles/Profile';
 import LoginPage from './pages/LoginPage';
-import PinViewPage from './pages/PinViewPage';
 import Feed from './pages/Feed';
-import CollectionViewPage from './pages/CollectionViewPage';
 
 import { ToastProvider } from './pages/ToastProvider';
 

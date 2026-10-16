@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreatePinPage.module.css'; // ← ИМПОРТ СТИЛЕЙ
-import logo from '../assets/Reverie.svg';
-import AddPinModal from './AddPinModal';
-import InviteCollaboratorModal from './InviteCollaboratorModal';
-import Header from './Header';
-import { createPin } from '../services/pinService';
+//import logo from '../../assets/Reverie.svg';
+import AddPinModal from '../collections/components/AddPinModal';
+import InviteCollaboratorModal from '../../pages/InviteCollaboratorModal';
+import Header from '../../pages/Header';
+import { createPin } from '../../services/pinService';
 import { useLocation } from 'react-router-dom';
-import MapModal from './MapModal';
+import MapModal from '../map/MapModal';
 
 const CreatePinPage = () => {
   const navigate = useNavigate();
@@ -22,6 +22,8 @@ const CreatePinPage = () => {
   const [isAddPinModalOpen, setIsAddPinModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState<string[]>([]); // ← заглушка: имена соавторов
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [images, setImages] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -85,28 +87,47 @@ const CreatePinPage = () => {
     setCollaborators((prev) => [...prev, newCollaborator]);
   };
 
+
   const handleSavePin = async () => {
-    console.log('[CreatePin] Current coordinates:', {
-      latitude: pinLatitude,
-      longitude: pinLongitude,
-    });
+    if (saving) return;
 
     if (pinLatitude === null || pinLongitude === null) {
-      alert('Выберите точку на карте');
+      setSaveError('Выберите точку на карте');
       return;
     }
 
     const payload = {
-      name: pinName,
+      name: pinName.trim(),
       description: pinInfo,
       latitude: pinLatitude,
       longitude: pinLongitude,
-      ownerId: '00000000-0000-0000-0000-000000000001', // временно, заглушка
+      ownerId: '00000000-0000-0000-0000-000000000001',
       coverImages: images,
     };
 
-    await createPin(payload);
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      const createdPin = await createPin(payload);
+
+      if (!createdPin) {
+        setSaveError('Сервер не вернул созданный пин');
+        return;
+      }
+
+      console.log('[CreatePin] Created:', createdPin);
+
+      // Открываем только что созданный пин
+      navigate(`/pin/${createdPin.id}`, { replace: true });
+    } catch (err: unknown) {
+      console.error('[CreatePin] Failed to create pin:', err);
+      setSaveError('Не удалось создать пин');
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   // Валидация для кнопки сохранения
   const isSaveEnabled =
@@ -275,12 +296,18 @@ const CreatePinPage = () => {
 
         <button
           type="button"
-          onClick={handleSavePin}
-          disabled={!isSaveEnabled}
+          onClick={() => void handleSavePin()}
+          disabled={!isSaveEnabled || saving}
           className={styles.saveButton}
         >
-          Сохранить пин
+          {saving ? 'Сохранение...' : 'Сохранить пин'}
         </button>
+
+        {saveError && (
+          <p role="alert" className={styles.errorMessage}>
+            {saveError}
+          </p>
+        )}
 
         {isAddPinModalOpen && <AddPinModal onClose={() => setIsAddPinModalOpen(false)} />}
 

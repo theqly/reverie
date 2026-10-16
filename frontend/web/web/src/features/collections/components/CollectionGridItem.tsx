@@ -1,5 +1,5 @@
 import React from 'react';
-import placeholder_1 from '../assets/placeholder1.jpg';
+import placeholder_1 from '../../../assets/placeholder1.jpg';
 import styles from './CollectionGridItem.module.css';
 
 const CollectionGridItem = ({ collection, onClick }) => {

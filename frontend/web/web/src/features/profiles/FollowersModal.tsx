@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import styles from './FollowersModal.module.css';
-import placeholder_10 from '../assets/placeholder10.jpg';
+import placeholder_10 from '../../assets/placeholder10.jpg';
 
 const FollowersModal = ({ isOpen, onClose, onFollowToggle }) => {
-  if (!isOpen) return null;
 
   const [followers, setFollowers] = useState(
     Array.from({ length: 20 }, (_, i) => ({
@@ -13,6 +12,8 @@ const FollowersModal = ({ isOpen, onClose, onFollowToggle }) => {
       isFollowing: false,
     })),
   );
+  if (!isOpen) return null;
+
 
   const handleToggle = (userId) => {
     setFollowers((prev) =>

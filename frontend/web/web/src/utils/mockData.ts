@@ -7,6 +7,12 @@ import placeholder_7 from '../assets/placeholder7.jpg';
 import placeholder_8 from '../assets/placeholder8.jpg';
 import placeholder_9 from '../assets/placeholder9.jpg';
 import placeholder_10 from '../assets/placeholder9.jpg';
+import type {
+  GetPinsByUserIdQuery,
+} from '@/graphql/generated/graphql';
+
+type PinFromQuery =
+  NonNullable<GetPinsByUserIdQuery['pinsByUser']>[number];
 
 export const mockPins = [
   {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from './FollowersModal.module.css';
-import placeholder from '../assets/placeholder.jpg';
+import placeholder from '../../assets/placeholder.jpg';
 
 interface FollowingModalProps {
   isOpen: boolean;
@@ -8,7 +8,6 @@ interface FollowingModalProps {
 }
 
 const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
 
   const [search, setSearch] = useState('');
 
@@ -21,6 +20,8 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose }) => {
       isFollowing: true,
     })),
   );
+  if (!isOpen) return null;
+
 
   const filtered = following.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()));
 

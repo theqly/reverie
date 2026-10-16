@@ -2,11 +2,13 @@ import { useState } from 'react';
 import styles from './ShareModal.module.css';
 
 const ShareModal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
 
   const profileUrl = window.location.href;
 
   const [copied, setCopied] = useState(false);
+
+  if (!isOpen) return null;
+
 
   const copyLink = () => {
     navigator.clipboard.writeText(profileUrl);

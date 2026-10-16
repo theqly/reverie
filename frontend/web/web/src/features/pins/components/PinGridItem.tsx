@@ -1,5 +1,5 @@
 import React from 'react';
-import placeholder_1 from '../assets/placeholder1.jpg';
+import placeholder_1 from '../../../assets/placeholder1.jpg';
 import styles from './PinGridItem.module.css';
 
 const PinGridItem = ({ pin, onClick }) => {

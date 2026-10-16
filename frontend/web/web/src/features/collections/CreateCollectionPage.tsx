@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreateCollectionPage.module.css';
-import InviteCollaboratorModal from './InviteCollaboratorModal';
-import Header from './Header';
-import { createCollection } from '../services/collectionsService';
+import InviteCollaboratorModal from '../../pages/InviteCollaboratorModal';
+import Header from '../../pages/Header';
+import { createCollection } from '../../services/collectionsService';
 
 const CreateCollectionPage = () => {
   const navigate = useNavigate();

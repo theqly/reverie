@@ -10,12 +10,14 @@ const REASONS = [
 ];
 
 const ReportModal = ({ isOpen, onClose, onSubmit }) => {
-  if (!isOpen) return null;
 
   // ШАГИ: 1 — выбор причины, 2 — ввод текста
   const [step, setStep] = useState(1);
   const [reason, setReason] = useState(null);
   const [text, setText] = useState('');
+
+  if (!isOpen) return null;
+
 
   const textLimit = 250;
   const textLength = text.length;

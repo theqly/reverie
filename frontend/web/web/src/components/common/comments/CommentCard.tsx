@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './CommentCard.module.css'; // Скопируй сюда твои стили
-import placeholder_1 from '../assets/placeholder1.jpg';
+import placeholder_1 from '../../../assets/placeholder1.jpg';
 import { Link } from 'react-router-dom';
 
 const CommentCard = ({

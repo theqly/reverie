@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './Header.module.css';
 import logo from '../assets/Reverie.svg';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from './ToastProvider'; // импортируем хук из провайдера
+import { useToast } from './ToastContext'; // импортируем хук из провайдера
 
 const Header: React.FC = () => {
   const navigate = useNavigate();

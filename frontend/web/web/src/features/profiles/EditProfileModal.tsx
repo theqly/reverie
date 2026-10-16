@@ -2,12 +2,14 @@ import { useState } from 'react';
 import styles from './EditProfileModal.module.css';
 
 const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
-  if (!isOpen) return null;
+  
 
   const [name, setName] = useState(initialData.name);
   const [nickname, setNickname] = useState(initialData.nickname || '');
   const [bio, setBio] = useState(initialData.bio);
   const [avatar, setAvatar] = useState(initialData.avatar);
+
+  if (!isOpen) return null;
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];

@@ -1,37 +1,55 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import styles from './Feed.module.css';
 import Header from './Header';
-import PinGrid from './PinGrid';
-import CollectionGrid from './CollectionGrid';
+import PinGrid from '../features/pins/components/PinGrid';
+import CollectionGrid from '../features/collections/components/CollectionGrid';
 
-import { mockPins, mockCollections } from '../utils/mockData';
-import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
+import {
+  getPinsByUser,
+  getOwnBoardsByUser,
+} from '../services/profileService';
+
+import type {
+  GetPinsByUserIdQuery,
+  GetOwnBoardsByUserIdQuery,
+} from '@/graphql/generated/graphql';
+
 import placeholder_1 from '../assets/placeholder1.jpg';
+
+type FeedPin =
+  NonNullable<GetPinsByUserIdQuery['pinsByUser']>[number];
+
+type FeedCollection =
+  GetOwnBoardsByUserIdQuery['ownBoardsByUser'][number];
+
+const TEMP_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 const Feed = () => {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'pins' | 'collections'>('pins');
-  const [onlySubscriptions, setOnlySubscriptions] = useState(false);
 
-  const [pins, setPins] = useState<any[]>([]);
-  const [collections, setCollections] = useState<any[]>([]);
+  const [pins, setPins] = useState<FeedPin[]>([]);
+  const [collections, setCollections] = useState<FeedCollection[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handlePlusClick = () => {
-    if (activeTab === 'pins') {
-      navigate('/pin/create');
-    } else {
-      navigate('/collection/create');
-    }
+    navigate(
+      activeTab === 'pins'
+        ? '/pin/create'
+        : '/collection/create',
+    );
   };
 
   const getPlusButtonTitle = () =>
-    activeTab === 'pins' ? 'Создать новый пин' : 'Создать новую подборку';
+    activeTab === 'pins'
+      ? 'Создать новый пин'
+      : 'Создать новую подборку';
 
   const handlePinClick = (pinId: string) => {
     navigate(`/pin/${pinId}`);
@@ -41,76 +59,85 @@ const Feed = () => {
     navigate(`/collection/${collectionId}`);
   };
 
-  const handleGetPins = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await getPinsByUser({
-        viewerId: '00000000-0000-0000-0000-000000000001',
-        userId: '00000000-0000-0000-0000-000000000001',
-        limit: 20,
-        offset: 0,
-      });
-
-      if (response && response.length > 0) {
-        setPins(response);
-      } else {
-        console.log('Использовали моки');
-        setPins(mockPins);
-      }
-    } catch (err) {
-      console.error('[Feed] getPins error:', err);
-      setPins(mockPins);
-      setError('Не удалось загрузить пины');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGetCollections = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await getOwnBoardsByUser({
-        userId: '00000000-0000-0000-0000-000000000001',
-        limit: 20,
-        offset: 0,
-      });
-
-      if (response && response.length > 0) {
-        setCollections(response);
-      } else {
-        console.log('Использовали моки');
-        setCollections(mockCollections);
-      }
-    } catch (err) {
-      console.error('[Feed] getCollections error:', err);
-      setCollections(mockCollections);
-      setError('Не удалось загрузить подборки');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (activeTab === 'pins') {
-      handleGetPins();
-    }
+    let cancelled = false;
 
-    if (activeTab === 'collections') {
-      handleGetCollections();
-    }
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        if (activeTab === 'pins') {
+          const response = await getPinsByUser({
+            viewerId: TEMP_USER_ID,
+            userId: TEMP_USER_ID,
+            limit: 20,
+            offset: 0,
+          });
+
+          if (!cancelled) {
+            setPins(response ?? []);
+          }
+        } else {
+          const response = await getOwnBoardsByUser({
+            userId: TEMP_USER_ID,
+            limit: 20,
+            offset: 0,
+          });
+
+          if (!cancelled) {
+            setCollections(response ?? []);
+          }
+        }
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error('[Feed] Loading error:', err);
+
+        if (activeTab === 'pins') {
+          setPins([]);
+          setError('Не удалось загрузить пины');
+        } else {
+          setCollections([]);
+          setError('Не удалось загрузить подборки');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeTab]);
 
-  const filteredPins = onlySubscriptions
-    ? pins.filter((pin) => ['jane_anderson', 'alex_smith'].includes(pin.author))
-    : pins;
+  // Временное представление данных для существующего PinGrid.
+  // Позже изменим сам PinGridItem под поля GraphQL.
+  const displayPins = pins.map((pin) => ({
+    id: pin.id,
+    title: pin.name,
+    image:
+      pin.images?.[0]?.imageUrl ?? placeholder_1,
+    location: `${pin.latitude}, ${pin.longitude}`,
+    author: 'Автор неизвестен',
+    authorAvatar: placeholder_1,
+  }));
 
-  const filteredCollections = onlySubscriptions
-    ? collections.filter((col) => ['jane_anderson', 'hana_tanaka'].includes(col.author))
-    : collections;
+  // Временное представление для существующего CollectionGrid.
+  const displayCollections = collections.map((col) => ({
+    id: col.id,
+    title: col.name,
+    description: col.description ?? '',
+    image: col.pins?.[0]?.images?.[0]?.imageUrl ?? placeholder_1,
+    location: '',
+    author: 'Автор неизвестен',
+    authorAvatar: placeholder_1,
+    pinsCount: col.pins?.length ?? 0,
+  }));
 
   return (
     <div>
@@ -128,13 +155,20 @@ const Feed = () => {
               title={getPlusButtonTitle()}
             >
               <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                <path
+                  d="M12 5V19M5 12H19"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
 
             <div className={styles.tabSwitcher}>
               <button
-                className={`${styles.tabButton} ${activeTab === 'pins' ? styles.active : ''}`}
+                className={`${styles.tabButton} ${
+                  activeTab === 'pins' ? styles.active : ''
+                }`}
                 onClick={() => setActiveTab('pins')}
               >
                 Пины
@@ -149,7 +183,10 @@ const Feed = () => {
                 Подборки
               </button>
 
-              <div className={styles.tabIndicator} data-active={activeTab} />
+              <div
+                className={styles.tabIndicator}
+                data-active={activeTab}
+              />
             </div>
           </div>
 
@@ -157,50 +194,51 @@ const Feed = () => {
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={onlySubscriptions}
-                onChange={(e) => setOnlySubscriptions(e.target.checked)}
+                checked={false}
+                disabled
                 className={styles.hiddenCheckbox}
               />
-              <span className={styles.customCheckbox}>
-                {onlySubscriptions && (
-                  <svg className={styles.checkIcon} viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                  </svg>
-                )}
+
+              <span className={styles.customCheckbox} />
+
+              <span className={styles.checkboxText}>
+                Только подписки (пока недоступно)
               </span>
-              <span className={styles.checkboxText}>Только подписки</span>
             </label>
           </div>
         </section>
 
-        {loading && <p className={styles.loading}>Загрузка…</p>}
-        {error && <p className={styles.error}>{error}</p>}
+        {loading && (
+          <p className={styles.loading}>Загрузка…</p>
+        )}
 
-        {activeTab === 'pins' && (
+        {error && (
+          <p className={styles.error}>{error}</p>
+        )}
+
+        {!loading && !error && activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
-            <PinGrid
-              pins={filteredPins.map((pin) => ({
-                ...pin,
-                image: placeholder_1, // поменяли imageUrl на image
-                title: pin.name, // название сразу в title
-                location: pin.latitude,
-              }))}
-              onPinClick={handlePinClick}
-            />
+            {displayPins.length > 0 ? (
+              <PinGrid
+                pins={displayPins}
+                onPinClick={handlePinClick}
+              />
+            ) : (
+              <p>Пинов пока нет</p>
+            )}
           </div>
         )}
 
-        {activeTab === 'collections' && (
+        {!loading && !error && activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
-            <CollectionGrid
-              collections={filteredCollections.map((col) => ({
-                ...col,
-                image: placeholder_1, // вместо imageUrl
-                title: col.name, // название сразу в title
-                pinsCount: 0,
-              }))}
-              onCollectionClick={handleCollectionClick}
-            />
+            {displayCollections.length > 0 ? (
+              <CollectionGrid
+                collections={displayCollections}
+                onCollectionClick={handleCollectionClick}
+              />
+            ) : (
+              <p>Подборок пока нет</p>
+            )}
           </div>
         )}
       </main>

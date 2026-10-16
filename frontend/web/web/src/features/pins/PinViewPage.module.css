@@ -14,7 +14,7 @@
   width: 40px;
   margin-right: 20px;
 
-  background-image: url('../assets/back.svg');
+  background-image: url('../../assets/back.svg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -118,7 +118,7 @@
   margin-left: 2px;
   padding-left: 26px;
 
-  background-image: url('../assets/location_on.svg');
+  background-image: url('../../assets/location_on.svg');
   background-size: 18px 18px;
   background-position: left 6px top 5px;
 
@@ -134,7 +134,7 @@
   margin-top: 10px;
   margin-left: 2px;
 
-  background-image: url('../assets/location_on.svg');
+  background-image: url('../../assets/location_on.svg');
   background-size: 18px 18px;
   background-position: left 6px top 5px;
   background-repeat: no-repeat;
@@ -212,7 +212,7 @@
 }
 
 .likesWrapper button {
-  background-image: url('../assets/Heart.svg');
+  background-image: url('../../assets/Heart.svg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -223,7 +223,7 @@
 }
 
 .bmWrapper button {
-  background-image: url('../assets/Bookmark.svg');
+  background-image: url('../../assets/Bookmark.svg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -375,7 +375,7 @@
   text-overflow: ellipsis;
   padding-left: 17px;
 
-  background-image: url('../assets/location_on.svg');
+  background-image: url('../../assets/location_on.svg');
   background-size: 12px 12px;
   background-position: left 3px top 2px;
 
@@ -472,7 +472,7 @@
   width: 40px;
   border-radius: 10px;
 
-  background-image: url('../assets/Edit.svg');
+  background-image: url('../../assets/Edit.svg');
   background-size: 25px 25px;
   background-color: rgb(255, 255, 255);
 

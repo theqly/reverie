@@ -2,7 +2,7 @@ import { useState } from 'react';
 import MapPicker from './MapPicker';
 import styles from './MapPage.module.css'; // ← ИМПОРТ СТИЛЕЙ
 import { useNavigate } from 'react-router-dom';
-import Header from './Header';
+import Header from '../../pages/Header';
 
 const MapPage = () => {
   const navigate = useNavigate();
