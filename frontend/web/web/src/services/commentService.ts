@@ -1,18 +1,20 @@
-import {apolloClient} from "@/api/apolloClient.ts";
+import { apolloClient } from '@/api/apolloClient.ts';
 import {
-  AddCommentToBoardDocument, type AddCommentToBoardInput,
+  AddCommentToBoardDocument,
+  type AddCommentToBoardInput,
   AddCommentToPinDocument,
-  type AddCommentToPinInput, type CommentToBoard,
+  type AddCommentToPinInput,
+  type CommentToBoard,
   type CommentToPin,
   DeleteCommentToBoardDocument,
-  DeleteCommentToPinDocument, GetCommentsByBoardIdDocument,
-  GetCommentsByPinIdDocument, UpdateCommentToBoardDocument,
-  UpdateCommentToPinDocument
-
-} from "@/graphql/generated/graphql.ts";
-
-
-
+  DeleteCommentToPinDocument,
+  GetCommentsByBoardIdDocument,
+  GetCommentsByPinIdDocument,
+  UpdateCommentToBoardDocument,
+  type GetCommentsByBoardIdQueryVariables, 
+  type GetCommentsByPinIdQueryVariables,
+  UpdateCommentToPinDocument,
+} from '@/graphql/generated/graphql.ts';
 
 /**
  * Получает список комментариев к Пину.
@@ -24,23 +26,18 @@ import {
  * @param params.offset - (Опционально) Смещение.
  * @returns Массив комментариев или пустой массив.
  */
-export async function getCommentsByPin(
-  params: {
-    pinId: string;
-    limit?: number;
-    offset?: number;
-  }
-): Promise<CommentToPin[]> {
+export async function getCommentsByPin(params: {
+  pinId: string;
+  limit?: number;
+  offset?: number;
+}): Promise<CommentToPin[]> {
   try {
     // Формируем переменные, включая только те, что переданы
-    const variables: any = { pinId: params.pinId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetCommentsByPinIdQueryVariables = {
+      pinId: params.pinId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetCommentsByPinIdDocument,
@@ -59,9 +56,7 @@ export async function getCommentsByPin(
  * @param params - Содержит все поля для AddCommentToPinInput.
  * @returns Созданный объект CommentToPin или null.
  */
-export async function addCommentToPin(
-  params: AddCommentToPinInput
-): Promise<CommentToPin | null> {
+export async function addCommentToPin(params: AddCommentToPinInput): Promise<CommentToPin | null> {
   try {
     const result = await apolloClient.mutate({
       mutation: AddCommentToPinDocument,
@@ -82,12 +77,10 @@ export async function addCommentToPin(
  * @param params.message - Новый текст сообщения (обязательный).
  * @returns Обновленный объект CommentToPin или null.
  */
-export async function updatePinComment(
-  params: {
-    id: string;
-    message: string;
-  }
-): Promise<CommentToPin | null> {
+export async function updatePinComment(params: {
+  id: string;
+  message: string;
+}): Promise<CommentToPin | null> {
   try {
     const result = await apolloClient.mutate({
       mutation: UpdateCommentToPinDocument,
@@ -107,11 +100,7 @@ export async function updatePinComment(
  * @param params.id - ID комментария (обязательный).
  * @returns true, если удаление прошло успешно.
  */
-export async function deletePinComment(
-  params: {
-    id: string;
-  }
-): Promise<boolean> {
+export async function deletePinComment(params: { id: string }): Promise<boolean> {
   try {
     const result = await apolloClient.mutate({
       mutation: DeleteCommentToPinDocument,
@@ -135,23 +124,18 @@ export async function deletePinComment(
  * @param params.offset - (Опционально) Смещение.
  * @returns Массив комментариев или пустой массив.
  */
-export async function getCommentsByBoard(
-  params: {
-    boardId: string;
-    limit?: number;
-    offset?: number;
-  }
-): Promise<CommentToBoard[]> {
+export async function getCommentsByBoard(params: {
+  boardId: string;
+  limit?: number;
+  offset?: number;
+}): Promise<CommentToBoard[]> {
   try {
     // Формируем переменные, включая только те, что переданы
-    const variables: any = { boardId: params.boardId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetCommentsByBoardIdQueryVariables = {
+      boardId: params.boardId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetCommentsByBoardIdDocument,
@@ -171,7 +155,7 @@ export async function getCommentsByBoard(
  * @returns Созданный объект CommentToBoard или null.
  */
 export async function addCommentToBoard(
-  params: AddCommentToBoardInput
+  params: AddCommentToBoardInput,
 ): Promise<CommentToBoard | null> {
   try {
     const result = await apolloClient.mutate({
@@ -193,12 +177,10 @@ export async function addCommentToBoard(
  * @param params.message - Новый текст сообщения (обязательный).
  * @returns Обновленный объект CommentToBoard или null.
  */
-export async function updateBoardComment(
-  params: {
-    id: string;
-    message: string;
-  }
-): Promise<CommentToBoard | null> {
+export async function updateBoardComment(params: {
+  id: string;
+  message: string;
+}): Promise<CommentToBoard | null> {
   try {
     const result = await apolloClient.mutate({
       mutation: UpdateCommentToBoardDocument,
@@ -218,11 +200,7 @@ export async function updateBoardComment(
  * @param params.id - ID комментария (обязательный).
  * @returns true, если удаление прошло успешно.
  */
-export async function deleteBoardComment(
-  params: {
-    id: string;
-  }
-): Promise<boolean> {
+export async function deleteBoardComment(params: { id: string }): Promise<boolean> {
   try {
     const result = await apolloClient.mutate({
       mutation: DeleteCommentToBoardDocument,

@@ -1,20 +1,15 @@
-// types/board.ts
-
 export type AccessLevel = {
-  type: "public" | "private" | "group_public" | "group";
+  type: 'public' | 'private' | 'group_public' | 'group';
 };
 
 export type Owner = {
   id: string;
 };
 
-
 export type Pin = {
   id: string;
   title: string;
   content: string;
-  //тут тоже не все поля которые нужны!!
-
 };
 
 export type Board = {
@@ -29,17 +24,17 @@ export type FullBoard = {
   name: string;
   accessLevel: AccessLevel;
   groupId: string;
-  createdAt: string; // обычно ISO строка
+  createdAt: string;
   owner: Owner;
   pins: Pin[];
 };
 
 export type BoardResponse = {
-  board: Board | null; 
+  board: Board | null;
 };
 
 export type FullBoardResponse = {
-  board: FullBoard | null; 
+  board: FullBoard | null;
 };
 
 export type GraphQLResponse<T> = {
@@ -55,13 +50,11 @@ export type User = {
   id: string;
   username: string;
   email: string;
-  // добавить другие поля которые нужны!!!
 };
 
 export type UserByIdResponse = {
   userById: User | null;
 };
-
 
 export type Reaction = {
   id: string;
@@ -72,7 +65,7 @@ export type Reaction = {
 export type Comment = {
   id: string;
   content: string;
-  createdAt: string; // ISO строка
+  createdAt: string;
   author: User;
 };
 
@@ -84,11 +77,10 @@ export type ReactionsCountByBoardResponse = {
   reactionsCountByBoard: number;
 };
 
-
 export type AddCommentInput = {
   contentId: string;
   userId: string;
-  message: string;   
+  message: string;
 };
 
 export type AddCommentResponse = {
@@ -97,7 +89,7 @@ export type AddCommentResponse = {
 
 export type ComplaintInput = {
   complaintTypeId: string;
-  content?: string;  // опционально
+  content?: string;
 };
 
 export type ComplaintTypes = {
@@ -112,10 +104,8 @@ export type ComplaintStatuses = {
   description: string;
 };
 
-// types/board.ts
 export type CopyBoardResponse = {
   copyBoard: {
     id: string;
-    // можно добавить другие поля если нужны
   };
 };

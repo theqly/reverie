@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,7 +41,6 @@
   position: relative;
 }
 
-
 .option:hover {
   background: #f2f2f2;
 }
@@ -54,7 +53,7 @@
   border-radius: 50%;
   cursor: pointer;
   margin-left: auto;
-  margin-top: -10px;    
+  margin-top: -10px;
   margin-right: -10px;
   background-image: url('../assets/close.svg');
   background-size: 25px 25px;
@@ -68,7 +67,7 @@
 
 .followersList {
   max-height: 300px; /* фиксированная высота */
-  overflow-y: auto;  /* вертикальный скролл */
+  overflow-y: auto; /* вертикальный скролл */
   margin-top: 10px;
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
@@ -83,7 +82,7 @@
   padding: 0;
 }
 
-.foundUser span{
+.foundUser span {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -127,7 +126,8 @@
   margin-right: 10px;
 }
 
-.searchResults, .followersList {
+.searchResults,
+.followersList {
   max-height: 300px;
   overflow-y: auto;
   border-top: 1px solid #ccc;
@@ -141,7 +141,8 @@
   margin-bottom: 10px;
 }
 
-.searchButton, .inviteButton {
+.searchButton,
+.inviteButton {
   padding: 3px 8px;
   background-color: #d2d2d2;
   color: black;
@@ -150,7 +151,8 @@
   cursor: pointer;
   margin-right: 10px;
 }
-.searchButton:hover, .inviteButton:hover {
+.searchButton:hover,
+.inviteButton:hover {
   background-color: #c7c7c7;
 }
 

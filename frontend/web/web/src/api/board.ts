@@ -1,14 +1,14 @@
-const GRAPHQL_ENDPOINT = "/graphql";
-const PROFILE_ENDPOINT = "/profile/graphql";
+const GRAPHQL_ENDPOINT = '/graphql';
+const PROFILE_ENDPOINT = '/profile/graphql';
 
 //ДОБАВИТЬ ЛОГИРОВАНИЕ
 
-// api/board.ts 
-import type { 
-  BoardResponse, 
-  FullBoardResponse, 
-  GraphQLResponse, 
-  PinsByLocationResponse, 
+// api/board.ts
+import type {
+  BoardResponse,
+  FullBoardResponse,
+  GraphQLResponse,
+  PinsByLocationResponse,
   Pin,
   UserByIdResponse,
   CommentsByBoardResponse,
@@ -19,19 +19,15 @@ import type {
   AddCommentInput,
   ComplaintInput,
   CopyBoardResponse,
-  User 
-} from "../types/board";
-
+  User,
+} from '../types/board';
 
 // api/board.ts
-export async function copyBoard(
-  boardId: string, 
-  userId: string
-): Promise<string | null> {
+export async function copyBoard(boardId: string, userId: string): Promise<string | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($boardId: UUID!, $userId: UUID!) {
@@ -47,29 +43,29 @@ export async function copyBoard(
     const json: GraphQLResponse<CopyBoardResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     // Логируем событие для аналитики
-    console.log("Pins copied via Collection_ID", { boardId });
-    
+    console.log('Pins copied via Collection_ID', { boardId });
+
     return json.data?.copyBoard.id || null;
   } catch (err) {
-    console.error("Ошибка copyBoard:", err);
+    console.error('Ошибка copyBoard:', err);
     return null;
   }
 }
 
 export async function complainAboutBoard(
-  creatorId: string, 
-  boardId: string, 
-  complaint: ComplaintInput
+  creatorId: string,
+  boardId: string,
+  complaint: ComplaintInput,
 ): Promise<boolean> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($creatorId: UUID!, $boardId: UUID!, $complaint: ComplaintInput) {
@@ -83,28 +79,24 @@ export async function complainAboutBoard(
     const json: GraphQLResponse<{ complainAboutBoard: boolean }> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return false;
     }
 
-    console.log("CollectionReported", { boardId, creatorId });
-
+    console.log('CollectionReported', { boardId, creatorId });
 
     return json.data?.complainAboutBoard || false;
   } catch (err) {
-    console.error("Ошибка complainAboutBoard:", err);
+    console.error('Ошибка complainAboutBoard:', err);
     return false;
   }
 }
 
-export async function addBoardToBookmarks(
-  boardId: string, 
-  userId: string
-): Promise<boolean> {
+export async function addBoardToBookmarks(boardId: string, userId: string): Promise<boolean> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($boardId: UUID!, $userId: UUID!) {
@@ -118,28 +110,24 @@ export async function addBoardToBookmarks(
     const json: GraphQLResponse<{ boardToBookmarks: boolean }> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return false;
     }
 
-    console.log("Bookmark toggled – added", { boardId, userId });
-
+    console.log('Bookmark toggled – added', { boardId, userId });
 
     return json.data?.boardToBookmarks || false;
   } catch (err) {
-    console.error("Ошибка addBoardToBookmarks:", err);
+    console.error('Ошибка addBoardToBookmarks:', err);
     return false;
   }
 }
 
-export async function removeBoardFromBookmarks(
-  boardId: string, 
-  userId: string
-): Promise<boolean> {
+export async function removeBoardFromBookmarks(boardId: string, userId: string): Promise<boolean> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($boardId: UUID!, $userId: UUID!) {
@@ -153,16 +141,15 @@ export async function removeBoardFromBookmarks(
     const json: GraphQLResponse<{ removeBoardFromBookmarks: boolean }> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return false;
     }
 
-    console.log("Bookmark toggled – removed", { boardId, userId });
-
+    console.log('Bookmark toggled – removed', { boardId, userId });
 
     return json.data?.removeBoardFromBookmarks || false;
   } catch (err) {
-    console.error("Ошибка removeBoardFromBookmarks:", err);
+    console.error('Ошибка removeBoardFromBookmarks:', err);
     return false;
   }
 }
@@ -170,8 +157,8 @@ export async function removeBoardFromBookmarks(
 export async function addCommentToBoard(input: AddCommentInput): Promise<Comment | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($input: AddCommentInput!) {
@@ -194,23 +181,23 @@ export async function addCommentToBoard(input: AddCommentInput): Promise<Comment
     const json: GraphQLResponse<AddCommentResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     const newComment = json.data?.addCommentToBoard;
-    
+
     if (newComment) {
       //Специально получили ID комментария
-      console.log("Comment added", { 
-        commentId: newComment.id, 
-        userId: input.userId 
+      console.log('Comment added', {
+        commentId: newComment.id,
+        userId: input.userId,
       });
     }
 
     return newComment || null;
   } catch (err) {
-    console.error("Ошибка addCommentToBoard:", err);
+    console.error('Ошибка addCommentToBoard:', err);
     return null;
   }
 }
@@ -218,8 +205,8 @@ export async function addCommentToBoard(input: AddCommentInput): Promise<Comment
 export async function fetchCommentsByBoard(groupId: string): Promise<Comment[] | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query ($groupId: UUID!) {
@@ -242,25 +229,25 @@ export async function fetchCommentsByBoard(groupId: string): Promise<Comment[] |
     const json: GraphQLResponse<CommentsByBoardResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     return json.data?.commentsByBoard || null;
   } catch (err) {
-    console.error("Ошибка fetchCommentsByBoard:", err);
+    console.error('Ошибка fetchCommentsByBoard:', err);
     return null;
   }
 }
 
 export async function fetchReactionsCountByBoard(
-  reaction: Reaction, 
-  boardId: string
+  reaction: Reaction,
+  boardId: string,
 ): Promise<number | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query ($reaction: Reaction!, $boardId: UUID!) {
@@ -274,26 +261,26 @@ export async function fetchReactionsCountByBoard(
     const json: GraphQLResponse<ReactionsCountByBoardResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     return json.data?.reactionsCountByBoard || null;
   } catch (err) {
-    console.error("Ошибка fetchReactionsCountByBoard:", err);
+    console.error('Ошибка fetchReactionsCountByBoard:', err);
     return null;
   }
 }
 
 export async function addReactionToBoard(
-  boardId: string, 
-  reactionId: string, 
-  userId: string
+  boardId: string,
+  reactionId: string,
+  userId: string,
 ): Promise<boolean> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($boardId: UUID!, $reactionId: UUID!, $userId: UUID!) {
@@ -307,29 +294,28 @@ export async function addReactionToBoard(
     const json: GraphQLResponse<{ addReactionToBoard: boolean }> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return false;
     }
 
-    console.log("Line toggled – added", { boardId, userId });
-
+    console.log('Line toggled – added', { boardId, userId });
 
     return json.data?.addReactionToBoard || false;
   } catch (err) {
-    console.error("Ошибка addReactionToBoard:", err);
+    console.error('Ошибка addReactionToBoard:', err);
     return false;
   }
 }
 
 export async function removeReactionToBoard(
-  boardId: string, 
-  reactionId: string, 
-  userId: string
+  boardId: string,
+  reactionId: string,
+  userId: string,
 ): Promise<boolean> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($boardId: UUID!, $reactionId: UUID!, $userId: UUID!) {
@@ -343,15 +329,14 @@ export async function removeReactionToBoard(
     const json: GraphQLResponse<{ removeReactionToBoard: boolean }> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return false;
     }
-    console.log("Line toggled – added", { boardId, userId });
-
+    console.log('Line toggled – added', { boardId, userId });
 
     return json.data?.removeReactionToBoard || false;
   } catch (err) {
-    console.error("Ошибка removeReactionToBoard:", err);
+    console.error('Ошибка removeReactionToBoard:', err);
     return false;
   }
 }
@@ -359,8 +344,8 @@ export async function removeReactionToBoard(
 export async function followUser(userId: string, followerId: string): Promise<boolean> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($userId: ID!, $followerId: ID!) {
@@ -374,15 +359,14 @@ export async function followUser(userId: string, followerId: string): Promise<bo
     const json: GraphQLResponse<{ followUser: boolean }> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return false;
     }
-    console.log("Author followed via Collection_ID", {userId, followerId });
-
+    console.log('Author followed via Collection_ID', { userId, followerId });
 
     return json.data?.followUser || false;
   } catch (err) {
-    console.error("Ошибка followUser:", err);
+    console.error('Ошибка followUser:', err);
     return false;
   }
 }
@@ -390,8 +374,8 @@ export async function followUser(userId: string, followerId: string): Promise<bo
 export async function unfollowUser(userId: string, followerId: string): Promise<boolean> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           mutation ($userId: ID!, $followerId: ID!) {
@@ -405,13 +389,13 @@ export async function unfollowUser(userId: string, followerId: string): Promise<
     const json: GraphQLResponse<{ unfollowUser: boolean }> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return false;
     }
 
     return json.data?.unfollowUser || false;
   } catch (err) {
-    console.error("Ошибка unfollowUser:", err);
+    console.error('Ошибка unfollowUser:', err);
     return false;
   }
 }
@@ -419,8 +403,8 @@ export async function unfollowUser(userId: string, followerId: string): Promise<
 export async function fetchUserById(userId: string): Promise<User | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query ($userId: ID!) {
@@ -438,13 +422,13 @@ export async function fetchUserById(userId: string): Promise<User | null> {
     const json: GraphQLResponse<UserByIdResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     return json.data?.userById || null;
   } catch (err) {
-    console.error("Ошибка fetchUserById:", err);
+    console.error('Ошибка fetchUserById:', err);
     return null;
   }
 }
@@ -452,8 +436,8 @@ export async function fetchUserById(userId: string): Promise<User | null> {
 export async function fetchPinsByLocation(query: string): Promise<Pin[] | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query ($query: String!) {
@@ -471,23 +455,22 @@ export async function fetchPinsByLocation(query: string): Promise<Pin[] | null> 
     const json: GraphQLResponse<PinsByLocationResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     return json.data?.pinsByLocation || null;
   } catch (err) {
-    console.error("Ошибка fetchPinsByLocation:", err);
+    console.error('Ошибка fetchPinsByLocation:', err);
     return null;
   }
 }
 
-
-export async function fetchBoardBasic(id: string): Promise<BoardResponse["board"] | null> {
+export async function fetchBoardBasic(id: string): Promise<BoardResponse['board'] | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query ($id: UUID!) {
@@ -506,22 +489,22 @@ export async function fetchBoardBasic(id: string): Promise<BoardResponse["board"
     const json: GraphQLResponse<BoardResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     return json.data?.board || null;
   } catch (err) {
-    console.error("Ошибка fetchBoardBasic:", err);
+    console.error('Ошибка fetchBoardBasic:', err);
     return null;
   }
 }
 
-export async function fetchFullBoard(id: string): Promise<FullBoardResponse["board"] | null> {
+export async function fetchFullBoard(id: string): Promise<FullBoardResponse['board'] | null> {
   try {
     const res = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query ($id: UUID!) {
@@ -547,13 +530,13 @@ export async function fetchFullBoard(id: string): Promise<FullBoardResponse["boa
     const json: GraphQLResponse<FullBoardResponse> = await res.json();
 
     if (json.errors?.length) {
-      console.error("GraphQL errors:", json.errors.map(e => e.message).join(", "));
+      console.error('GraphQL errors:', json.errors.map((e) => e.message).join(', '));
       return null;
     }
 
     return json.data?.board || null;
   } catch (err) {
-    console.error("Ошибка fetchFullBoard:", err);
+    console.error('Ошибка fetchFullBoard:', err);
     return null;
   }
 }
@@ -561,8 +544,8 @@ export async function fetchFullBoard(id: string): Promise<FullBoardResponse["boa
 export async function checkUserInGroup(userId: string, groupId: string): Promise<boolean> {
   try {
     const res = await fetch(PROFILE_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query ($userId: ID!, $groupId: ID!) {
@@ -576,12 +559,7 @@ export async function checkUserInGroup(userId: string, groupId: string): Promise
     const json: { data?: { isUserInGroup: boolean } } = await res.json();
     return json.data?.isUserInGroup || false;
   } catch (err) {
-    console.error("Ошибка checkUserInGroup:", err);
+    console.error('Ошибка checkUserInGroup:', err);
     return false;
   }
 }
-
-
-
-
-

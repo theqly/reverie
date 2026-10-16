@@ -1,23 +1,25 @@
-import {apolloClient} from "@/api/apolloClient.ts";
+
+import { apolloClient } from '@/api/apolloClient.ts';
+
 import {
   AccessLevelType,
-  type Board,
   CreateBoardDocument,
-  type CreateBoardInput,
   CreateGroupDocument,
-  type CreateGroupInput,
   GetBoardByIdDocument,
   GetBoardReactionIdDocument,
   IsBoardBookmarkedDocument,
   OwnerType,
   UpdateBoardDocument,
-  type UpdateBoardInput
-} from "@/graphql/generated/graphql.ts";
+  type GetBoardByIdQuery,
+  type CreateBoardMutation,
+  type UpdateBoardMutation,
+  type UpdateBoardInput,
+} from '@/graphql/generated/graphql.ts';
 
 import {
-  uploadImageDev, 
-  type ImageUploadProgress 
-} from "@/services/imageService.ts";
+  uploadImageDev,
+  type ImageUploadProgress,
+} from '@/services/imageService.ts';
 
 export interface CreateCollectionPayload {
   name: string;
@@ -26,225 +28,211 @@ export interface CreateCollectionPayload {
   collaborators: string[];
 }
 
+type CreatedBoard = NonNullable<CreateBoardMutation['createBoard']>;
+type UpdatedBoard = NonNullable<UpdateBoardMutation['updateBoard']>;
+type BoardById = NonNullable<GetBoardByIdQuery['board']>;
+
 export interface CreateCollectionResult {
   success: boolean;
   boardId?: string;
-  board?: Board;
-  coverImageUrl?: string; // URL загруженной обложки
+  board?: CreatedBoard;
+  coverImageUrl?: string;
   error?: string;
 }
 
 /**
- * Создаёт новую коллекцию с заданными параметрами. Добавляет ее в БД
- *
- * @param {CreateCollectionPayload} payload - Данные коллекции, которые нужно отправить.
- *
- * @example
- * await createCollection({
- *   name: "Моя коллекция",
- *   info: "Описание коллекции",
- *   coverImage: file,
- *   collaborators: ["user-uuid-1", "user-uuid-2"]
- * });
+ * Создаёт новую подборку и при наличии изображения
+ * загружает её обложку.
  */
 export async function createCollection(
   payload: CreateCollectionPayload,
-  onImageProgress?: (progress: ImageUploadProgress) => void
+  onImageProgress?: (progress: ImageUploadProgress) => void,
 ): Promise<CreateCollectionResult> {
-  if (payload.collaborators.length == 0) {
-    return { success: false, error: 'Не указаны участники коллекции' };
+  if (payload.collaborators.length === 0) {
+    return {
+      success: false,
+      error: 'Не указаны участники подборки',
+    };
   }
-  
+
   let coverImageUrl: string | undefined;
-  
+
   try {
-    // Загружаем обложку если она есть
-    // Примечание: у Board нет своего поля для обложки в схеме GraphQL
-    // Обложка берётся из первого пина коллекции
-    // Но мы можем сохранить URL для локального использования
+    // Загружаем обложку, если пользователь выбрал файл.
     if (payload.coverImage) {
-      const uploadResult = await uploadImageDev(payload.coverImage, onImageProgress);
+      const uploadResult = await uploadImageDev(
+        payload.coverImage,
+        onImageProgress,
+      );
+
       if (uploadResult.success && uploadResult.imageUrl) {
         coverImageUrl = uploadResult.imageUrl;
-        console.log('Cover image uploaded:', coverImageUrl);
       } else {
-        console.warn('Failed to upload cover image:', uploadResult.error);
+        console.warn(
+          '[createCollection] Failed to upload cover image:',
+          uploadResult.error,
+        );
       }
     }
 
+    // Если участников несколько, создаём групповую подборку.
     if (payload.collaborators.length > 1) {
       const groupResult = await apolloClient.mutate({
         mutation: CreateGroupDocument,
         variables: {
           input: {
-            members: payload.collaborators
-          } as CreateGroupInput
-        }
+            members: payload.collaborators,
+          },
+        },
       });
 
       const newGroupId = groupResult.data?.createGroup?.id;
+
       if (!newGroupId) {
-        throw new Error('Failed to create group');
+        throw new Error('Не удалось создать группу');
       }
 
-      // Создать Board
       const boardResult = await apolloClient.mutate({
         mutation: CreateBoardDocument,
         variables: {
           input: {
             name: payload.name,
-            description: payload.info || undefined,
+            description: payload.info,
             boardImageURL: coverImageUrl,
             accessLevel: AccessLevelType.Group,
             ownerId: newGroupId,
             ownerType: OwnerType.Group,
-            description: payload.info
-          } as CreateBoardInput
+          },
         },
       });
 
       const newBoard = boardResult.data?.createBoard;
 
       if (!newBoard) {
-        throw new Error('Failed to create board');
+        throw new Error('Не удалось создать подборку');
       }
 
       return {
         success: true,
         boardId: newBoard.id,
         board: newBoard,
-        coverImageUrl
-      };
-    } else {
-      const boardResult = await apolloClient.mutate({
-        mutation: CreateBoardDocument,
-        variables: {
-          input: {
-            name: payload.name,
-            description: payload.info || undefined,
-            accessLevel: AccessLevelType.Public,
-            boardImageURL: coverImageUrl, // ← ДОБАВЬ ЭТУ СТРОКУ
-            ownerId: payload.collaborators[0],
-            ownerType: OwnerType.User,
-            description: payload.info
-          } as CreateBoardInput
-        },
-      });
-
-      const newBoard = boardResult.data?.createBoard;
-
-      if (!newBoard) {
-        throw new Error('Failed to create board');
-      }
-
-      return {
-        success: true,
-        boardId: newBoard.id,
-        board: newBoard,
-        coverImageUrl
+        coverImageUrl,
       };
     }
 
-  } catch (error: any) {
-    console.error('Error creating collection:', error);
-    return { 
-      success: false, 
-      error: `Failed to create collection: ${error.message}` 
+    // Если участник один, создаём личную подборку.
+    const boardResult = await apolloClient.mutate({
+      mutation: CreateBoardDocument,
+      variables: {
+        input: {
+          name: payload.name,
+          description: payload.info,
+          boardImageURL: coverImageUrl,
+          accessLevel: AccessLevelType.Public,
+          ownerId: payload.collaborators[0],
+          ownerType: OwnerType.User,
+        },
+      },
+    });
+
+    const newBoard = boardResult.data?.createBoard;
+
+    if (!newBoard) {
+      throw new Error('Не удалось создать подборку');
+    }
+
+    return {
+      success: true,
+      boardId: newBoard.id,
+      board: newBoard,
+      coverImageUrl,
+    };
+  } catch (error: unknown) {
+    console.error('[createCollection] Failed:', error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
 
 /**
- * Обновляет подборку с заданным ID
- *
- * @param {string} collectionId - ID обновляемой подборки
- * @param {UpdateBoardInput} input - Данные подборки, которые нужно отправить.
- *
- * @example
- * await updateCollection(
- * "00000000-0000-0000-0000-000000000002",
- * {
- *   name: "Моя подборка",
- *   description: "Описание",
- *   ownerId: "00000000-0000-0000-0000-000000000001",
- * });
+ * Обновляет существующую подборку.
  */
-export async function updateCollection(collectionId: string, input: UpdateBoardInput) : Promise< Board | null > {
-
-  const updateInput: any = {
+export async function updateCollection(
+  collectionId: string,
+  input: UpdateBoardInput,
+): Promise<UpdatedBoard | null> {
+  const updateInput: UpdateBoardInput = {
     userId: input.userId,
+    accessLevel: input.accessLevel,
+    name: input.name,
+    description: input.description,
   };
 
-  if (input.accessLevel !== undefined) {
-    updateInput.accessLevel = input.accessLevel;
-  }
-
-  if (input.name !== undefined) {
-    updateInput.name = input.name;
-  }
-
-  if (input.description !== undefined) {
-    updateInput.description = input.description;
-  }
-
-  const updatedBoardResult = await apolloClient.mutate({
+  const result = await apolloClient.mutate({
     mutation: UpdateBoardDocument,
     variables: {
       id: collectionId,
-      input: updateInput as UpdateBoardInput
+      input: updateInput,
     },
   });
 
-  return updatedBoardResult.data?.updateBoard || null;
+  return result.data?.updateBoard ?? null;
 }
 
 /**
- * Получает подборку по её ID
- * @returns Board или null
+ * Получает подборку по её ID.
  */
-export async function getPinById(id: string): Promise<Board | null> {
+export async function getBoardById(
+  id: string,
+): Promise<BoardById | null> {
   try {
     const result = await apolloClient.query({
       query: GetBoardByIdDocument,
-       variables: { id },
+      variables: { id },
     });
-    return result.data?.board?? null;
-  } catch (error) {
-    console.error('Failed to fetch board:', error);
+
+    return result.data?.board ?? null;
+  } catch (error: unknown) {
+    console.error('[getBoardById] Failed:', error);
     return null;
   }
 }
 
 /**
- * Получает статус лайка на подборке (лайкнута/не лайкнута)
- * @returns true - лайкнута, false - нет или в случае ошибки
+ * Проверяет реакцию на подборке.
+ *
+ * Для актуальной JWT-интеграции необходимо проверить,
+ * как сервер определяет пользователя.
  */
-export async function isBoardLiked(id: string): Promise<boolean> {
-  try {
-    const result = await apolloClient.query({
-      query: GetBoardReactionIdDocument,
-      variables: { id },
-    });
-    return result.data?.board.reactionId == "8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f";
-  } catch (error) {
-    console.error('Failed to fetch pin:', error);
-    return false;
-  }
+export async function isBoardLiked(
+  id: string,
+): Promise<boolean> {
+  const result = await apolloClient.query({
+    query: GetBoardReactionIdDocument,
+    variables: { id },
+    fetchPolicy: 'network-only',
+  });
+
+  return (
+    result.data?.board?.reactionId ===
+    '8e2f0e90-3b1a-4f2c-9c0d-1a2b3c4d5e6f'
+  );
 }
 
 /**
- * Получает статус букмарка на подборке (добавлена/не добавлена)
- * @returns true - добавлена, false - нет или в случае ошибки
+ * Проверяет, добавлена ли подборка в закладки.
  */
-export async function isBoardBookmarked(id: string): Promise<boolean> {
-  try {
-    const result = await apolloClient.query({
-      query: IsBoardBookmarkedDocument,
-      variables: { id },
-    });
-    return result.data?.board.bookmarked ?? false;
-  } catch (error) {
-    console.error('Failed to fetch pin:', error);
-    return false;
-  }
+export async function isBoardBookmarked(
+  id: string,
+): Promise<boolean> {
+  const result = await apolloClient.query({
+    query: IsBoardBookmarkedDocument,
+    variables: { id },
+    fetchPolicy: 'network-only',
+  });
+
+  return result.data?.board?.bookmarked ?? false;
 }

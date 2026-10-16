@@ -3,301 +3,193 @@ import { useNavigate } from 'react-router-dom';
 
 import styles from './Feed.module.css';
 import Header from './Header';
-import PinGrid from './PinGrid';
-import CollectionGrid from './CollectionGrid';
-import {getUserIdFromToken} from '../auth/tokenStorage';
+import PinGrid from '../features/pins/components/PinGrid';
+import CollectionGrid from '../features/collections/components/CollectionGrid';
+import placeholder_1 from '../assets/placeholder1.jpg';
 
-import { mockPins, mockCollections } from '../utils/mockData';
-import { getPinsByUser, getOwnBoardsByUser } from '../services/profileService';
+import { getUserIdFromToken } from '../auth/tokenStorage';
+import { getPinsByUser, getOwnBoardsByUser, findUser } from '../services/profileService';
 import { getCityFromCoordinates } from '../services/geoService';
 
-import { findUser } from '../services/profileService';
+import type {
+  GetPinsByUserIdQuery,
+  GetOwnBoardsByUserIdQuery,
+} from '@/graphql/generated/graphql';
 
-import placeholder_1 from '../assets/placeholder1.jpg';
+type FeedPin = NonNullable<
+  NonNullable<GetPinsByUserIdQuery['pinsByUser']>[number]
+>;
+type FeedCollection = NonNullable<
+  NonNullable<GetOwnBoardsByUserIdQuery['ownBoardsByUser']>[number]
+>;
+
+type Tab = 'pins' | 'collections';
 
 const Feed = () => {
   const navigate = useNavigate();
-
-  const [activeTab, setActiveTab] = useState<'pins' | 'collections'>('pins');
-  const [onlySubscriptions, setOnlySubscriptions] = useState(false);
-
-  const [pins, setPins] = useState<any[]>([]);
-  const [collections, setCollections] = useState<any[]>([]);
-
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('pins');
+  const [pins, setPins] = useState<FeedPin[]>([]);
+  const [collections, setCollections] = useState<FeedCollection[]>([]);
+  const [pinLocations, setPinLocations] = useState<Record<string, string>>({});
+  const [author, setAuthor] = useState({
+    nickname: 'Автор неизвестен',
+    avatar: placeholder_1,
+  });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-
-  /* =======================
-     Navigation
-  ======================= */
-
-  const handlePlusClick = () => {
-    if (activeTab === 'pins') {
-      navigate('/pin/create');
-    } else {
-      navigate('/collection/create');
-    }
-  };
-
-  const getPlusButtonTitle = () =>
-    activeTab === 'pins'
-      ? 'Создать новый пин'
-      : 'Создать новую подборку';
-
-  const handlePinClick = (pinId: string, owner: string, ownerId: string) => {
-    navigate(`/pin/${pinId}?owner=${owner}&ownerId=${ownerId}`);
-  };
-
-  const handleCollectionClick = (collectionId: string, owner: string, ownerId: string) => {
-    navigate(`/collection/${collectionId}?owner=${owner}&ownerId=${ownerId}`);
-  };
-
-  /* =======================
-     Data loading
-  ======================= */
-  const UUID = String(getUserIdFromToken());
-  const UUID2 = '458c47be-bcab-4572-bf06-bafbc7c536ec';
-
-  const handleGetPins = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await getPinsByUser({
-        viewerId: UUID,
-        userId: UUID2,
-        limit: 20,
-        offset: 0,
-      });
-
-      const response2 = await getPinsByUser({
-        viewerId: UUID,
-        userId: UUID,
-        limit: 20,
-        offset: 0,
-      });
-
-      // Добавляем поле author к пинам из первого ответа
-      const pinsFromResponse1 = response 
-        ? response.map(pin => ({
-            ...pin,
-            authorId: UUID2,
-            ownerId: UUID2
-          }))
-        : [];
-
-      // Добавляем поле author к пинам из второго ответа  
-      const pinsFromResponse2 = response2
-        ? response2.map(pin => ({
-            ...pin,
-            authorId: UUID,
-            ownerId: UUID
-          }))
-        : [];
-
-      // Объединяем оба массива
-      const combinedPins = [
-        ...pinsFromResponse1,
-        ...pinsFromResponse2
-      ];
-
-      const sourcePins = combinedPins.length > 0 ? combinedPins : mockPins;
-
-      // Получаем уникальные ID авторов
-      const uniqueAuthorIds = [...new Set(sourcePins.map(pin => pin.authorId))];
-      
-      // Получаем информацию обо всех авторах параллельно
-      const authorsPromises = uniqueAuthorIds.map(authorId => findUser({ id: authorId }));
-      const authors = await Promise.all(authorsPromises);
-      
-      // Создаем маппинг authorId -> данные пользователя
-      const authorMap = new Map();
-      authors.forEach((user, index) => {
-        if (user) {
-          authorMap.set(uniqueAuthorIds[index], {
-            nickname: user.nickTag || user.nickname || 'unknown',
-            profilePicture: user.profilePicture || placeholder_1,
-            name: user.nickname || user.nickTag || 'Пользователь'
-          });
-        }
-      });
-
-      // 🔥 здесь получаем город по координатам и добавляем данные автора
-      const pinsWithLocationAndAuthor = await Promise.all(
-        sourcePins.map(async (pin) => {
-          let location = '';
-          const authorData = authorMap.get(pin.authorId) || {
-            nickname: pin.authorId,
-            profilePicture: placeholder_1,
-            name: 'Пользователь'
-          };
-
-          if (pin.latitude && pin.longitude) {
-            try {
-              location = await getCityFromCoordinates(
-                pin.latitude,
-                pin.longitude
-              );
-            } catch (e) {
-              console.warn('Не удалось определить город', e);
-            }
-          }
-
-          return {
-            ...pin,
-            location, // ← готовая строка города
-            author: authorData.nickname, // ← никнейм автора
-            authorAvatar: authorData.profilePicture, // ← аватарка автора
-            authorName: authorData.name, // ← имя автора
-          };
-        })
-      );
-
-      setPins(pinsWithLocationAndAuthor);
-    } catch (err) {
-      console.error('[Feed] getPins error:', err);
-      setPins(mockPins);
-      setError('Не удалось загрузить пины');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGetCollections = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const [response, response2] = await Promise.all([
-        getOwnBoardsByUser({
-          userId: UUID2,
-          limit: 20,
-          offset: 0,
-        }),
-        getOwnBoardsByUser({
-          userId: UUID,
-          limit: 20,
-          offset: 0,
-        })
-      ]);
-
-      const collectionsFromResponse1 = response 
-        ? response.map(col => ({
-            ...col,
-            authorId: UUID2
-          }))
-        : [];
-
-      const collectionsFromResponse2 = response2
-        ? response2.map(col => ({
-            ...col,
-            authorId: UUID,
-            ownerId: UUID
-          }))
-        : [];
-
-      // Объединяем оба массива
-      const combinedCollections = [
-        ...collectionsFromResponse1,
-        ...collectionsFromResponse2
-      ];
-
-      if (combinedCollections.length > 0) {
-        // Получаем данные всех авторов за один запрос
-        const uniqueAuthorIds = [...new Set(combinedCollections.map(col => col.authorId))];
-        
-        // Получаем информацию обо всех авторах параллельно
-        const authorsPromises = uniqueAuthorIds.map(authorId => findUser({ id: authorId }));
-        const authors = await Promise.all(authorsPromises);
-        
-        // Создаем маппинг authorId -> данные пользователя
-        const authorMap = new Map();
-        authors.forEach((user, index) => {
-          if (user) {
-            authorMap.set(uniqueAuthorIds[index], {
-              nickname: user.nickTag || user.nickname || 'unknown',
-              profilePicture: user.profilePicture || placeholder_1,
-              name: user.nickname || user.nickTag || 'Пользователь'
-            });
-          }
-        });
-
-        // Добавляем данные авторов к подборкам
-        const collectionsWithAuthors = combinedCollections.map(col => {
-          const authorData = authorMap.get(col.authorId) || {
-            nickname: col.authorId,
-            profilePicture: placeholder_1,
-            name: 'Пользователь'
-          };
-          
-          return {
-            ...col,
-            author: authorData.nickname, // ← никнейм автора
-            authorAvatar: authorData.profilePicture, // ← аватарка автора
-            authorName: authorData.name, // ← имя автора
-          };
-        });
-
-        setCollections(collectionsWithAuthors);
-      } else {
-        setCollections(mockCollections);
-      }
-    } catch (err) {
-      console.error('[Feed] getCollections error:', err);
-      setCollections(mockCollections);
-      setError('Не удалось загрузить подборки');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* =======================
-     Effects
-  ======================= */
+  const userId = getUserIdFromToken();
 
   useEffect(() => {
-    if (activeTab === 'pins') {
-      handleGetPins();
-    }
+    let cancelled = false;
+    if (!userId) return;
 
-    if (activeTab === 'collections') {
-      handleGetCollections();
-    }
-  }, [activeTab]);
+    void findUser({ id: userId })
+      .then((user) => {
+        if (!cancelled && user) {
+          setAuthor({
+            nickname: user.nickTag || user.nickname || 'Пользователь',
+            avatar: user.profilePicture || placeholder_1,
+          });
+        }
+      })
+      .catch((err: unknown) => {
+        console.warn('[Feed] Не удалось получить профиль автора:', err);
+      });
 
-  /* =======================
-     Filters
-  ======================= */
+    return () => { cancelled = true; };
+  }, [userId]);
 
-  const filteredPins = onlySubscriptions
-    ? pins.filter((pin) =>
-        ['jane_anderson', 'alex_smith'].includes(pin.author)
-      )
-    : pins;
+  useEffect(() => {
+    let cancelled = false;
 
-  const filteredCollections = onlySubscriptions
-    ? collections.filter((col) =>
-        ['jane_anderson', 'hana_tanaka'].includes(col.author)
-      )
-    : collections;
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+
+      if (!userId) {
+        setPins([]);
+        setCollections([]);
+        setError('Не удалось определить пользователя. Войдите в аккаунт.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        if (activeTab === 'pins') {
+          const response = await getPinsByUser({
+            viewerId: userId,
+            userId,
+            limit: 20,
+            offset: 0,
+          });
+          if (cancelled) return;
+
+          const fetchedPins = (response ?? []).filter(
+            (pin): pin is FeedPin => pin != null,
+          );
+          setPins(fetchedPins);
+
+          // Получение города — дополнительная функция; её сбой
+          // не должен скрывать загруженные пины.
+          const locations = await Promise.all(
+            fetchedPins.map(async (pin) => {
+              try {
+                const city = await getCityFromCoordinates(
+                  pin.latitude,
+                  pin.longitude,
+                );
+                return [pin.id, city] as const;
+              } catch (err) {
+                console.warn('[Feed] Не удалось определить город:', err);
+                return [pin.id, ''] as const;
+              }
+            }),
+          );
+          if (!cancelled) {
+            setPinLocations(Object.fromEntries(locations));
+          }
+        } else {
+          const response = await getOwnBoardsByUser({
+            userId,
+            limit: 20,
+            offset: 0,
+          });
+          if (!cancelled) {
+            setCollections(
+              (response ?? []).filter(
+                (board): board is FeedCollection => board != null,
+              ),
+            );
+          }
+        }
+      } catch (err: unknown) {
+        if (cancelled) return;
+        console.error('[Feed] Loading error:', err);
+        setError(
+          activeTab === 'pins'
+            ? 'Не удалось загрузить пины'
+            : 'Не удалось загрузить подборки',
+        );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadData();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, userId]);
+
+  const displayPins = pins.map((pin) => ({
+    id: pin.id,
+    title: pin.name,
+    image: pin.images?.[0]?.imageUrl ?? placeholder_1,
+    location: pinLocations[pin.id] ?? `${pin.latitude}, ${pin.longitude}`,
+    author: author.nickname,
+    authorAvatar: author.avatar,
+  }));
+
+  const displayCollections = collections.map((board) => ({
+    id: board.id,
+    title: board.name,
+    description: board.description ?? '',
+    image:
+      ('boardImageURL' in board &&
+      typeof board.boardImageURL === 'string' &&
+      board.boardImageURL) ||
+      board.pins?.[0]?.images?.[0]?.imageUrl ||
+      placeholder_1,
+    location: '',
+    author: author.nickname,
+    authorAvatar: author.avatar,
+    pinsCount: board.pins?.length ?? 0,
+  }));
+
+  const handlePlusClick = () => {
+    navigate(activeTab === 'pins' ? '/pin/create' : '/collection/create');
+  };
 
   return (
     <div>
       <Header />
-
       <main className={styles.collectionContent}>
         <section className={styles.container}>
           <h2 className={styles.h_header}>Рекомендации</h2>
-
           <div className={styles.centerPanel}>
             <button
+              type="button"
               className={styles.floatingPlusBtn}
               onClick={handlePlusClick}
               aria-label="Создать"
-              title={getPlusButtonTitle()}
+              title={
+                activeTab === 'pins'
+                  ? 'Создать новый пин'
+                  : 'Создать новую подборку'
+              }
             >
-              <svg viewBox="0 0 24 24" fill="none">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
                   d="M12 5V19M5 12H19"
                   stroke="white"
@@ -306,9 +198,9 @@ const Feed = () => {
                 />
               </svg>
             </button>
-
             <div className={styles.tabSwitcher}>
               <button
+                type="button"
                 className={`${styles.tabButton} ${
                   activeTab === 'pins' ? styles.active : ''
                 }`}
@@ -316,8 +208,8 @@ const Feed = () => {
               >
                 Пины
               </button>
-
               <button
+                type="button"
                 className={`${styles.tabButton} ${
                   activeTab === 'collections' ? styles.active : ''
                 }`}
@@ -325,77 +217,53 @@ const Feed = () => {
               >
                 Подборки
               </button>
-
-              <div
-                className={styles.tabIndicator}
-                data-active={activeTab}
-              />
+              <div className={styles.tabIndicator} data-active={activeTab} />
             </div>
           </div>
-
           <div className={styles.checkboxContainer}>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={onlySubscriptions}
-                onChange={(e) =>
-                  setOnlySubscriptions(e.target.checked)
-                }
+                checked={false}
+                disabled
                 className={styles.hiddenCheckbox}
               />
-              <span className={styles.customCheckbox}>
-                {onlySubscriptions && (
-                  <svg
-                    className={styles.checkIcon}
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                  </svg>
-                )}
-              </span>
+              <span className={styles.customCheckbox} />
               <span className={styles.checkboxText}>
-                Только подписки
+                Только подписки (пока недоступно)
               </span>
             </label>
           </div>
         </section>
 
-        {loading && (
-          <p className={styles.loading}>Загрузка…</p>
-        )}
-        {error && (
-          <p className={styles.error}>{error}</p>
-        )}
+        {loading && <p className={styles.loading}>Загрузка…</p>}
+        {error && <p className={styles.error}>{error}</p>}
 
-        {activeTab === 'pins' && (
+        {!loading && !error && activeTab === 'pins' && (
           <div className={styles.pinsGridContainer}>
-            <PinGrid
-              pins={filteredPins.map((pin) => ({
-                ...pin,
-                image: pin.images?.[0]?.imageUrl || pin.imageUrl || placeholder_1, // используем реальное изображение пина
-                title: pin.name || pin.title,
-                location: pin.location,
-                author: pin.author,
-                authorAvatar: pin.authorAvatar, // ← передаем аватарку автора
-              }))}
-              onPinClick={handlePinClick}
-            />
+            {displayPins.length > 0 ? (
+              <PinGrid
+                pins={displayPins}
+                onPinClick={(pinId: string) => navigate(`/pin/${pinId}`)}
+              />
+            ) : (
+              <p>Пинов пока нет</p>
+            )}
           </div>
         )}
 
-        {activeTab === 'collections' && (
+        {!loading && !error && activeTab === 'collections' && (
           <div className={styles.collectionsGridContainer}>
-            <CollectionGrid
-              collections={filteredCollections.map((col) => ({
-                ...col,
-                image: col.boardImageURL || col.image || placeholder_1, // используем реальное изображение подборки
-                title: col.name,
-                pinsCount: col.pins ? col.pins.length : 0,
-                author: col.author,
-                authorAvatar: col.authorAvatar, // ← передаем аватарку автора
-              }))}
-              onCollectionClick={handleCollectionClick}
-            />
+            {displayCollections.length > 0 ? (
+              <CollectionGrid
+                collections={displayCollections}
+                onCollectionClick={(collectionId: string) =>
+                  navigate(`/collection/${collectionId}`)
+                }
+              />
+            ) : (
+              <p>Подборок пока нет</p>
+            )}
           </div>
         )}
       </main>

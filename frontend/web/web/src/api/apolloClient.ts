@@ -1,5 +1,5 @@
 // const GRAPHQL_URL = 'http://localhost:4000/graphql';
-const GRAPHQL_URL = '/api';   // TODO: убрать, когда 07-12-2025 frontend-main вольют в main, где будет фикс проблемы, для которой сейчас этот костыль
+const GRAPHQL_URL = '/api'; // TODO: убрать, когда 07-12-2025 frontend-main вольют в main, где будет фикс проблемы, для которой сейчас этот костыль
 
 import {
   getAccessToken,
@@ -62,10 +62,10 @@ const authLink = setContext(async (_, { headers }) => {
 const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path, extensions }) => {
-      console.error(
-        `[GraphQL error]: Message: ${message}, Path: ${path}`,
-        { locations, extensions }
-      );
+      console.error(`[GraphQL error]: Message: ${message}, Path: ${path}`, {
+        locations,
+        extensions,
+      });
 
       if (extensions?.code === 'UNAUTHENTICATED') {
         console.log('Пользователь не авторизован');
@@ -103,10 +103,13 @@ const cache = new InMemoryCache({
       fields: {
         pin: {
           read(existing, { args, toReference }) {
-            return existing || toReference({
-              __typename: 'Pin',
-              id: args?.id,
-            });
+            return (
+              existing ||
+              toReference({
+                __typename: 'Pin',
+                id: args?.id,
+              })
+            );
           },
         },
       },
@@ -117,14 +120,8 @@ const cache = new InMemoryCache({
   },
 });
 
-
 export const apolloClient = new ApolloClient({
-  link: from([
-    errorLink,
-    authLink,
-    loggingLink,
-    httpLink,
-  ]),
+  link: from([errorLink, authLink, loggingLink, httpLink]),
 
   cache,
 

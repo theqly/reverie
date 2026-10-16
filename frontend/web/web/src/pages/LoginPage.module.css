@@ -1,32 +1,32 @@
 .h_container {
-    display: flex;
-    align-items: center;
-    margin: 20px 20px -80px 20px;
+  display: flex;
+  align-items: center;
+  margin: 20px 20px -80px 20px;
 }
 
 h1 {
-    font-size: 26px;
+  font-size: 26px;
 }
 
 .back_btn {
-    padding: 8px;
-    height: 40px;
-    width: 40px;
-    margin-right: 20px;
+  padding: 8px;
+  height: 40px;
+  width: 40px;
+  margin-right: 20px;
 
-    background-image: url('../assets/back.svg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-color: white;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
+  background-image: url('../assets/back.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: white;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
 }
 
 .back_btn:hover {
-    background-color: rgb(237, 237, 237);
-    transition: 0.2s;
+  background-color: rgb(237, 237, 237);
+  transition: 0.2s;
 }
 
 .container {
@@ -43,7 +43,7 @@ h1 {
   padding: 32px;
   border-radius: 16px;
   background: white;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 
   display: flex;
   flex-direction: column;

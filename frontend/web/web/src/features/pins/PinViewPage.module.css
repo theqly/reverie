@@ -1,0 +1,790 @@
+.collectionContent {
+  padding-bottom: 40px;
+}
+
+.h_container {
+  display: flex;
+  align-items: center;
+  margin: 20px;
+}
+
+.back_btn {
+  padding: 8px;
+  height: 40px;
+  width: 40px;
+  margin-right: 20px;
+
+  background-image: url('../../assets/back.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: white;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.back_btn:hover {
+  background-color: rgb(237, 237, 237);
+  transition: 0.2s;
+}
+
+.mapWrapper {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Карточка поверх карты */
+.pinCard {
+  min-width: 400px; /* карточка приятной ширины */
+  max-width: 90%;
+  width: fit-content;
+
+  padding: 22px 26px;
+  background: white;
+  border-radius: 14px;
+  /* box-shadow: 0 4px 20px rgba(0,0,0,0.15); */
+  background-color: #eeeeee;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin: 10px 20px;        /* нормальные отступы */
+  box-sizing: border-box;
+}
+
+.pinTitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.pinDescription {
+  display: block; /* уже есть */
+  font-size: 16px;
+  line-height: 1.45;
+  color: #444;
+
+  max-width: 700px; /* ширина блока, можно менять */
+  width: 100%; /* чтобы не растягивался больше родителя */
+
+  white-space: normal; /* перенос строк по словам */
+  word-break: break-word; /* переносит длинные слова */
+}
+
+.pinCoords {
+  font-size: 14px;
+  color: #777;
+  margin-top: 10px;
+}
+
+.pinTitle {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.pinDescription {
+  font-size: 15px;
+  color: #444;
+}
+
+.pinCoords {
+  font-size: 13px;
+  color: #777;
+}
+
+/* Если MapPicker отдаёт div с фиксированной высотой – адаптируем */
+.mapWrapper > *:first-child {
+  width: 100%;
+  height: 100%; /* можно менять */
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.img1 {
+  border-radius: 15px;
+}
+.collectionLocation {
+  margin-top: 10px;
+  font-size: 15px;
+  background: #00000065;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-left: 2px;
+  padding-left: 26px;
+
+  background-image: url('../../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+
+  background-repeat: no-repeat;
+  border: none;
+
+  width: max-content; /* ширина ровно под текст */
+  white-space: nowrap; /* не переносить строки */
+  background: #00000065;
+  padding: 6px 10px 6px 26px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-top: 10px;
+  margin-left: 2px;
+
+  background-image: url('../../assets/location_on.svg');
+  background-size: 18px 18px;
+  background-position: left 6px top 5px;
+  background-repeat: no-repeat;
+
+  display: inline-block; /* чтобы работало корректно */ /* чтобы работало ограничение */
+  margin: 0;
+}
+
+.pageWrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* Контейнер под контент под хедером */
+.contentWrapper {
+  display: flex;
+  width: 100%;
+  position: relative;
+}
+
+/* Высота хедера фиксируется здесь — важный момент */
+:root {
+  --header-height: 70px;
+}
+
+/* Левая часть — больше НЕ скроллится */
+.leftColumn {
+  width: 50vw;
+  padding: 0 30px 20px 20px;
+  box-sizing: border-box;
+
+  /* УБРАНО overflow-y: auto; */
+  /* УБРАНО height */
+  /* она просто растёт по контенту */
+}
+
+/* Правая карта остаётся фиксированной */
+.mapWrapperFixed {
+  position: fixed;
+  top: 65px;
+  right: 0;
+  width: 50vw;
+  height: calc(100vh - var(--header-height));
+  overflow: hidden;
+  border-left: 1px solid #ddd;
+}
+
+.mapWrapperFixed > *:first-child {
+  width: 100%;
+  height: 100%;
+}
+
+.reactionBlock,
+.likesWrapper,
+.bmWrapper {
+  display: flex;
+}
+
+.bmWrapper {
+  margin-right: -10px;
+}
+
+.likesWrapper button,
+.bmWrapper button {
+  width: 20px;
+  height: 20px;
+}
+
+.reactionBlock {
+  gap: 15px;
+}
+
+.likesWrapper {
+  margin-left: auto;
+}
+
+.likesWrapper button {
+  background-image: url('../../assets/Heart.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.bmWrapper button {
+  background-image: url('../../assets/Bookmark.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.likesWrapper p {
+  font-weight: 700;
+  margin: 0;
+}
+
+/*комментарии*/
+
+.commentCard {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  max-width: 568px;
+  margin-bottom: 12px;
+  word-wrap: break-word;
+}
+
+.commentAuthorWrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.commentAuthorAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.commentAuthorName {
+  font-weight: 600;
+  font-size: 14px;
+  color: #222;
+}
+
+.commentText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.commentDate {
+  font-size: 12px;
+  color: #999;
+  align-self: flex-end;
+}
+
+.commentWrapper {
+  margin-left: 20px;
+}
+
+.commentWrapper p {
+  font-size: 25px;
+}
+
+/* стили для подборок */
+
+.pinsWrapper {
+  max-width: 600px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.pinsTitle {
+  margin: 40px 20px 10px 20px;
+  font-size: 25px;
+  font-weight: 600;
+  text-align: start;
+}
+
+.pinsGrid {
+  max-width: 600px;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 16px;
+  margin-top: 0;
+}
+
+.pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* background: #f8f8f8; */
+  padding: 8px 8px 8px 8px;
+  border-radius: 8px;
+}
+
+.pinImage {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  aspect-ratio: 1.3 / 1;
+  cursor: pointer;
+}
+
+.pinImageWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pinImageWrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 1.3 / 1;
+
+  background-color: rgba(0, 0, 0, 0); /* по умолчанию прозрачный */
+  border-radius: 16px;
+  transition: background-color 0.2s ease;
+  pointer-events: none; /* чтобы не блокировал клики */
+}
+
+.pinImageWrapper:hover::after {
+  background-color: rgba(0, 0, 0, 0.11); /* лёгкая полупрозрачная тень */
+}
+
+/* Верхний правый угол — название локации */
+.pinLocation {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 17px;
+
+  background-image: url('../../assets/location_on.svg');
+  background-size: 12px 12px;
+  background-position: left 3px top 2px;
+
+  background-repeat: no-repeat;
+  border: none;
+}
+
+/* Имя автора под картинкой */
+.pinAuthor {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Нижний центр — название пина, перенос строк вверх */
+
+.pinAuthorWrapper {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.pinAuthorAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 5px -5px 0; /* расстояние между аватаркой и никнеймом */
+}
+
+.pinAuthor {
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.lilPinTitle {
+  position: absolute;
+  bottom: 8px; /* отступ от низа */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 170px;
+  max-width: 100%;
+
+  white-space: normal; /* разрешаем перенос строк */
+  word-break: break-word; /* переносим длинные слова */
+  text-align: center;
+
+  /* Опционально ограничение по высоте */
+  max-height: 48px; /* примерно 2-3 строки */
+  overflow: hidden;
+}
+
+/* ВОТ ЭТО Я ЗРЯ СЮДА ВСТАВЛЯЮ НО ИЗВИНИТЕ */
+
+.edit_btn,
+.reportBtn,
+.settingsBtn,
+.shareBtn {
+  height: 30px;
+  width: 100px;
+  border-radius: 10px;
+  background-color: rgb(236, 236, 236);
+  border: none;
+  cursor: pointer;
+}
+
+.edit_btn {
+  margin-left: auto;
+  width: 250px;
+  height: 40px;
+  background-color: #b5b5b5;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.settingsBtn {
+  height: 40px;
+  width: 40px;
+  border-radius: 10px;
+
+  background-image: url('../../assets/Edit.svg');
+  background-size: 25px 25px;
+  background-color: rgb(255, 255, 255);
+
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-right: 10px;
+  margin-left: auto;
+}
+
+.settingsBtn:hover {
+  background-color: rgb(242, 242, 242);
+}
+
+.pinCardWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.authorA {
+  cursor: pointer;
+  color: rgb(80, 80, 80);
+  text-decoration: none;
+}
+
+.authorA:hover {
+  color: rgb(0, 0, 0);
+}
+
+
+.addTo{
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 35px;
+  height: 40px;
+  cursor: pointer;
+  background-color: transparent;
+  width: 300px;
+  text-align: left;
+  padding-left: 40px;
+  font-size: 16px;
+
+  background-image: url('../assets/plus.svg');
+  background-size: 30px 30px;
+  background-position: left center ;
+  
+  background-repeat: no-repeat;
+  border: none;
+  align-self: first baseline;
+}
+
+.addTo:hover{
+  background-size: 35px 35px;
+  padding-left: 45px;
+}
+
+
+
+/* Стили для модального окна */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modalCloseBtn:hover {
+  background-color: #f5f5f5;
+}
+
+.modalBody {
+  padding: 0;
+}
+
+.modalLoading,
+.modalError,
+.modalEmpty {
+  padding: 40px 24px;
+  text-align: center;
+  color: #666;
+}
+
+.modalError p {
+  margin-bottom: 16px;
+}
+
+.retryButton {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background-color: #0056cc;
+}
+
+.createCollectionButton {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background-color 0.2s;
+}
+
+.createCollectionButton:hover {
+  background-color: #0056cc;
+}
+
+.collectionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.collectionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.collectionItem:hover {
+  background-color: #f8f9fa;
+}
+
+.collectionItem:last-child {
+  border-bottom: none;
+}
+
+.collectionInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.collectionName {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.collectionDescription {
+  font-size: 14px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.collectionAction {
+  color: #007aff;
+  font-size: 24px;
+  font-weight: 300;
+  padding-left: 16px;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .modalContent {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .collectionItem {
+    padding: 14px 20px;
+  }
+}
+
+/* Добавьте эти стили в ваш PinViewPage.module.css */
+
+.emptyMapPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 16px;
+  border: 2px dashed #e0e0e0;
+}
+
+.placeholderContent {
+  text-align: center;
+  padding: 2rem;
+  max-width: 300px;
+}
+
+.placeholderText {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+
+
+.addPinButton{
+  height: 40px;
+  cursor: pointer;
+  background-color: transparent;
+  width: 250px;
+  text-align: left;
+  padding-left: 40px;
+  font-size: 16px;
+
+  background-image: url('../assets/plus.svg');
+  background-size: 30px 30px;
+  background-position: left center ;
+  
+  background-repeat: no-repeat;
+  border: none;
+  margin-left: 15px;
+}
+
+.addPinButton:hover {
+  background-size: 35px 35px;
+  padding-left: 45px;
+}

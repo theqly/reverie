@@ -1,0 +1,19 @@
+node_modules
+dist
+build
+coverage
+.vite
+
+# codegen output
+src/graphql/generated
+
+# схемы (на всякий случай, если добавите prettier-plugin-graphql)
+deploy/apollo/schemas
+
+# lock-файлы
+package-lock.json
+yarn.lock
+pnpm-lock.yaml  
+
+# .graphql — Prettier без плагина их не форматирует
+src/graphql/**/*.graphql

@@ -2,9 +2,8 @@ import React from 'react';
 import styles from './Header.module.css';
 import logo from '../assets/Reverie.svg';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from './ToastProvider'; // импортируем хук из провайдера
-import {getUserIdFromToken} from '../auth/tokenStorage';
-
+import { useToast } from './ToastContext';
+import { getUserIdFromToken } from '../auth/tokenStorage';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();

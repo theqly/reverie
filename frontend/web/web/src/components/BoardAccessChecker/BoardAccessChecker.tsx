@@ -1,14 +1,14 @@
 // components/BoardAccessChecker.tsx
-import React, { useEffect, useState } from "react";
-import type { Board, FullBoard } from "../../types/board";
-import { fetchBoardBasic, fetchFullBoard, checkUserInGroup } from "../../api/board";
+import React, { useEffect, useState } from 'react';
+import type { Board, FullBoard } from '../../types/board';
+import { fetchBoardBasic, fetchFullBoard, checkUserInGroup } from '../../api/board';
 
 type Props = {
   boardId: string;
   currentUserId: string;
 };
 
-export const BoardAccessChecker: React.FC<Props> = ({ boardId, currentUserId}) => {
+export const BoardAccessChecker: React.FC<Props> = ({ boardId, currentUserId }) => {
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export const BoardAccessChecker: React.FC<Props> = ({ boardId, currentUserId}) =
       setLoading(true);
       const data = await fetchBoardBasic(boardId);
       if (!data) {
-        setError("Нет доступа к этой доске или ошибка запроса");
+        setError('Нет доступа к этой доске или ошибка запроса');
       }
       setBoard(data);
       setLoading(false);
@@ -40,23 +40,21 @@ export const BoardAccessChecker: React.FC<Props> = ({ boardId, currentUserId}) =
   // Проверка доступа
   // ------------------------
   useEffect(() => {
-    
-
     async function checkAccess() {
       if (!board) return;
       const accessType = board.accessLevel.type;
 
       // public+group_public и private
-      if (accessType === "public" || accessType === "group_public") {
+      if (accessType === 'public' || accessType === 'group_public') {
         setHasAccess(true);
         return;
-      } else if (accessType === "private" && board.owner.id === currentUserId) {
+      } else if (accessType === 'private' && board.owner.id === currentUserId) {
         setHasAccess(true);
         return;
       }
 
       // group
-      if (accessType === "group") {
+      if (accessType === 'group') {
         setCheckingGroup(true);
         const isInGroup = await checkUserInGroup(currentUserId, board.groupId);
         setHasAccess(isInGroup);
@@ -77,7 +75,7 @@ export const BoardAccessChecker: React.FC<Props> = ({ boardId, currentUserId}) =
       setLoadingPins(true);
       const data = await fetchFullBoard(boardId);
       if (!data) {
-        setErrorPins("Ошибка загрузки полной доски");
+        setErrorPins('Ошибка загрузки полной доски');
       }
       setFullBoard(data);
       setLoadingPins(false);
@@ -111,7 +109,7 @@ export const BoardAccessChecker: React.FC<Props> = ({ boardId, currentUserId}) =
       <p>Создано: {fullBoard.createdAt}</p>
 
       <h4>Пины:</h4>
-      {fullBoard.pins.map(pin => (
+      {fullBoard.pins.map((pin) => (
         <div key={pin.id}>
           <p>{pin.title}</p>
           <p>{pin.content}</p>

@@ -3,7 +3,6 @@
   align-items: center;
   gap: 24px;
   padding: 0;
-
 }
 
 /* Общие стили для кнопок */
@@ -129,7 +128,9 @@
   border-radius: 50%;
   background: currentColor;
   opacity: 0;
-  transition: opacity 0.3s, transform 0.3s;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
   z-index: -1;
 }
 
@@ -152,13 +153,13 @@
   .reactionBlock {
     gap: 20px;
   }
-  
+
   .heartIcon,
   .bookmarkIcon {
     width: 20px;
     height: 20px;
   }
-  
+
   .likesCount {
     font-size: 13px;
   }

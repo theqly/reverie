@@ -1,14 +1,19 @@
-import {apolloClient} from "@/api/apolloClient.ts";
+import { apolloClient } from '@/api/apolloClient.ts';
 import {
   type Board,
   CountAllReactionsToBoardDocument,
   CountAllReactionsToPinDocument,
-  GetAvailableReactionsDocument, GetLikedBoardsByUserIdDocument, GetLikedPinsByUserIdDocument, type Pin,
-  type Reaction, ReactionToBoardDocument, ReactionToPinDocument
-} from "@/graphql/generated/graphql.ts";
-import {resolveUserId} from "@/services/profileService.ts";
-
-
+  GetAvailableReactionsDocument,
+  GetLikedBoardsByUserIdDocument,
+  type GetLikedBoardsByUserIdQueryVariables,
+  GetLikedPinsByUserIdDocument,
+  type GetLikedPinsByUserIdQueryVariables,
+  type Pin,
+  type Reaction,
+  ReactionToBoardDocument,
+  ReactionToPinDocument,
+} from '@/graphql/generated/graphql.ts';
+import { resolveUserId } from '@/services/profileService.ts';
 
 /**
  * Получает список всех доступных типов реакций
@@ -32,9 +37,7 @@ export async function getAvailableReactions(): Promise<Reaction[]> {
  * @param params.pinId - ID пина
  * @returns Количество реакций
  */
-export async function countReactionsToPin(
-  params: { pinId: string }
-): Promise<number> {
+export async function countReactionsToPin(params: { pinId: string }): Promise<number> {
   try {
     const result = await apolloClient.query({
       query: CountAllReactionsToPinDocument,
@@ -53,9 +56,7 @@ export async function countReactionsToPin(
  * @param params.boardId - ID доски
  * @returns Количество реакций
  */
-export async function countReactionsToBoard(
-  params: { boardId: string }
-): Promise<number> {
+export async function countReactionsToBoard(params: { boardId: string }): Promise<number> {
   try {
     const result = await apolloClient.query({
       query: CountAllReactionsToBoardDocument,
@@ -76,9 +77,11 @@ export async function countReactionsToBoard(
  * @param params.reactionId - ID типа реакции
  * @param params.userId - ID пользователя, ставящего реакцию
  */
-export async function reactToPin(
-  params: { pinId: string; reactionId: string; userId: string }
-): Promise<boolean> {
+export async function reactToPin(params: {
+  pinId: string;
+  reactionId: string;
+  userId: string;
+}): Promise<boolean> {
   try {
     const result = await apolloClient.mutate({
       mutation: ReactionToPinDocument,
@@ -99,19 +102,21 @@ export async function reactToPin(
  * @param params.reactionId - ID типа реакции
  * @param params.userId - ID пользователя, ставящего реакцию
  */
-export async function reactToBoard(
-  params: { boardId: string; reactionId: string; userId: string }
-): Promise<boolean> {
-  try {
-    const result = await apolloClient.mutate({
-      mutation: ReactionToBoardDocument,
-      variables: params,
-    });
-    return result.data?.reactionToBoard === true;
-  } catch (error) {
-    console.error(`Failed to set reaction on Board ${params.boardId}:`, error);
-    return false;
+export async function reactToBoard(params: {
+  boardId: string;
+  reactionId: string;
+  userId: string;
+}): Promise<boolean> {
+  const result = await apolloClient.mutate({
+    mutation: ReactionToBoardDocument,
+    variables: params,
+  });
+
+  if (result.data?.reactionToBoard == null) {
+    throw new Error('Empty reactionToBoard response');
   }
+
+  return result.data.reactionToBoard;
 }
 
 /**
@@ -124,17 +129,15 @@ export async function reactToBoard(
  * @param params.offset - (Опционально) Смещение
  * @returns Массив лайкнутых пинов или null
  */
-export async function getLikedPinsByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    limit?: number;
-    offset?: number;
-  }
-): Promise<Pin[] | null> {
+export async function getLikedPinsByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<Pin[] | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -142,18 +145,15 @@ export async function getLikedPinsByUser(
   }
 
   try {
-    const variables: any = { userId: finalUserId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetLikedPinsByUserIdQueryVariables = {
+      userID: finalUserId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetLikedPinsByUserIdDocument,
-      variables
+      variables,
     });
     return result.data?.likedPinsByUser ?? null;
   } catch (error) {
@@ -172,17 +172,15 @@ export async function getLikedPinsByUser(
  * @param params.offset - (Опционально) Смещение
  * @returns Массив лайкнутых досок или null
  */
-export async function getLikedBoardsByUser(
-  params: {
-    userId?: string;
-    nickTag?: string;
-    limit?: number;
-    offset?: number;
-  }
-): Promise<Board[] | null> {
+export async function getLikedBoardsByUser(params: {
+  userId?: string;
+  nickTag?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<Board[] | null> {
   const finalUserId = await resolveUserId({
     userId: params.userId,
-    nickTag: params.nickTag
+    nickTag: params.nickTag,
   });
 
   if (!finalUserId) {
@@ -190,18 +188,15 @@ export async function getLikedBoardsByUser(
   }
 
   try {
-    const variables: any = { userId: finalUserId };
-
-    if (params.limit !== undefined) {
-      variables.limit = params.limit;
-    }
-    if (params.offset !== undefined) {
-      variables.offset = params.offset;
-    }
+    const variables: GetLikedBoardsByUserIdQueryVariables = {
+      userID: finalUserId,
+      limit: params.limit,
+      offset: params.offset,
+    };
 
     const result = await apolloClient.query({
       query: GetLikedBoardsByUserIdDocument,
-      variables
+      variables,
     });
     return result.data?.likedBoardsByUser ?? null;
   } catch (error) {
