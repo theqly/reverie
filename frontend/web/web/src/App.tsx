@@ -8,7 +8,7 @@ import PinViewPage from './features/pins/PinViewPage';
 import EditPinPage from './features/pins/EditPinPage';
 import MapPage from './features/map/MapPage';
 import LikedPins from './pages/LikedPins';
-import Profile from './pages/Profile';
+import Profile from './features/profiles/Profile';
 import LoginRedirect from './pages/LoginRedirect';
 import Feed from './pages/Feed';
 import AuthCallbackPage from './pages/AuthCallbackPage';

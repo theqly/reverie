@@ -1,76 +1,115 @@
-import { useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import styles from './CreateCollectionPage.module.css';
 import InviteCollaboratorModal from '../../pages/InviteCollaboratorModal';
 import Header from '../../pages/Header';
 import { createCollection } from '../../services/collectionsService';
+import { validateImageFile } from '../../services/imageService';
+import { getUserIdFromToken } from '../../auth/tokenStorage';
 
 const CreateCollectionPage = () => {
   const navigate = useNavigate();
 
-  // Состояния для полей формы
   const [collectionName, setCollectionName] = useState('');
   const [collectionInfo, setCollectionInfo] = useState('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [collaborators, setCollaborators] = useState<string[]>([]);
-
   const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
 
-  // Обработчики
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!coverImage) {
+      setCoverPreviewUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(coverImage);
+    setCoverPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [coverImage]);
+
   const handleBack = () => {
-    // Пробуем взять from из URL
-    const searchParams = new URLSearchParams(location.search);
+    const searchParams = new URLSearchParams(window.location.search);
     const from = searchParams.get('from');
 
-    if (from) {
-      // Если есть параметр from - используем его
-      navigate(`/${from}`);
-    } else if (document.referrer && document.referrer.includes(window.location.origin)) {
-      // Если есть реферер и он с нашего сайта - используем его
-      const referrerPath = new URL(document.referrer).pathname;
-      navigate(referrerPath);
+    if (from?.startsWith('/') && !from.startsWith('//')) {
+      navigate(from);
     } else {
-      // Иначе возвращаемся в историю или на фид по умолчанию
       navigate(-1);
     }
   };
 
-  const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setCoverImage(file);
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setUploadError(validation.error || 'Недопустимый файл');
+      event.target.value = '';
+      return;
     }
+
+    setUploadError(null);
+    setCoverImage(file);
+    event.target.value = '';
   };
 
-  const handleInviteCollaborator = () => {
-    setIsInviteModalOpen(true);
-  };
-
-  const handleAddCollaborator = () => {
-    // Заглушка: добавляем фиктивного коллаборатора
-    const newCollaborator = `Collaborator ${collaborators.length + 1}`;
-    setCollaborators((prev) => [...prev, newCollaborator]);
-  };
-
-  const handleSaveCollection = async () => {
-    const currentUser = '00000000-0000-0000-0000-000000000001';
-
-    const payload = {
-      name: collectionName,
-      info: collectionInfo,
-      coverImage,
-      collaborators: [currentUser],
-    };
-
-    await createCollection(payload);
-    console.log('createCollection вызвана с payload(c owner):', payload);
-  };
-
-  // Валидация для кнопки сохранения
   const isSaveEnabled =
+    !isUploading &&
     collectionName.trim().length > 0 &&
     collectionName.length <= 50 &&
     collectionInfo.length <= 1000;
+
+  const handleSaveCollection = async () => {
+    if (!isSaveEnabled) return;
+
+    const currentUser = getUserIdFromToken();
+    if (!currentUser) {
+      setUploadError('Не удалось определить пользователя. Войдите в аккаунт повторно.');
+      return;
+    }
+
+    // Модальное окно пока возвращает имена, а CreateGroup ожидает UUID.
+    // Не отправляем некорректные данные и не создаём подборку без соавторов молча.
+    if (collaborators.length > 0) {
+      setUploadError('Создание подборки с соавторами пока недоступно: необходимо получать ID выбранных пользователей.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    try {
+      const result = await createCollection(
+        {
+          name: collectionName.trim(),
+          info: collectionInfo,
+          coverImage,
+          collaborators: [currentUser],
+        },
+        (progress) => setUploadProgress(progress.percentage),
+      );
+
+      if (!result.success || !result.boardId) {
+        setUploadError(result.error || 'Не удалось создать подборку');
+        return;
+      }
+
+      navigate(`/collection/${result.boardId}`, { replace: true });
+    } catch (error: unknown) {
+      console.error('[CreateCollectionPage] Creation failed:', error);
+      setUploadError(error instanceof Error ? error.message : 'Произошла ошибка');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <div className={styles.createCollectionPage}>
@@ -78,70 +117,55 @@ const CreateCollectionPage = () => {
 
       <main className={styles.collectionContent}>
         <div className={styles.h_container}>
-          <button onClick={handleBack} className={styles.back_btn}></button>
-          <h1>Создание подборки @nickname</h1>
+          <button type="button" onClick={handleBack} className={styles.back_btn} aria-label="Назад" />
+          <h1>Создание подборки</h1>
         </div>
 
         <div className={styles.gridWrapper}>
-          <label htmlFor="collection-name" className={styles.name_label}>
-            Название:
-          </label>
+          <label htmlFor="collection-name" className={styles.name_label}>Название:</label>
           <div className={styles.name_input_block}>
             <input
               id="collection-name"
               type="text"
               value={collectionName}
-              onChange={(e) => setCollectionName(e.target.value)}
+              onChange={(event) => setCollectionName(event.target.value)}
               maxLength={50}
-              className={collectionName.length > 50 ? styles.error : styles.name_input}
+              className={styles.name_input}
             />
             <div className={styles.characterCounter}>{collectionName.length}/50</div>
-            {collectionName.length > 50 && (
-              <div className={styles.errorMessage}>
-                Collection name must be 50 characters or less
-              </div>
-            )}
           </div>
 
-          <label htmlFor="collection-info" className={styles.discr_label}>
-            Описание:
-          </label>
+          <label htmlFor="collection-info" className={styles.discr_label}>Описание:</label>
           <div className={styles.discr_input_block}>
             <textarea
               id="collection-info"
               value={collectionInfo}
-              onChange={(e) => setCollectionInfo(e.target.value)}
+              onChange={(event) => setCollectionInfo(event.target.value)}
               maxLength={1000}
               rows={4}
-              className={collectionInfo.length > 1000 ? styles.error : styles.discr_input}
+              className={styles.discr_input}
             />
             <div className={styles.characterCounter}>{collectionInfo.length}/1000</div>
-            {collectionInfo.length > 1000 && (
-              <div className={styles.errorMessage}>
-                Collection info must be 1000 characters or less
-              </div>
-            )}
           </div>
 
-          <label className={styles.collaborator_label}>Соавторы: </label>
+          <label className={styles.collaborator_label}>Соавторы:</label>
           <div className={styles.collaboratorsList}>
-            {collaborators.map((name, idx) => (
-              <div key={idx} className={styles.collaboratorItem}>
+            {collaborators.map((name) => (
+              <div key={name} className={styles.collaboratorItem}>
                 <span>@{name}</span>
                 <button
+                  type="button"
                   className={styles.removeCollaboratorBtn}
-                  onClick={() => {
-                    setCollaborators((prev) => prev.filter((c) => c !== name));
-                  }}
+                  onClick={() => setCollaborators((prev) => prev.filter((item) => item !== name))}
+                  aria-label={`Удалить соавтора ${name}`}
                 >
                   ✕
                 </button>
               </div>
             ))}
-
             <button
               type="button"
-              onClick={handleInviteCollaborator}
+              onClick={() => setIsInviteModalOpen(true)}
               className={styles.actionButton}
             >
               Добавить соавтора
@@ -150,12 +174,8 @@ const CreateCollectionPage = () => {
 
           <section className={styles.coverSection}>
             <label htmlFor="cover-input" className={styles.coverLabel}>
-              {coverImage ? (
-                <img
-                  src={URL.createObjectURL(coverImage)}
-                  alt="Collection cover"
-                  className={styles.coverPreview}
-                />
+              {coverPreviewUrl ? (
+                <img src={coverPreviewUrl} alt="Обложка подборки" className={styles.coverPreview} />
               ) : (
                 <div className={styles.coverPlaceholder}>
                   <span className={styles.plus}>+</span>
@@ -168,27 +188,43 @@ const CreateCollectionPage = () => {
               accept="image/*"
               onChange={handleCoverUpload}
               className={styles.hiddenInput}
+              disabled={isUploading}
             />
             <label htmlFor="cover-input" className={styles.uploadButton}>
-              Загрузить фото
+              {coverImage ? 'Заменить фото' : 'Загрузить фото'}
             </label>
           </section>
         </div>
 
+        {uploadError && (
+          <div role="alert" className={styles.errorMessage} style={{ marginBottom: '1rem', color: 'red' }}>
+            {uploadError}
+          </div>
+        )}
+
+        {isUploading && coverImage && (
+          <div className={styles.uploadProgress} style={{ marginBottom: '1rem' }}>
+            <div>Загрузка обложки: {uploadProgress}%</div>
+            <div style={{ width: '100%', height: '8px', backgroundColor: '#e0e0e0', borderRadius: '4px', marginTop: '0.5rem' }}>
+              <div style={{ width: `${uploadProgress}%`, height: '100%', backgroundColor: '#4CAF50', borderRadius: '4px', transition: 'width 0.3s ease' }} />
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
-          onClick={handleSaveCollection}
+          onClick={() => void handleSaveCollection()}
           disabled={!isSaveEnabled}
           className={styles.saveButton}
         >
-          Сохранить подборку
+          {isUploading ? 'Сохранение...' : 'Сохранить подборку'}
         </button>
 
         {isInviteModalOpen && (
           <InviteCollaboratorModal
             onClose={() => setIsInviteModalOpen(false)}
             onAddCollaborator={(name) => {
-              setCollaborators((prev) => [...prev, name]);
+              setCollaborators((prev) => prev.includes(name) ? prev : [...prev, name]);
             }}
             existingCollaborators={collaborators}
           />

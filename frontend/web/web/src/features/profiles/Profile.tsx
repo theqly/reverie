@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import styles from './Profile.module.css';
 import Header from '../../pages/Header';
@@ -17,200 +16,42 @@ import CollectionGrid from '../collections/components/CollectionGrid';
 
 import placeholder_3 from '../../assets/placeholder3.jpg';
 import placeholder_1 from '../../assets/placeholder1.jpg';
+import {getUserIdFromToken} from '../../auth/tokenStorage';
 
 import {
+  findUser,
   getPinsByUser,
   getOwnBoardsByUser,
   getLikesByUser,
   getBookmarksByUser,
+  updateUser,
 } from '../../services/profileService';
+
+import { getCityFromCoordinates } from '../../services/geoService';
 
 type TabType = 'collections' | 'pins' | 'likes' | 'bookmarks';
 
-// Типы получаем из сервисов, без дублирования GraphQL-сущностей.
-type PinItem =
-  NonNullable<Awaited<ReturnType<typeof getPinsByUser>>>[number];
-
-type CollectionItem =
-  NonNullable<Awaited<ReturnType<typeof getOwnBoardsByUser>>>[number];
-
-type LikesResponse =
-  NonNullable<Awaited<ReturnType<typeof getLikesByUser>>>;
-
-type BookmarksResponse =
-  NonNullable<Awaited<ReturnType<typeof getBookmarksByUser>>>;
-
-type LikedPin = NonNullable<LikesResponse['pins']>[number];
-type LikedCollection = NonNullable<LikesResponse['boards']>[number];
-
-type BookmarkedPin =
-  NonNullable<BookmarksResponse['pins']>[number];
-
-type BookmarkedCollection =
-  NonNullable<BookmarksResponse['boards']>[number];
-
-// Временный UUID до подключения авторизации.
-const TEMP_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-// Формат существующего UI-компонента PinGridItem.
-type PinCard = {
+interface UserData {
   id: string;
-  title: string;
-  image: string;
-  location: string;
-  author: string;
-  authorAvatar: string;
-};
-
-type CollectionCard = {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  pinsCount: number;
-  location: string;
-  author: string;
-  authorAvatar: string;
-};
-
-type FeedBlock =
-  | { type: 'pins'; items: PinCard[] }
-  | { type: 'collections'; items: CollectionCard[] };
-
-// Проверка данных без приведения к any.
-const isRecord = (
-  value: unknown,
-): value is Record<string, unknown> =>
-  typeof value === 'object' &&
-  value !== null &&
-  !Array.isArray(value);
-
-const getString = (value: unknown): string | null =>
-  typeof value === 'string' ? value : null;
-
-const getFirstImage = (value: unknown): string => {
-  if (!Array.isArray(value)) return placeholder_1;
-
-  const firstImage: unknown = value[0];
-
-  if (!isRecord(firstImage)) return placeholder_1;
-
-  return getString(firstImage.imageUrl) ?? placeholder_1;
-};
-
-// Временное преобразование API-данных для старого PinGridItem.
-const toPinCard = (value: unknown): PinCard | null => {
-  if (!isRecord(value)) return null;
-
-  const id = getString(value.id);
-  if (!id) return null;
-
-  const name =
-    getString(value.name) ??
-    getString(value.title) ??
-    'Без названия';
-
-  const latitude = value.latitude;
-  const longitude = value.longitude;
-
-  const hasCoords =
-    typeof latitude === 'number' &&
-    typeof longitude === 'number';
-
-  return {
-    id,
-    title: name,
-    image:
-      getFirstImage(value.images),
-    location: hasCoords
-      ? `${latitude}, ${longitude}`
-      : '',
-    author: 'Автор неизвестен',
-    authorAvatar: placeholder_1,
-  };
-};
-
-// Временное преобразование API-данных для CollectionGridItem.
-const toCollectionCard = (
-  value: unknown,
-): CollectionCard | null => {
-  if (!isRecord(value)) return null;
-
-  const id = getString(value.id);
-  if (!id) return null;
-
-  const pins = Array.isArray(value.pins) ? value.pins : [];
-
-  const firstPin: unknown = pins[0];
-
-  const image =
-    isRecord(firstPin)
-      ? getFirstImage(firstPin.images)
-      : placeholder_1;
-
-  return {
-    id,
-    title: getString(value.name) ?? 'Без названия',
-    description: getString(value.description) ?? '',
-    image,
-    pinsCount: pins.length,
-    location: '',
-    author: 'Автор неизвестен',
-    authorAvatar: placeholder_1,
-  };
-};
-
-const toPinCards = (items: readonly unknown[]): PinCard[] =>
-  items
-    .map(toPinCard)
-    .filter((item): item is PinCard => item !== null);
-
-const toCollectionCards = (
-  items: readonly unknown[],
-): CollectionCard[] =>
-  items
-    .map(toCollectionCard)
-    .filter((item): item is CollectionCard => item !== null);
-
-const generateMixedFeed = (
-  collections: CollectionCard[],
-  pins: PinCard[],
-): FeedBlock[] => {
-  const COLLECTIONS_PER_BLOCK = 2;
-  const PINS_PER_BLOCK = 5;
-
-  const colls = [...collections];
-  const ps = [...pins];
-
-  const feed: FeedBlock[] = [];
-  let next: 'collections' | 'pins' = 'collections';
-
-  while (colls.length > 0 || ps.length > 0) {
-    if (next === 'collections' && colls.length > 0) {
-      feed.push({
-        type: 'collections',
-        items: colls.splice(0, COLLECTIONS_PER_BLOCK),
-      });
-      next = 'pins';
-    } else if (next === 'pins' && ps.length > 0) {
-      feed.push({
-        type: 'pins',
-        items: ps.splice(0, PINS_PER_BLOCK),
-      });
-      next = 'collections';
-    } else {
-      next = colls.length > 0 ? 'collections' : 'pins';
-    }
-  }
-
-  return feed;
-};
+  nickname: string;
+  name?: string;
+  email: string;
+  nickTag: string;
+  profilePicture?: string;
+  description?: string;
+  userRating: number;
+  followers: Array<{ id: string; nickname: string }>;
+  following: Array<{ id: string; nickname: string }>;
+}
 
 const Profile = () => {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<TabType>('collections');
+  /* =======================
+     UI state
+  ======================= */
 
+  const [activeTab, setActiveTab] = useState<TabType>('collections');
   const [isEditOpen, setEditOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isShareOpen, setShareOpen] = useState(false);
@@ -218,198 +59,457 @@ const Profile = () => {
   const [isFollowersOpen, setFollowersOpen] = useState(false);
   const [isFollowingOpen, setFollowingOpen] = useState(false);
 
-  const [isFollowing, setFollowing] = useState(false);
+  /* =======================
+     Profile data
+  ======================= */
 
-  // TODO: заменить статические данные на API профиля.
-  const [profileData, setProfileData] = useState({
-    name: 'Jane Anderson',
-    bio: 'The photographer capturing moments around the world based in Paris',
-    avatar: placeholder_3,
-    nickname: 'wanderlust_jane',
+  const [userData, setUserData] = useState<UserData | null>(null);
+  
+  // Для модалки редактирования
+  const [editFormData, setEditFormData] = useState({
+    nickname: '',
+    name: '',
+    description: '',
+    nickTag: '',
   });
 
-  const [pins, setPins] = useState<PinItem[]>([]);
-  const [collections, setCollections] = useState<CollectionItem[]>([]);
+  /* =======================
+     Data state
+  ======================= */
 
-  const [likedPins, setLikedPins] = useState<LikedPin[]>([]);
-  const [likedCollections, setLikedCollections] =
-    useState<LikedCollection[]>([]);
-
-  const [bookmarkedPins, setBookmarkedPins] =
-    useState<BookmarkedPin[]>([]);
-  const [bookmarkedCollections, setBookmarkedCollections] =
-    useState<BookmarkedCollection[]>([]);
+  const [pins, setPins] = useState<any[]>([]); // TODO: типизировать по возвращаемым данным getPinsByUser
+  const [collections, setCollections] = useState<any[]>([]); // TODO: типизировать GraphQL-результат
+  const [likedPins, setLikedPins] = useState<any[]>([]);
+  const [likedCollections, setLikedCollections] = useState<any[]>([]);
+  const [bookmarkedPins, setBookmarkedPins] = useState<any[]>([]);
+  const [bookmarkedCollections, setBookmarkedCollections] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleBack = () => navigate(-1);
+  /* =======================
+     Константы для ID пользователей
+  ======================= */
+  const { id } = useParams<{ id: string }>();
+  const viewerId = getUserIdFromToken();
+  const profileId = id ?? viewerId ?? null;
+  const isOwnProfile = Boolean(viewerId && profileId && profileId === viewerId);
+
+
+  /* =======================
+     Навигация
+  ======================= */
+
+  const handleBack = () => {
+    navigate(-1);
+  };
 
   const handleCreatePin = () => navigate('/pin/create');
-  const handleCreateCollection = () =>
-    navigate('/collection/create');
+  const handleCreateCollection = () => navigate('/collection/create');
 
-  const handlePinClick = (pinId: string) => {
-    navigate(`/pin/${pinId}`);
+  const handlePinClick = (pinId: string, owner: string, ownerId: string) => {
+    navigate(`/pin/${pinId}?owner=${owner}&ownerId=${ownerId}`);
   };
 
-  const handleCollectionClick = (collectionId: string) => {
-    navigate(`/collection/${collectionId}`);
+  const handleCollectionClick = (collectionId: string, owner: string, ownerId: string) => {
+    navigate(`/collection/${collectionId}?owner=${owner}&ownerId=${ownerId}`);
   };
 
-  // Загружаем только данные активной вкладки.
-  useEffect(() => {
-    let cancelled = false;
+  /* =======================
+     Загрузка профиля пользователя
+  ======================= */
 
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        switch (activeTab) {
-          case 'pins': {
-            const response = await getPinsByUser({
-              viewerId: TEMP_USER_ID,
-              userId: TEMP_USER_ID,
-              limit: 20,
-              offset: 0,
-            });
-
-            if (!cancelled) {
-              setPins(response ?? []);
-            }
-            break;
-          }
-
-          case 'collections': {
-            const response = await getOwnBoardsByUser({
-              userId: TEMP_USER_ID,
-              limit: 20,
-              offset: 0,
-            });
-
-            if (!cancelled) {
-              setCollections(response ?? []);
-            }
-            break;
-          }
-
-          case 'likes': {
-            const response = await getLikesByUser({
-              userId: TEMP_USER_ID,
-              pinsLimit: 20,
-              pinsOffset: 0,
-              boardsLimit: 10,
-              boardsOffset: 0,
-            });
-
-            if (!cancelled) {
-              setLikedPins(response?.pins ?? []);
-              setLikedCollections(response?.boards ?? []);
-            }
-            break;
-          }
-
-          case 'bookmarks': {
-            const response = await getBookmarksByUser({
-              userId: TEMP_USER_ID,
-              pinsLimit: 20,
-              pinsOffset: 0,
-              boardsLimit: 10,
-              boardsOffset: 0,
-            });
-
-            if (!cancelled) {
-              setBookmarkedPins(response?.pins ?? []);
-              setBookmarkedCollections(response?.boards ?? []);
-            }
-            break;
-          }
-        }
-      } catch (err: unknown) {
-        if (cancelled) return;
-
-        console.error(
-          `[Profile] Failed to load ${activeTab}:`,
-          err,
-        );
-
-        switch (activeTab) {
-          case 'pins':
-            setPins([]);
-            setError('Не удалось загрузить пины');
-            break;
-
-          case 'collections':
-            setCollections([]);
-            setError('Не удалось загрузить подборки');
-            break;
-
-          case 'likes':
-            setLikedPins([]);
-            setLikedCollections([]);
-            setError('Не удалось загрузить лайки');
-            break;
-
-          case 'bookmarks':
-            setBookmarkedPins([]);
-            setBookmarkedCollections([]);
-            setError('Не удалось загрузить закладки');
-            break;
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+  const loadUserProfile = async () => {
+    setLoadingProfile(true);
+    try {
+      console.log("Загружаем данные профиля пользователя...");
+      if (!profileId) {
+        setUserData(null);
+        setError('Не удалось определить пользователя');
+        return;
       }
-    };
+      setError(null);
+      setUserData(null);
+      const user = await findUser({ id: profileId });
+      
+      if (user) {
+        console.log("Данные пользователя получены:", user);
+        setUserData(user as UserData);
+        
+        // Устанавливаем данные для формы редактирования
+        setEditFormData({
+          nickname: user.nickname || '',
+          name: user.name || user.nickname || '',
+          description: user.description || '',
+          nickTag: user.nickTag || '',
+        });
+      } else {
+        console.log("Пользователь не найден");
+        setError('Пользователь не найден');
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки профиля:', error);
+      setError('Не удалось загрузить профиль');
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
 
-    void loadData();
+  /* =======================
+     Обработка сохранения профиля
+  ======================= */
 
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTab]);
+  const handleSaveProfile = async (data: { nickname: string; name: string; description: string; nickTag?: string }) => {
+    if (!isOwnProfile || !profileId) return false;
+    try {
+      console.log("Сохранение профиля:", data);
+      
+      // Вызываем API для обновления пользователя
+      const updatedUser = await updateUser(profileId, {
+        nickname: data.nickname,
+        name: data.name,
+        description: data.description,
+        // Добавьте другие поля при необходимости
+      });
+      
+      if (updatedUser) {
+        // Обновляем локальные данные
+        setUserData((previous) => previous ? { ...previous, ...updatedUser } : updatedUser as UserData);
+        setEditFormData({
+          nickname: updatedUser.nickname || '',
+          name: updatedUser.name || updatedUser.nickname || '',
+          description: updatedUser.description || '',
+          nickTag: updatedUser.nickTag || '',
+        });
+      }
+      
+      return Boolean(updatedUser);
+    } catch (error) {
+      console.error('Ошибка сохранения профиля:', error);
+      return false;
+    }
+  };
 
-  const displayPins = toPinCards(pins);
-  const displayCollections = toCollectionCards(collections);
+  /* =======================
+     Загрузка данных (используем реальные ID)
+  ======================= */
 
-  const likesFeed = generateMixedFeed(
-    toCollectionCards(likedCollections),
-    toPinCards(likedPins),
-  );
+  const handleGetPins = async () => {
+    if (!userData) return;
+    
+    setLoading(true);
+    setError(null);
 
-  const bookmarksFeed = generateMixedFeed(
-    toCollectionCards(bookmarkedCollections),
-    toPinCards(bookmarkedPins),
-  );
+    try {
+      const response = await getPinsByUser({
+        viewerId: viewerId ?? userData.id,
+        userId: userData.id,
+        limit: 20,
+        offset: 0,
+      });
 
-  const renderMixedFeed = (blocks: FeedBlock[]) => (
-    <div className={styles.likesFeed}>
-      {blocks.length === 0 && (
-        <p>Пока ничего нет</p>
-      )}
+      if (response && response.length > 0) {
+        const pinsWithLocation = await Promise.all(
+          response.map(async (pin) => {
+            let location = '';
+            if (pin.latitude != null && pin.longitude != null) {
+              try {
+                location = await getCityFromCoordinates(
+                  pin.latitude,
+                  pin.longitude
+                );
+              } catch (e) {
+                console.warn('Не удалось определить город для пина', e);
+              }
+            }
+            
+            const imageUrl = pin.images && pin.images[0] && pin.images[0].imageUrl
+              ? pin.images[0].imageUrl
+              : pin.imageUrl || placeholder_1;
+            
+            return {
+              ...pin,
+              id: pin.id,
+              title: pin.name || pin.title || 'Без названия',
+              description: pin.description || '',
+              image: imageUrl,
+              author: userData.nickname,
+              ownerId: userData.id,
+              authorAvatar: userData.profilePicture || placeholder_1,
+              likes: pin.rating || pin.likes || 0,
+              location: location || 'Не указано',
+              createdAt: pin.createdAt,
+              latitude: pin.latitude,
+              longitude: pin.longitude
+            };
+          })
+        );
+        setPins(pinsWithLocation);
+      } else {
+        console.log('[Profile] У пользователя нет пинов');
+        setPins([]);
+      }
+    } catch (err) {
+      console.error('[Profile] getPins error:', err);
+      setPins([]);
+      setError('Не удалось загрузить пины');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      {blocks.map((block, index) => (
-        <div
-          key={`${block.type}-${index}`}
-          className={styles.feedBlock}
-        >
-          {block.type === 'collections' ? (
-            <CollectionGrid
-              collections={block.items}
-              onCollectionClick={handleCollectionClick}
-            />
-          ) : (
-            <PinGrid
-              pins={block.items}
-              onPinClick={handlePinClick}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
+  const handleGetCollections = async () => {
+    if (!userData) return;
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getOwnBoardsByUser({
+        userId: userData.id,
+        limit: 20,
+        offset: 0,
+      });
+
+      if (response && response.length > 0) {
+        const formattedCollections = response.map(col => ({
+          ...col,
+          id: col.id,
+          title: col.name || 'Без названия',
+          description: col.description || '',
+          image: col.boardImageURL || col.image || placeholder_1,
+          author: userData.nickname,
+          authorAvatar: userData.profilePicture || placeholder_1,
+          pinsCount: col.pins ? col.pins.length : 0,
+          likes: col.rating || 0,
+          createdAt: col.createdAt,
+          accessLevel: col.accessLevel,
+          ownerId: col.ownerId
+        }));
+        setCollections(formattedCollections);
+      } else {
+        console.log('[Profile] У пользователя нет подборок');
+        setCollections([]);
+      }
+    } catch (err) {
+      console.error('[Profile] getCollections error:', err);
+      setCollections([]);
+      setError('Не удалось загрузить подборки');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGetLikes = async () => {
+    if (!userData) return;
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getLikesByUser({
+        userId: userData.id,
+        pinsLimit: 20,
+        pinsOffset: 0,
+        boardsLimit: 10,
+        boardsOffset: 0,
+      });
+
+      if (response) {
+        setLikedPins(response.pins || []);
+        setLikedCollections(response.boards || []);
+      } else {
+        console.log('[Profile] Лайки не найдены');
+        setLikedPins([]);
+        setLikedCollections([]);
+      }
+    } catch (err) {
+      console.error('[Profile] getLikes error:', err);
+      setLikedPins([]);
+      setLikedCollections([]);
+      setError('Не удалось загрузить лайки');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGetBookmarks = async () => {
+    if (!userData) return;
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getBookmarksByUser({
+        userId: userData.id,
+        pinsLimit: 20,
+        pinsOffset: 0,
+        boardsLimit: 10,
+        boardsOffset: 0,
+      });
+
+      if (response) {
+        setBookmarkedPins(response.pins || []);
+        setBookmarkedCollections(response.boards || []);
+      } else {
+        console.log('[Profile] Закладки не найдены');
+        setBookmarkedPins([]);
+        setBookmarkedCollections([]);
+      }
+    } catch (err) {
+      console.error('[Profile] getBookmarks error:', err);
+      setBookmarkedPins([]);
+      setBookmarkedCollections([]);
+      setError('Не удалось загрузить закладки');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =======================
+     Effects
+  ======================= */
+
+  useEffect(() => {
+    void loadUserProfile();
+  }, [profileId]);
+
+  useEffect(() => {
+    if (userData) {
+      if (activeTab === 'pins') {
+        handleGetPins();
+      } else if (activeTab === 'collections') {
+        handleGetCollections();
+      } else if (activeTab === 'likes') {
+        handleGetLikes();
+      } else if (activeTab === 'bookmarks') {
+        handleGetBookmarks();
+      }
+    }
+  }, [activeTab, userData]);
+
+  /* =======================
+     Вспомогательные функции
+  ======================= */
+
+  const getFollowersCount = () => {
+    return userData?.followers?.length || 0;
+  };
+
+  const getFollowingCount = () => {
+    return userData?.following?.length || 0;
+  };
+
+  const getUserRating = () => {
+    return userData?.userRating || 0;
+  };
+
+  const getProfilePicture = () => {
+    return userData?.profilePicture || placeholder_3;
+  };
+
+    
+  const getNickTag = () => {
+    return userData?.nickTag || 'user';
+  };
+
+  const getName = () => {
+    return userData?.name || userData?.nickname || 'Без имени';
+  };
+
+  const getBio = () => {
+    return userData?.description || 'Нет описания';
+  };
+
+  /* =======================
+     Mixed feed (likes / bookmarks)
+  ======================= */
+
+  const generateMixedFeed = (collections: any[], pins: any[]) => {
+    const COLLECTIONS_PER_BLOCK = 2;
+    const PINS_PER_BLOCK = 5;
+
+    const colls = [...collections];
+    const ps = [...pins];
+    const feed: { type: 'collections' | 'pins'; items: any[] }[] = [];
+    let next: 'collections' | 'pins' = 'collections';
+
+    while (colls.length || ps.length) {
+      if (next === 'collections' && colls.length) {
+        feed.push({
+          type: 'collections',
+          items: colls.splice(0, COLLECTIONS_PER_BLOCK),
+        });
+        next = 'pins';
+      } else if (next === 'pins' && ps.length) {
+        feed.push({
+          type: 'pins',
+          items: ps.splice(0, PINS_PER_BLOCK),
+        });
+        next = 'collections';
+      } else {
+        next = colls.length ? 'collections' : 'pins';
+      }
+    }
+
+    return feed;
+  };
+
+  const likesFeed = generateMixedFeed(likedCollections, likedPins);
+  const bookmarksFeed = generateMixedFeed(bookmarkedCollections, bookmarkedPins);
+
+  const getImageUrl = (item: any) => {
+    if (item.image) return item.image;
+    if (item.images && item.images[0] && item.images[0].imageUrl) {
+      return item.images[0].imageUrl;
+    }
+    if (item.imageUrl) {
+      return item.imageUrl;
+    }
+    if (item.boardImageURL) {
+      return item.boardImageURL;
+    }
+    return placeholder_1;
+  };
+
+  /* =======================
+     Render состояния загрузки
+  ======================= */
+
+  if (loadingProfile) {
+    return (
+      <div className={styles.createCollectionPage}>
+        <Header />
+        <main className={styles.collectionContent}>
+          <div className={styles.loadingContainer}>
+            <p>Загрузка профиля...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className={styles.createCollectionPage}>
+        <Header />
+        <main className={styles.collectionContent}>
+          <div className={styles.errorContainer}>
+            <h2>Профиль не найден</h2>
+            <p>{error || 'Не удалось загрузить данные профиля'}</p>
+            <button onClick={() => navigate('/feed')} className={styles.backButton}>
+              Вернуться на главную
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  /* =======================
+     Render
+  ======================= */
 
   return (
     <div className={styles.createCollectionPage}>
@@ -417,28 +517,22 @@ const Profile = () => {
 
       <main className={styles.collectionContent}>
         <div className={styles.h_container}>
-          <button
-            onClick={handleBack}
-            className={styles.back_btn}
-            aria-label="Назад"
-          />
-
-          <h1>@{profileData.nickname}</h1>
+          <button onClick={handleBack} className={styles.back_btn} />
+          <h1>@{getNickTag()}</h1>
+          <div className={styles.hidden}>
+            Рейтинг: {getUserRating().toFixed(1)} ⭐
+          </div>
         </div>
 
         <section className={styles.main_content}>
-          <div style={{ display: 'flex', width: '100%' }}>
+          <div style={{ display: "flex", width: "100%" }}>
+
+            {/* Левая часть — профиль */}
             <div className={styles.profile}>
-              <img
-                src={profileData.avatar}
-                alt="Аватар профиля"
-                className={styles.avatar}
-              />
+              <img src={getProfilePicture()} className={styles.avatar} alt={getName()} />
 
               <div className={styles.info}>
-                <div className={styles.name}>
-                  {profileData.name}
-                </div>
+                <div className={styles.name}>{getName()}</div>
 
                 <ul className={styles.follow_options}>
                   <li>
@@ -446,7 +540,7 @@ const Profile = () => {
                       className={styles.followLink}
                       onClick={() => setFollowersOpen(true)}
                     >
-                      <p>1247</p> подписчиков
+                      <p>{getFollowersCount()}</p> подписчиков
                     </button>
                   </li>
 
@@ -455,63 +549,80 @@ const Profile = () => {
                       className={styles.followLink}
                       onClick={() => setFollowingOpen(true)}
                     >
-                      <p>450</p> подписок
+                      <p>{getFollowingCount()}</p> подписок
                     </button>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div
-              className={styles.btn_container}
-              style={{ display: 'flex' }}
-            >
-              <button
-                className={styles.edit_btn}
-                onClick={() => setEditOpen(true)}
-              >
-                Редактировать профиль
-              </button>
+            {/* Правая часть — кнопки */}
+            <div className={styles.btn_container} style={{ display: "flex" }}>
+              {isOwnProfile && (
+                <>
+                  <button
+                    className={styles.edit_btn}
+                    onClick={() => setEditOpen(true)}
+                  >
+                    Редактировать профиль
+                  </button>
 
-              <button
-                className={styles.settingsBtn}
-                onClick={() => setSettingsOpen(true)}
-                aria-label="Настройки"
-              />
-
+                  <button
+                    className={styles.settingsBtn}
+                    onClick={() => setSettingsOpen(true)}
+                    title="Настройки"
+                  />
+                </>
+              )}
+            {!isOwnProfile && (
               <button
                 className={styles.shareBtn}
                 onClick={() => setShareOpen(true)}
-                aria-label="Поделиться"
-              />
+                title="Поделиться профилем"
+                    style={{ marginLeft: 'auto' }}
+
+                />
+              )}
+              {isOwnProfile && (
+              <button
+                className={styles.shareBtn}
+                onClick={() => setShareOpen(true)}
+                title="Поделиться профилем"
+                />
+              )}
             </div>
+
           </div>
 
-          <div className={styles.bio}>
-            {profileData.bio}
-          </div>
+          <div className={styles.bio}>{getBio()}</div>
 
-          <div style={{ display: 'flex' }}>
-            <button
-              className={styles.editBtn}
-              onClick={() => setFollowing((prev) => !prev)}
-            >
-              {isFollowing ? 'Отписаться' : 'Подписаться'}
-            </button>
+          <div style={{ display: "flex" }}>
+            {!isOwnProfile && (
+              <>
+                <button
+                  className={styles.editBtn}
+                  disabled
+                  title="Подписки пока не подключены"
+                >
+                  Подписаться (скоро)
+                </button>
 
-            <button
-              className={styles.reportBtn}
-              onClick={() => setReportOpen(true)}
-            >
-              !
-            </button>
+                <button
+                  className={styles.reportBtn}
+                  onClick={() => setReportOpen(true)}
+                  title="Пожаловаться на профиль"
+                >
+                  !
+                </button>
+              </>
+            )}
+
           </div>
         </section>
 
+        {/* Tabs */}
         <div className={styles.tabs}>
-          {(
-            ['collections', 'pins', 'likes', 'bookmarks'] as TabType[]
-          ).map((tab) => (
+          {(['collections', 'pins', 'likes', 'bookmarks'] as TabType[]).map(tab => (
             <button
               key={tab}
               className={`${styles.tabBtn} ${
@@ -519,81 +630,165 @@ const Profile = () => {
               }`}
               onClick={() => setActiveTab(tab)}
             >
-              {
-                {
-                  collections: 'Подборки',
-                  pins: 'Пины',
-                  likes: 'Понравившиеся',
-                  bookmarks: 'Закладки',
-                }[tab]
-              }
+              {{
+                collections: 'Подборки',
+                pins: 'Пины',
+                likes: 'Понравившиеся',
+                bookmarks: 'Закладки',
+              }[tab]}
             </button>
           ))}
         </div>
 
-        {loading && (
-          <p className={styles.loading}>Загрузка…</p>
-        )}
+        {loading && <p className={styles.loading}>Загрузка…</p>}
+        {error && <p className={styles.error}>{error}</p>}
 
-        {error && (
-          <p className={styles.error}>{error}</p>
-        )}
+        <div className={styles.tabContent}>
+          {activeTab === 'collections' && (
+            <>
+              {isOwnProfile && <button
+                onClick={handleCreateCollection}
+                className={styles.newBoardBtn}
+              >
+                Создать подборку
+              </button>}
 
-        {!loading && !error && (
-          <div className={styles.tabContent}>
-            {activeTab === 'collections' && (
-              <>
-                <button
-                  onClick={handleCreateCollection}
-                  className={styles.newBoardBtn}
-                >
-                  Создать подборку
-                </button>
+              {collections.length > 0 ? (
+                <CollectionGrid
+                  collections={collections.map(col => ({
+                    ...col,
+                    image: getImageUrl(col),
+                    authorAvatar: getProfilePicture(),
+                    title: col.name || col.title || 'Без названия',
+                    pinsCount: col.pinsCount || (col.pins ? col.pins.length : 0),
+                    description: col.description || '',
+                    author: getNickTag()
+                  }))}
+                  onCollectionClick={handleCollectionClick}
+                />
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>У вас пока нет подборок</p>
+                </div>
+              )}
+            </>
+          )}
 
-                {displayCollections.length > 0 ? (
-                  <CollectionGrid
-                    collections={displayCollections}
-                    onCollectionClick={handleCollectionClick}
-                  />
-                ) : (
-                  <p>Подборок пока нет</p>
-                )}
-              </>
-            )}
+          {activeTab === 'pins' && (
+            <>
+              {isOwnProfile && <button
+                onClick={handleCreatePin}
+                className={styles.newPinBtn}
+              >
+                Создать пин
+              </button>}
 
-            {activeTab === 'pins' && (
-              <>
-                <button
-                  onClick={handleCreatePin}
-                  className={styles.newPinBtn}
-                >
-                  Создать пин
-                </button>
+              {pins.length > 0 ? (
+                <PinGrid 
+                  pins={pins.map(pin => ({
+                    ...pin,
+                    image: getImageUrl(pin),
+                    title: pin.name || pin.title || 'Без названия',
+                    author: getNickTag(),
+                    authorAvatar: getProfilePicture(),
+                    location: pin.location || 'Не указано',
+                    likes: pin.rating || pin.likes || 0
+                  }))} 
+                  onPinClick={handlePinClick} 
+                />
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>У вас пока нет пинов</p>
+                </div>
+              )}
+            </>
+          )}
 
-                {displayPins.length > 0 ? (
-                  <PinGrid
-                    pins={displayPins}
-                    onPinClick={handlePinClick}
-                  />
-                ) : (
-                  <p>Пинов пока нет</p>
-                )}
-              </>
-            )}
+          {activeTab === 'likes' && (
+            <div className={styles.likesFeed}>
+              {likesFeed.length > 0 ? (
+                likesFeed.map((block, idx) => (
+                  <div key={idx} className={styles.feedBlock}>
+                    {block.type === 'collections' ? (
+                      <CollectionGrid
+                        collections={block.items.map(col => ({
+                          ...col,
+                          image: getImageUrl(col),
+                          authorAvatar: placeholder_1,
+                          title: col.name || col.title || 'Без названия'
+                        }))}
+                        onCollectionClick={handleCollectionClick}
+                      />
+                    ) : (
+                      <PinGrid
+                        pins={block.items.map(pin => ({
+                          ...pin,
+                          image: getImageUrl(pin),
+                          authorAvatar: placeholder_1,
+                          title: pin.name || pin.title || 'Без названия'
+                        }))}
+                        onPinClick={handlePinClick}
+                      />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>У вас пока нет лайков</p>
+                  <p className={styles.emptyStateSubtitle}>
+                    Отмечайте понравившиеся пины и подборки сердечком ❤️
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
-            {activeTab === 'likes' &&
-              renderMixedFeed(likesFeed)}
+          {activeTab === 'bookmarks' && (
+            <div className={styles.likesFeed}>
+              {bookmarksFeed.length > 0 ? (
+                bookmarksFeed.map((block, idx) => (
+                  <div key={idx} className={styles.feedBlock}>
+                    {block.type === 'collections' ? (
+                      <CollectionGrid
+                        collections={block.items.map(col => ({
+                          ...col,
+                          image: getImageUrl(col),
+                          authorAvatar: placeholder_1,
+                          title: col.name || col.title || 'Без названия'
+                        }))}
+                        onCollectionClick={handleCollectionClick}
+                      />
+                    ) : (
+                      <PinGrid
+                        pins={block.items.map(pin => ({
+                          ...pin,
+                          image: getImageUrl(pin),
+                          authorAvatar: placeholder_1,
+                          title: pin.name || pin.title || 'Без названия'
+                        }))}
+                        onPinClick={handlePinClick}
+                      />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>У вас пока нет закладок</p>
+                  <p className={styles.emptyStateSubtitle}>
+                    Сохраняйте интересные пины и подборки в закладки для быстрого доступа 📌
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-            {activeTab === 'bookmarks' &&
-              renderMixedFeed(bookmarksFeed)}
-          </div>
-        )}
-
+        {/* Modals */}
         <EditProfileModal
           isOpen={isEditOpen}
           onClose={() => setEditOpen(false)}
-          onSave={setProfileData}
-          initialData={profileData}
+          onSave={handleSaveProfile}
+          initialData={editFormData}
         />
 
         <SettingsModal
@@ -604,22 +799,26 @@ const Profile = () => {
         <ShareModal
           isOpen={isShareOpen}
           onClose={() => setShareOpen(false)}
+          profileUrl={`${window.location.origin}/profile/${userData.id}`}
+          profileName={getName()}
         />
 
         <ReportModal
           isOpen={isReportOpen}
           onClose={() => setReportOpen(false)}
-          onSubmit={(data) => console.log('Жалоба:', data)}
+          onSubmit={data => console.log('Жалоба:', data)}
         />
 
         <FollowersModal
           isOpen={isFollowersOpen}
           onClose={() => setFollowersOpen(false)}
+          followers={userData.followers || []}
         />
 
         <FollowingModal
           isOpen={isFollowingOpen}
           onClose={() => setFollowingOpen(false)}
+          following={userData.following || []}
         />
       </main>
     </div>

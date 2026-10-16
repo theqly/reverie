@@ -1,25 +1,31 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import styles from './CreateCollectionPage.module.css';
-
 import Header from '../../pages/Header';
 import { useToast } from '../../pages/ToastContext';
-
+import placeholder from '../../assets/placeholder1.jpg';
+import { getUserIdFromToken } from '../../auth/tokenStorage';
 import {
   getBoardById,
   updateCollection,
 } from '../../services/collectionsService';
+import type { UpdateBoardInput } from '@/graphql/generated/graphql';
 
-import {
-  AccessLevelType,
-  type UpdateBoardInput,
-} from '@/graphql/generated/graphql';
+type CollectionData = NonNullable<Awaited<ReturnType<typeof getBoardById>>>;
 
-type CollectionData = NonNullable<
-  Awaited<ReturnType<typeof getBoardById>>
->;
+// В некоторых версиях сгенерированного GraphQL-типа это поле ещё отсутствует.
+function getBoardCoverUrl(board: CollectionData): string {
+  if (
+    'boardImageURL' in board &&
+    typeof board.boardImageURL === 'string' &&
+    board.boardImageURL.length > 0
+  ) {
+    return board.boardImageURL;
+  }
+
+  return board.pins?.[0]?.images?.[0]?.imageUrl ?? placeholder;
+}
 
 const EditCollectionPage = () => {
   const navigate = useNavigate();
@@ -28,13 +34,12 @@ const EditCollectionPage = () => {
 
   const [originalCollection, setOriginalCollection] =
     useState<CollectionData | null>(null);
-
   const [collectionName, setCollectionName] = useState('');
   const [collectionInfo, setCollectionInfo] = useState('');
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -53,7 +58,6 @@ const EditCollectionPage = () => {
 
       try {
         const board = await getBoardById(id);
-
         if (cancelled) return;
 
         if (!board) {
@@ -64,94 +68,62 @@ const EditCollectionPage = () => {
         setOriginalCollection(board);
         setCollectionName(board.name);
         setCollectionInfo(board.description ?? '');
-      } catch (err) {
+      } catch (err: unknown) {
         if (cancelled) return;
-
-        console.error(
-          '[EditCollectionPage] Failed to load collection:',
-          err,
-        );
-
+        console.error('[EditCollectionPage] Load error:', err);
         setError('Не удалось загрузить подборку');
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
     void loadCollection();
-
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
   const isSaveEnabled =
+    !loading &&
+    !saving &&
+    originalCollection !== null &&
     collectionName.trim().length > 0 &&
     collectionName.length <= 50 &&
-    collectionInfo.length <= 1000 &&
-    !saving;
+    collectionInfo.length <= 1000;
 
   const handleSaveCollection = async () => {
-    if (!id || !originalCollection || !isSaveEnabled) {
+    if (!id || !isSaveEnabled) return;
+
+    const userId = getUserIdFromToken();
+    if (!userId) {
+      setSaveError('Не удалось определить авторизованного пользователя');
+      showToast('Для сохранения необходимо войти в аккаунт', true);
       return;
     }
 
-    // В текущей форме нет доступа к авторизованному
-    // пользователю. Не подставляем фиктивный userId.
-    //
-    // Если GetBoardById возвращает ownerId,
-    // используем его только после проверки типа.
-    const ownerId =
-      'ownerId' in originalCollection &&
-      typeof originalCollection.ownerId === 'string'
-        ? originalCollection.ownerId
-        : null;
-
-    if (!ownerId) {
-      console.error(
-        '[EditCollectionPage] Missing userId for UpdateBoardInput',
-      );
-
-      showToast(
-        'Не удалось определить пользователя для сохранения',
-        true,
-      );
-      return;
-    }
-
+    // accessLevel намеренно не передаём: изменение имени/описания
+    // не должно делать приватную или групповую подборку публичной.
     const payload: UpdateBoardInput = {
-      userId: ownerId,
+      userId,
       name: collectionName.trim(),
       description: collectionInfo,
-      accessLevel: AccessLevelType.Public,
     };
 
     setSaving(true);
+    setSaveError(null);
 
     try {
-      console.log('[EditCollection] Sending payload:', payload);
       const updatedBoard = await updateCollection(id, payload);
-
       if (!updatedBoard) {
-        showToast('Ошибка при сохранении', true);
-        return;
+        throw new Error('Сервер не вернул обновлённую подборку');
       }
 
       showToast('Подборка успешно обновлена!');
-
       navigate(`/collection/${id}`);
     } catch (err: unknown) {
-      console.error(
-        '[EditCollectionPage] Failed to update collection:',
-        err,
-      );
-
+      console.error('[EditCollectionPage] Save error:', err);
+      const message = err instanceof Error ? err.message : 'Ошибка при сохранении';
+      setSaveError(message);
       showToast('Ошибка при сохранении', true);
     } finally {
       setSaving(false);
@@ -162,12 +134,9 @@ const EditCollectionPage = () => {
     return (
       <div className={styles.createCollectionPage}>
         <Header />
-
         <main className={styles.collectionContent}>
           <div className={styles.loadingContainer}>
-            <div className={styles.loading}>
-              Загрузка данных подборки...
-            </div>
+            <div className={styles.loading}>Загрузка данных подборки...</div>
           </div>
         </main>
       </div>
@@ -178,16 +147,12 @@ const EditCollectionPage = () => {
     return (
       <div className={styles.createCollectionPage}>
         <Header />
-
         <main className={styles.collectionContent}>
           <div className={styles.errorContainer}>
             <h2>Не удалось открыть подборку</h2>
-
-            <p>
-              {error ?? 'Данные подборки отсутствуют'}
-            </p>
-
+            <p>{error ?? 'Данные подборки отсутствуют'}</p>
             <button
+              type="button"
               onClick={() => navigate('/feed')}
               className={styles.backButton}
             >
@@ -202,26 +167,21 @@ const EditCollectionPage = () => {
   return (
     <div className={styles.createCollectionPage}>
       <Header />
-
       <main className={styles.collectionContent}>
         <div className={styles.h_container}>
           <button
-            onClick={handleBack}
+            type="button"
+            onClick={() => navigate(`/collection/${id}`)}
             className={styles.back_btn}
             aria-label="Назад"
           />
-
           <h1>Редактировать подборку</h1>
         </div>
 
         <div className={styles.gridWrapper}>
-          <label
-            htmlFor="collection-name"
-            className={styles.name_label}
-          >
+          <label htmlFor="collection-name" className={styles.name_label}>
             Название:
           </label>
-
           <div className={styles.name_input_block}>
             <input
               id="collection-name"
@@ -229,31 +189,16 @@ const EditCollectionPage = () => {
               value={collectionName}
               onChange={(e) => setCollectionName(e.target.value)}
               maxLength={50}
-              className={
-                collectionName.length > 50
-                  ? styles.error
-                  : styles.name_input
-              }
+              className={styles.name_input}
             />
-
             <div className={styles.characterCounter}>
               {collectionName.length}/50
             </div>
-
-            {collectionName.length > 50 && (
-              <div className={styles.errorMessage}>
-                Название не должно превышать 50 символов
-              </div>
-            )}
           </div>
 
-          <label
-            htmlFor="collection-info"
-            className={styles.discr_label}
-          >
+          <label htmlFor="collection-info" className={styles.discr_label}>
             Описание:
           </label>
-
           <div className={styles.discr_input_block}>
             <textarea
               id="collection-info"
@@ -261,24 +206,36 @@ const EditCollectionPage = () => {
               onChange={(e) => setCollectionInfo(e.target.value)}
               maxLength={1000}
               rows={4}
-              className={
-                collectionInfo.length > 1000
-                  ? styles.error
-                  : styles.discr_input
-              }
+              className={styles.discr_input}
               placeholder="Опишите вашу подборку..."
             />
-
             <div className={styles.characterCounter}>
               {collectionInfo.length}/1000
             </div>
           </div>
+
+          <section className={styles.coverSection}>
+            <div className={styles.coverLabel}>
+              <img
+                src={getBoardCoverUrl(originalCollection)}
+                className={styles.coverPreview}
+                alt="Обложка подборки"
+              />
+            </div>
+            <p>Изменение обложки пока недоступно.</p>
+          </section>
         </div>
+
+        {saveError && (
+          <p role="alert" className={styles.errorMessage}>
+            {saveError}
+          </p>
+        )}
 
         <button
           type="button"
-          onClick={() => void handleSaveCollection()}
           disabled={!isSaveEnabled}
+          onClick={() => void handleSaveCollection()}
           className={styles.saveButton}
         >
           {saving ? 'Сохранение...' : 'Сохранить изменения'}
